@@ -6,6 +6,7 @@ using UnityEngine.Experimental.VFX;
 
 namespace UnityEngine.VFX.Utils
 {
+    [AddComponentMenu("VFX/Utilities/Parameters/VFX Plane Binder")]
     [VFXBinder("Utility/Plane")]
     public class VFXPlaneBinder : VFXBinderBase
     {

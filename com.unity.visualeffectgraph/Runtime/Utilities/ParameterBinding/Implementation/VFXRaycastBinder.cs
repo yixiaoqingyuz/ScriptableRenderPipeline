@@ -1,12 +1,10 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+#if VFX_HAS_PHYSICS
 using UnityEngine.Experimental.VFX;
 
 namespace UnityEngine.VFX.Utils
 {
-    [VFXBinder("Utility/Raycast")]
+    [AddComponentMenu("VFX/Utilities/Parameters/VFX Raycast Binder")]
+    [VFXBinder("Physics/Raycast")]
     public class VFXRaycastBinder : VFXBinderBase
     {
         public string TargetPosition { get { return (string)m_TargetPosition; } set { m_TargetPosition = value; UpdateSubParameters(); } }
@@ -81,3 +79,4 @@ namespace UnityEngine.VFX.Utils
         }
     }
 }
+#endif

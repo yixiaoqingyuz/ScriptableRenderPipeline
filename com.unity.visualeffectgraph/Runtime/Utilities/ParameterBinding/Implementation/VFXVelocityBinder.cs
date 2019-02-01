@@ -1,12 +1,9 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.Experimental.VFX;
 
 namespace UnityEngine.VFX.Utils
 {
-    [VFXBinder("Utility/Velocity")]
+    [AddComponentMenu("VFX/Utilities/Parameters/VFX Velocity Binder")]
+    [VFXBinder("Transform/Velocity")]
     public class VFXVelocityBinder : VFXBinderBase
     {
         public string Parameter { get { return (string)m_Parameter; } set { m_Parameter = value; } }

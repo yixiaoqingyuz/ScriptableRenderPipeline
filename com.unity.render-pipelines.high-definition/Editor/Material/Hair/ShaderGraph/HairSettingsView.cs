@@ -113,7 +113,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline.Drawing
                 });
             });
 
-            ps.Add(new PropertyRow(CreateLabel("Alpha Cutoff", indentLevel)), (row) =>
+            ps.Add(new PropertyRow(CreateLabel("Alpha Clipping", indentLevel)), (row) =>
             {
                 row.Add(new Toggle(), (toggle) =>
                 {
@@ -190,6 +190,15 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline.Drawing
                 {
                     field.value = m_Node.specularOcclusionMode;
                     field.RegisterValueChangedCallback(ChangeSpecularOcclusionMode);
+                });
+            });
+
+            ps.Add(new PropertyRow(CreateLabel("Override Baked GI", indentLevel)), (row) =>
+            {
+                row.Add(new Toggle(), (toggle) =>
+                {
+                    toggle.value = m_Node.overrideBakedGI.isOn;
+                    toggle.OnToggleChanged(ChangeoverrideBakedGI);
                 });
             });
 
@@ -340,6 +349,14 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline.Drawing
 
             m_Node.owner.owner.RegisterCompleteObjectUndo("Specular Occlusion Mode Change");
             m_Node.specularOcclusionMode = (SpecularOcclusionMode)evt.newValue;
+        }
+
+        void ChangeoverrideBakedGI(ChangeEvent<bool> evt)
+        {
+            m_Node.owner.owner.RegisterCompleteObjectUndo("overrideBakedGI Change");
+            ToggleData td = m_Node.overrideBakedGI;
+            td.isOn = evt.newValue;
+            m_Node.overrideBakedGI = td;
         }
 
         public AlphaMode GetAlphaMode(HairMasterNode.AlphaModeLit alphaModeLit)

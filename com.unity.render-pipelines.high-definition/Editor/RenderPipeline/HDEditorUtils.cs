@@ -15,14 +15,13 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         delegate void MaterialResetter(Material material);
         static Dictionary<string, MaterialResetter> k_MaterialResetters = new Dictionary<string, MaterialResetter>()
         {
-            { "HDRenderPipeline/LayeredLit",  LayeredLitGUI.SetupMaterialKeywordsAndPass },
-            { "HDRenderPipeline/LayeredLitTessellation", LayeredLitGUI.SetupMaterialKeywordsAndPass },
-            { "HDRenderPipeline/Lit", LitGUI.SetupMaterialKeywordsAndPass },
-            { "HDRenderPipeline/LitTessellation", LitGUI.SetupMaterialKeywordsAndPass },
-            { "HDRenderPipeline/Unlit", UnlitGUI.SetupMaterialKeywordsAndPass },
-            // { "HDRenderPipeline/Fabric",  FabricGUI.SetupMaterialKeywordsAndPass },
-            { "HDRenderPipeline/Decal", DecalUI.SetupMaterialKeywordsAndPass },
-            { "HDRenderPipeline/TerrainLit", TerrainLitGUI.SetupMaterialKeywordsAndPass }
+            { "HDRP/LayeredLit",  LayeredLitGUI.SetupMaterialKeywordsAndPass },
+            { "HDRP/LayeredLitTessellation", LayeredLitGUI.SetupMaterialKeywordsAndPass },
+            { "HDRP/Lit", LitGUI.SetupMaterialKeywordsAndPass },
+            { "HDRP/LitTessellation", LitGUI.SetupMaterialKeywordsAndPass },
+            { "HDRP/Unlit", UnlitGUI.SetupMaterialKeywordsAndPass },
+            { "HDRP/Decal", DecalUI.SetupMaterialKeywordsAndPass },
+            { "HDRP/TerrainLit", TerrainLitGUI.SetupMaterialKeywordsAndPass }
         };
 
         public static T LoadAsset<T>(string relativePath) where T : UnityEngine.Object
@@ -59,7 +58,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             return types;
         }
 
-        static readonly GUIContent s_OverrideTooltip = CoreEditorUtils.GetContent("|Override this setting in component.");
+        static readonly GUIContent s_OverrideTooltip = EditorGUIUtility.TrTextContent("", "Override this setting in component.");
         public static bool FlagToggle<TEnum>(TEnum v, SerializedProperty property)
             where TEnum : struct, IConvertible // restrict to ~enum
         {
@@ -162,6 +161,33 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 bounds.Encapsulate(b);
                 return bounds;
             };
+        }
+
+
+        /// <summary>
+        /// Give a human readable string representing the inputed weight given in byte.
+        /// </summary>
+        public static string HumanizeWeight(long weightInByte)
+        {
+            if (weightInByte < 500)
+            {
+                return weightInByte + " B";
+            }
+            else if (weightInByte < 500000L)
+            {
+                float res = weightInByte / 1000f;
+                return res.ToString("n2") + " KB";
+            }
+            else if (weightInByte < 500000000L)
+            {
+                float res = weightInByte / 1000000f;
+                return res.ToString("n2") + " MB";
+            }
+            else
+            {
+                float res = weightInByte / 1000000000f;
+                return res.ToString("n2") + " GB";
+            }
         }
     }
 }

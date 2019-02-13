@@ -16,7 +16,7 @@ namespace UnityEngine.Rendering.LWRP
         void ExecuteBeforeCameraRender(LightweightRenderPipeline pipelineInstance, ScriptableRenderContext context, Camera camera);
     }
 
-    public sealed partial class LightweightRenderPipeline : UnityEngine.Rendering.RenderPipeline
+    public sealed partial class LightweightRenderPipeline : RenderPipeline
     {
         static class PerFrameBuffer
         {
@@ -31,10 +31,11 @@ namespace UnityEngine.Rendering.LWRP
             public static int _ScaledScreenParams;
         }
 
+        public const string k_ShaderTagName = "LightweightPipeline";
+
         const string k_RenderCameraTag = "Render Camera";
 
         public ScriptableRenderer renderer { get; private set; }
-        PipelineSettings settings { get; set; }
 
         public static float maxShadowBias
         {
@@ -56,78 +57,17 @@ namespace UnityEngine.Rendering.LWRP
             get { return 4; }
         }
 
-        internal struct PipelineSettings
+        public static LightweightRenderPipelineAsset asset
         {
-            public bool supportsCameraDepthTexture { get; private set; }
-            public bool supportsCameraOpaqueTexture { get; private set; }
-            public Downsampling opaqueDownsampling { get; private set; }
-            public bool supportsHDR { get; private set; }
-            public int msaaSampleCount { get; private set; }
-            public float renderScale { get; private set; }
-            public LightRenderingMode mainLightRenderingMode { get; private set; }
-            public bool supportsMainLightShadows { get; private set; }
-            public int mainLightShadowmapResolution { get; private set; }
-            public LightRenderingMode additionalLightsRenderingMode { get; private set; }
-            public int maxAdditionalLights { get; private set; }
-            public bool supportsAdditionalLightShadows { get; private set; }
-            public int additionalLightsShadowmapResolution { get; private set; }
-            public float shadowDistance { get; private set; }
-            public ShadowCascadesOption shadowCascadeOption { get; private set; }
-            public float cascade2Split { get; private set; }
-            public Vector3 cascade4Split { get; private set; }
-            public float shadowDepthBias { get; private set; }
-            public float shadowNormalBias { get; private set; }
-            public bool supportsSoftShadows { get; private set; }
-            public bool supportsDynamicBatching { get; private set; }
-            public bool mixedLightingSupported { get; private set; }
-            public IRendererSetup rendererSetup { get; private set; }
-
-            public static PipelineSettings Create(LightweightRenderPipelineAsset asset)
+            get
             {
-                var cache = new PipelineSettings();
-                // General settings
-                cache.supportsCameraDepthTexture = asset.supportsCameraDepthTexture;
-                cache.supportsCameraOpaqueTexture = asset.supportsCameraOpaqueTexture;
-                cache.opaqueDownsampling = asset.opaqueDownsampling;
-
-                // Quality settings
-                cache.msaaSampleCount = asset.msaaSampleCount;
-                cache.supportsHDR = asset.supportsHDR;
-                cache.renderScale = asset.renderScale;
-
-                // Main directional light settings
-                cache.mainLightRenderingMode = asset.mainLightRenderingMode;
-                cache.supportsMainLightShadows = asset.supportsMainLightShadows;
-                cache.mainLightShadowmapResolution = asset.mainLightShadowmapResolution;
-
-                // Additional light settings
-                cache.additionalLightsRenderingMode = asset.additionalLightsRenderingMode;
-                cache.maxAdditionalLights = asset.maxAdditionalLightsCount;
-                cache.supportsAdditionalLightShadows = asset.supportsAdditionalLightShadows;
-                cache.additionalLightsShadowmapResolution = asset.additionalLightsShadowmapResolution;
-
-                // Shadow settings
-                cache.shadowDistance = asset.shadowDistance;
-                cache.shadowCascadeOption = asset.shadowCascadeOption;
-                cache.cascade2Split = asset.cascade2Split;
-                cache.cascade4Split = asset.cascade4Split;
-                cache.shadowDepthBias = asset.shadowDepthBias;
-                cache.shadowNormalBias = asset.shadowNormalBias;
-                cache.supportsSoftShadows = asset.supportsSoftShadows;
-
-                // Advanced settings
-                cache.supportsDynamicBatching = asset.supportsDynamicBatching;
-                cache.mixedLightingSupported = asset.supportsMixedLighting;
-                cache.rendererSetup = new ForwardRendererSetup();
-
-                return cache;
+                return GraphicsSettings.renderPipelineAsset as LightweightRenderPipelineAsset;
             }
         }
 
         public LightweightRenderPipeline(LightweightRenderPipelineAsset asset)
         {
-            settings = PipelineSettings.Create(asset);
-            renderer = new ScriptableRenderer(asset);
+            renderer = new ScriptableRenderer();
 
             SetSupportedRenderingFeatures();
 
@@ -140,8 +80,8 @@ namespace UnityEngine.Rendering.LWRP
             PerCameraBuffer._ScaledScreenParams = Shader.PropertyToID("_ScaledScreenParams");
 
             // Let engine know we have MSAA on for cases where we support MSAA backbuffer
-            if (QualitySettings.antiAliasing != settings.msaaSampleCount)
-                QualitySettings.antiAliasing = settings.msaaSampleCount;
+            if (QualitySettings.antiAliasing != asset.msaaSampleCount)
+                QualitySettings.antiAliasing = asset.msaaSampleCount;
 
             Shader.globalRenderPipeline = "LightweightPipeline";
 
@@ -181,11 +121,11 @@ namespace UnityEngine.Rendering.LWRP
                 foreach (var beforeCamera in camera.GetComponents<IBeforeCameraRender>())
                     beforeCamera.ExecuteBeforeCameraRender(this, renderContext, camera);
 
-                RenderSingleCamera(this, renderContext, camera, camera.GetComponent<IRendererSetup>());
+                RenderSingleCamera(this, renderContext, camera);
             }
         }
 
-        public static void RenderSingleCamera(LightweightRenderPipeline pipelineInstance, ScriptableRenderContext context, Camera camera, IRendererSetup setup = null)
+        public static void RenderSingleCamera(LightweightRenderPipeline pipelineInstance, ScriptableRenderContext context, Camera camera)
         {
             if (pipelineInstance == null)
             {
@@ -199,16 +139,18 @@ namespace UnityEngine.Rendering.LWRP
             CommandBuffer cmd = CommandBufferPool.Get(k_RenderCameraTag);
             using (new ProfilingSample(cmd, k_RenderCameraTag))
             {
-                PipelineSettings settings = pipelineInstance.settings;
                 ScriptableRenderer renderer = pipelineInstance.renderer;
-                InitializeCameraData(settings, camera, out var cameraData);
+                var settings = asset;
+                LWRPAdditionalCameraData additionalCameraData = camera.gameObject.GetComponent<LWRPAdditionalCameraData>();
+                InitializeCameraData(settings, camera, additionalCameraData, out var cameraData);
                 SetupPerCameraShaderConstants(cameraData);
 
-                if (pipelineInstance.settings.additionalLightsRenderingMode == LightRenderingMode.Disabled ||
-                    pipelineInstance.settings.maxAdditionalLights == 0)
-                {
-                    cullingParameters.cullingOptions |= CullingOptions.DisablePerObjectCulling;
-                }
+                // TODO: PerObjectCulling also affect reflection probes. Enabling it for now.
+                // if (asset.additionalLightsRenderingMode == LightRenderingMode.Disabled ||
+                //     asset.maxAdditionalLightsCount == 0)
+                // {
+                //     cullingParameters.cullingOptions |= CullingOptions.DisablePerObjectCulling;
+                // }
 
                 cullingParameters.shadowDistance = Mathf.Min(cameraData.maxShadowDistance, camera.farClipPlane);
 
@@ -229,7 +171,7 @@ namespace UnityEngine.Rendering.LWRP
 
                 renderer.Clear();
 
-                var rendererSetup = setup ?? settings.rendererSetup;
+                IRendererSetup rendererSetup = (additionalCameraData != null) ? additionalCameraData.rendererSetup : settings.rendererSetup;
                 rendererSetup.Setup(renderer, ref renderingData);
                 renderer.Execute(context, ref renderingData);
             }
@@ -258,7 +200,7 @@ namespace UnityEngine.Rendering.LWRP
 #endif
         }
 
-        static void InitializeCameraData(PipelineSettings settings, Camera camera, out CameraData cameraData)
+        static void InitializeCameraData(LightweightRenderPipelineAsset settings, Camera camera, LWRPAdditionalCameraData additionalCameraData, out CameraData cameraData)
         {
             const float kRenderScaleThreshold = 0.05f;
             cameraData.camera = camera;
@@ -269,6 +211,16 @@ namespace UnityEngine.Rendering.LWRP
             else
                 cameraData.msaaSamples = 1;
 
+            if (Camera.main == camera && camera.cameraType == CameraType.Game && camera.targetTexture == null)
+            {
+                // There's no exposed API to control how a backbuffer is created with MSAA
+                // By settings antiAliasing we match what the amount of samples in camera data with backbuffer
+                // We only do this for the main camera and this only takes effect in the beginning of next frame.
+                // This settings should not be changed on a frame basis so that's fine.
+                QualitySettings.antiAliasing = cameraData.msaaSamples;
+            }
+
+
             cameraData.isSceneViewCamera = camera.cameraType == CameraType.SceneView;
             cameraData.isStereoEnabled = IsStereoEnabled(camera);
 
@@ -276,6 +228,10 @@ namespace UnityEngine.Rendering.LWRP
 
             cameraData.postProcessLayer = camera.GetComponent<PostProcessLayer>();
             cameraData.postProcessEnabled = cameraData.postProcessLayer != null && cameraData.postProcessLayer.isActiveAndEnabled;
+
+            // Disables postprocessing in mobile VR. It's stable on mobile yet.
+            if (cameraData.isStereoEnabled && Application.isMobilePlatform)
+                cameraData.postProcessEnabled = false;
 
             Rect cameraRect = camera.rect;
             cameraData.isDefaultViewport = (!(Math.Abs(cameraRect.x) > 0.0f || Math.Abs(cameraRect.y) > 0.0f ||
@@ -292,8 +248,7 @@ namespace UnityEngine.Rendering.LWRP
 
             bool anyShadowsEnabled = settings.supportsMainLightShadows || settings.supportsAdditionalLightShadows;
             cameraData.maxShadowDistance = (anyShadowsEnabled) ? settings.shadowDistance : 0.0f;
-
-            LWRPAdditionalCameraData additionalCameraData = camera.gameObject.GetComponent<LWRPAdditionalCameraData>();
+            
             if (additionalCameraData != null)
             {
                 cameraData.maxShadowDistance = (additionalCameraData.renderShadows) ? cameraData.maxShadowDistance : 0.0f;
@@ -317,7 +272,7 @@ namespace UnityEngine.Rendering.LWRP
             cameraData.captureActions = CameraCaptureBridge.GetCaptureActions(camera);
         }
 
-        static void InitializeRenderingData(PipelineSettings settings, ref CameraData cameraData, ref CullingResults cullResults,
+        static void InitializeRenderingData(LightweightRenderPipelineAsset settings, ref CameraData cameraData, ref CullingResults cullResults,
             int maxVisibleAdditionalLights, int maxPerObjectAdditionalLights, out RenderingData renderingData)
         {
             var visibleLights = cullResults.visibleLights;
@@ -363,7 +318,7 @@ namespace UnityEngine.Rendering.LWRP
             renderingData.killAlphaInFinalBlit = !Graphics.preserveFramebufferAlpha && platformNeedsToKillAlpha;
         }
 
-        static void InitializeShadowData(PipelineSettings settings, NativeArray<VisibleLight> visibleLights, bool mainLightCastShadows, bool additionalLightsCastShadows, out ShadowData shadowData)
+        static void InitializeShadowData(LightweightRenderPipelineAsset settings, NativeArray<VisibleLight> visibleLights, bool mainLightCastShadows, bool additionalLightsCastShadows, out ShadowData shadowData)
         {
             m_ShadowBiasData.Clear();
 
@@ -430,7 +385,7 @@ namespace UnityEngine.Rendering.LWRP
             shadowData.shadowmapDepthBufferBits = 16;
         }
 
-        static void InitializeLightData(PipelineSettings settings, NativeArray<VisibleLight> visibleLights, int mainLightIndex, int maxAdditionalLights,
+        static void InitializeLightData(LightweightRenderPipelineAsset settings, NativeArray<VisibleLight> visibleLights, int mainLightIndex, int maxAdditionalLights,
             int maxPerObjectAdditionalLights, out LightData lightData)
         {
             lightData.mainLightIndex = mainLightIndex;
@@ -440,7 +395,7 @@ namespace UnityEngine.Rendering.LWRP
                 lightData.additionalLightsCount =
                     Math.Min((mainLightIndex != -1) ? visibleLights.Length - 1 : visibleLights.Length,
                         maxAdditionalLights);
-                lightData.maxPerObjectAdditionalLightsCount = Math.Min(settings.maxAdditionalLights, maxPerObjectAdditionalLights);
+                lightData.maxPerObjectAdditionalLightsCount = Math.Min(settings.maxAdditionalLightsCount, maxPerObjectAdditionalLights);
             }
             else
         {
@@ -450,11 +405,11 @@ namespace UnityEngine.Rendering.LWRP
 
             lightData.shadeAdditionalLightsPerVertex = settings.additionalLightsRenderingMode == LightRenderingMode.PerVertex;
             lightData.visibleLights = visibleLights;
-            lightData.supportsMixedLighting = settings.mixedLightingSupported;
+            lightData.supportsMixedLighting = settings.supportsMixedLighting;
         }
 
         // Main Light is always a directional light
-        static int GetMainLightIndex(PipelineSettings settings, NativeArray<VisibleLight> visibleLights)
+        static int GetMainLightIndex(LightweightRenderPipelineAsset settings, NativeArray<VisibleLight> visibleLights)
         {
             int totalVisibleLights = visibleLights.Length;
 
@@ -515,7 +470,7 @@ namespace UnityEngine.Rendering.LWRP
             Shader.SetGlobalMatrix(PerCameraBuffer._InvCameraViewProj, invViewProjMatrix);
         }
 
-        public static Lightmapping.RequestLightsDelegate lightsDelegate = (Light[] requests, NativeArray<LightDataGI> lightsOutput) =>
+        static Lightmapping.RequestLightsDelegate lightsDelegate = (Light[] requests, NativeArray<LightDataGI> lightsOutput) =>
         {
             LightDataGI lightData = new LightDataGI();
 

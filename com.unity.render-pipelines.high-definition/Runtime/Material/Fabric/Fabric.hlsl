@@ -82,6 +82,15 @@ void ApplyDebugToSurfaceData(float3x3 worldToTangent, inout SurfaceData surfaceD
     {
         surfaceData.normalWS = worldToTangent[2];
     }
+
+    if (_DebugFullScreenMode == FULLSCREENDEBUGMODE_VALIDATE_DIFFUSE_COLOR)
+    {
+        surfaceData.baseColor = pbrDiffuseColorValidate(surfaceData.baseColor, surfaceData.specularColor, false, false).xyz;
+    }
+    else if (_DebugFullScreenMode == FULLSCREENDEBUGMODE_VALIDATE_SPECULAR_COLOR)
+    {
+        surfaceData.baseColor = pbrSpecularColorValidate(surfaceData.baseColor, surfaceData.specularColor, false, false).xyz;
+    }
 #endif
 }
 
@@ -189,12 +198,41 @@ BSDFData ConvertSurfaceDataToBSDFData(uint2 positionSS, SurfaceData surfaceData)
 void GetSurfaceDataDebug(uint paramId, SurfaceData surfaceData, inout float3 result, inout bool needLinearToSRGB)
 {
     GetGeneratedSurfaceDataDebug(paramId, surfaceData, result, needLinearToSRGB);
+
+    // Overide debug value output to be more readable
+    switch (paramId)
+    {
+    case DEBUGVIEW_FABRIC_SURFACEDATA_NORMAL_VIEW_SPACE:
+        // Convert to view space
+        result = TransformWorldToViewDir(surfaceData.normalWS) * 0.5 + 0.5;
+        break;
+    case DEBUGVIEW_FABRIC_SURFACEDATA_GEOMETRIC_NORMAL_VIEW_SPACE:
+        result = TransformWorldToViewDir(surfaceData.geomNormalWS) * 0.5 + 0.5;
+        break;
+    }
 }
 
 // This function call the generated debug function and allow to override the debug output if needed
 void GetBSDFDataDebug(uint paramId, BSDFData bsdfData, inout float3 result, inout bool needLinearToSRGB)
 {
     GetGeneratedBSDFDataDebug(paramId, bsdfData, result, needLinearToSRGB);
+
+    // Overide debug value output to be more readable
+    switch (paramId)
+    {
+    case DEBUGVIEW_FABRIC_BSDFDATA_NORMAL_VIEW_SPACE:
+        // Convert to view space
+        result = TransformWorldToViewDir(bsdfData.normalWS) * 0.5 + 0.5;
+        break;
+    case DEBUGVIEW_FABRIC_BSDFDATA_GEOMETRIC_NORMAL_VIEW_SPACE:
+        result = TransformWorldToViewDir(bsdfData.geomNormalWS) * 0.5 + 0.5;
+        break;
+    }
+}
+
+void GetPBRValidatorDebug(SurfaceData surfaceData, inout float3 result)
+{
+    result = surfaceData.baseColor;
 }
 
 //-----------------------------------------------------------------------------
@@ -543,7 +581,7 @@ IndirectLighting EvaluateBSDF_Env(  LightLoopContext lightLoopContext,
     int sliceIndex = 0;
     if (HasFlag(bsdfData.materialFeatures, MATERIALFEATUREFLAGS_FABRIC_COTTON_WOOL))
     {
-        sliceIndex = 1;
+        sliceIndex = _EnvSliceSize - 1;
     }
 
     float4 preLD = SampleEnv(lightLoopContext, lightData.envIndex, R, iblMipLevel, sliceIndex);

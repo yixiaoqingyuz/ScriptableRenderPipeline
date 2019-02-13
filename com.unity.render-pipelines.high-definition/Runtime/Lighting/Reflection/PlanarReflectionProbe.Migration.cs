@@ -10,7 +10,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             Initial,
             First = 2,
             CaptureSettings,
-            ProbeSettings
+            ProbeSettings,
+            SeparatePassThrough,
+            UpgradeFrameSettingsToStruct
         }
 
         [SerializeField, FormerlySerializedAs("version"), FormerlySerializedAs("m_Version")]
@@ -51,7 +53,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 p.m_ProbeSettings.proxySettings.mirrorPositionProxySpace = mirrorPositionPS;
                 p.m_ProbeSettings.proxySettings.mirrorRotationProxySpace = mirrorRotationPS;
                 p.m_LocalReferencePosition = Quaternion.Euler(-90, 0, 0) * -p.m_LocalReferencePosition;
-            })
+            }),
+            MigrationStep.New(PlanarProbeVersion.SeparatePassThrough, (PlanarReflectionProbe t) => k_Migration.ExecuteStep(t, Version.SeparatePassThrough)),
+            MigrationStep.New(PlanarProbeVersion.UpgradeFrameSettingsToStruct, (PlanarReflectionProbe t) => k_Migration.ExecuteStep(t, Version.UpgradeFrameSettingsToStruct))
         );
 
         // Obsolete Properties

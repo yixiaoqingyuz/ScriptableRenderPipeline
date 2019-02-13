@@ -184,6 +184,9 @@ void Frag(  PackedVaryingsToPS packedInput
                 #ifdef WRITE_MSAA_DEPTH
                 , out float1 depthColor : SV_Target2
                 #endif
+            #elif defined(WRITE_MSAA_DEPTH) // When only WRITE_MSAA_DEPTH is define and not WRITE_NORMAL_BUFFER it mean we are Unlit and only need depth, but we still have normal buffer binded
+            , out float4 outNormalBuffer : SV_Target1
+            , out float1 depthColor : SV_Target2
             #endif
 
             #ifdef _DEPTHOFFSET_ON
@@ -223,8 +226,11 @@ void Frag(  PackedVaryingsToPS packedInput
 
     // Note: unity_MotionVectorsParams.y is 0 is forceNoMotion is enabled
     bool forceNoMotion = unity_MotionVectorsParams.y == 0.0;
+
+    // Setting the velocity to a value more than 2 set as a flag for "force no motion". This is valid because, given that the velocities are in NDC,
+    // a value of >1 can never happen naturally, unless explicitely set. 
     if (forceNoMotion)
-        outVelocity = float4(0.0, 0.0, 0.0, 0.0);
+        outVelocity = float4(2.0, 0.0, 0.0, 0.0);
 
 // Normal Buffer Processing
 #ifdef WRITE_NORMAL_BUFFER
@@ -234,6 +240,11 @@ void Frag(  PackedVaryingsToPS packedInput
     // In case we are rendering in MSAA, reading the an MSAA depth buffer is way too expensive. To avoid that, we export the depth to a color buffer
     depthColor = packedInput.vmesh.positionCS.z;
     #endif
+#elif defined(WRITE_MSAA_DEPTH) // When we are MSAA depth only without normal buffer
+    // Due to the binding order of these three render targets, we need to have them both declared
+    outNormalBuffer = float4(0.0, 0.0, 0.0, 1.0);
+    // In case we are rendering in MSAA, reading the an MSAA depth buffer is way too expensive. To avoid that, we export the depth to a color buffer
+    depthColor = packedInput.vmesh.positionCS.z;
 #endif
 
 #ifdef _DEPTHOFFSET_ON

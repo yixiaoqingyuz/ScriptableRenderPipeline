@@ -13,7 +13,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             MergeEditors,
             AddCaptureSettingsAndFrameSettings,
             ModeAndTextures,
-            ProbeSettings
+            ProbeSettings,
+            SeparatePassThrough,
+            UpgradeFrameSettingsToStruct
         }
 
         static readonly MigrationDescription<ReflectionProbeVersion, HDAdditionalReflectionData> k_ReflectionProbeMigration
@@ -94,7 +96,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     var capturePositionPS = t.proxyToWorld.inverse.MultiplyPoint(capturePositionWS);
                     t.m_ProbeSettings.proxySettings.capturePositionProxySpace = capturePositionPS;
 #pragma warning restore 618
-                })
+                }),
+                MigrationStep.New(ReflectionProbeVersion.SeparatePassThrough, (HDAdditionalReflectionData t) => k_Migration.ExecuteStep(t, Version.SeparatePassThrough)),
+                MigrationStep.New(ReflectionProbeVersion.UpgradeFrameSettingsToStruct, (HDAdditionalReflectionData t) => k_Migration.ExecuteStep(t, Version.UpgradeFrameSettingsToStruct))
             );
 
         [SerializeField, FormerlySerializedAs("version"), FormerlySerializedAs("m_Version")]

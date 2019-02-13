@@ -37,14 +37,18 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         internal SerializedProperty cullingUseOcclusionCulling;
         internal SerializedProperty cullingCullingMask;
         internal SerializedProperty cullingInvertFaceCulling;
-        internal SerializedProperty renderingPath;
+        internal SerializedProperty customRenderingSettings;
         internal SerializedProperty flipYMode;
+        internal SerializedProperty probeLayerMask;
 
         internal SerializedCameraSettings(SerializedProperty root)
         {
             this.root = root;
 
-            frameSettings = new SerializedFrameSettings(root.Find((CameraSettings s) => s.frameSettings));
+            frameSettings = new SerializedFrameSettings(
+                root.Find((CameraSettings s) => s.renderingPathCustomFrameSettings),
+                root.Find((CameraSettings s) => s.renderingPathCustomFrameSettingsOverrideMask)
+                );
 
             bufferClearColorMode = root.FindPropertyRelative("bufferClearing.clearColorMode");
             bufferClearBackgroundColorHDR = root.FindPropertyRelative("bufferClearing.backgroundColorHDR");
@@ -60,8 +64,9 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             cullingUseOcclusionCulling = root.FindPropertyRelative("culling.useOcclusionCulling");
             cullingCullingMask = root.FindPropertyRelative("culling.cullingMask");
             cullingInvertFaceCulling = root.FindPropertyRelative("invertFaceCulling");
-            renderingPath = root.FindPropertyRelative("renderingPath");
+            customRenderingSettings = root.FindPropertyRelative("customRenderingSettings");
             flipYMode = root.FindPropertyRelative("flipYMode");
+            probeLayerMask = root.FindPropertyRelative("probeLayerMask");
         }
     }
 }

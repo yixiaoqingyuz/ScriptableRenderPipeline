@@ -7415,6 +7415,7 @@ MonoBehaviour:
   m_UIPosition: {x: 0, y: 0}
   m_UICollapsed: 1
   m_UISuperCollapsed: 0
+  title: 
   m_Owners:
   - {fileID: 114214122751800258}
   m_Capacity: 65536
@@ -9921,7 +9922,7 @@ VisualEffectResource:
     - name: OnStop
       playSystems: 
       stopSystems: 
-    m_RuntimeVersion: 7
+    m_RuntimeVersion: 8
     m_RendererSettings:
       motionVectorGenerationMode: 0
       shadowCastingMode: 0

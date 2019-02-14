@@ -687,6 +687,7 @@ namespace UnityEditor.VFX
                 SaveShaderFiles(m_Graph.visualEffectResource, generatedCodeData, contextToCompiledData);
 
                 var bufferDescs = new List<VFXGPUBufferDesc>();
+                var temporaryBufferDescs = new List<VFXTemporaryGPUBufferDesc>();
                 var cpuBufferDescs = new List<VFXCPUBufferDesc>();
                 var systemDescs = new List<VFXEditorSystemDesc>();
 
@@ -712,6 +713,7 @@ namespace UnityEditor.VFX
                 foreach (var data in compilableData)
                 {
                     data.FillDescs(bufferDescs,
+                        temporaryBufferDescs,
                         systemDescs,
                         m_ExpressionGraph,
                         contextToCompiledData,
@@ -730,7 +732,7 @@ namespace UnityEditor.VFX
                 expressionSheet.values = valueDescs.OrderBy(o => o.expressionIndex).ToArray();
                 expressionSheet.exposed = exposedParameterDescs.OrderBy(o => o.name).ToArray();
 
-                m_Graph.visualEffectResource.SetRuntimeData(expressionSheet, systemDescs.ToArray(), eventDescs.ToArray(), bufferDescs.ToArray(), cpuBufferDescs.ToArray());
+                m_Graph.visualEffectResource.SetRuntimeData(expressionSheet, systemDescs.ToArray(), eventDescs.ToArray(), bufferDescs.ToArray(), cpuBufferDescs.ToArray(), temporaryBufferDescs.ToArray());
                 m_ExpressionValues = expressionSheet.values;
 
                 if (k_FnVFXResource_SetCompileInitialVariants != null)

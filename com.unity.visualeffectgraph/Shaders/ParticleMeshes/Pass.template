@@ -34,9 +34,32 @@ VFX_VARYING_PS_INPUTS vert(vs_input i, uint instanceID : SV_InstanceID)
 	${VFXLoadSize}
 	
 	float4x4 elementToVFX = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);
+	
+	float4x4 previousElementToVFX = (float4x4)0;
+	
+	UNITY_UNROLL
+	for (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow) 
+		UNITY_UNROLL
+		for (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)
+		{
+			uint itIndexMatrix = itIndexMatrixCol * 4 + itIndexMatrixRow;
+			uint read = elementToVFXBufferPrevious.Load((index * 16 + itIndexMatrix) << 2);
+			previousElementToVFX[itIndexMatrixRow][itIndexMatrixCol] = asfloat(read);
+		}
+	
 	float3 vPos = mul(elementToVFX,float4(i.pos,1.0f)).xyz;
-
-	o.VFX_VARYING_POSCS = TransformPositionVFXToClip(vPos);
+	float4 csPos = TransformPositionVFXToClip(vPos);
+	o.VFX_VARYING_POSCS = csPos;
+	
+	float3 oldvPos = mul(previousElementToVFX,float4(i.pos,1.0f)).xyz;
+	float4 oldcsPos = TransformPositionVFXToClip(oldvPos);
+	
+	float2 velocity = (csPos.xy/csPos.w) - (oldcsPos.xy/oldcsPos.w);
+	velocity.y *= -1.0f;
+	
+	#ifdef VFX_VARYING_VELOCITY
+	o.VFX_VARYING_VELOCITY = velocity;
+	#endif
 	
 	#ifdef VFX_VARYING_NORMAL // TODO Should use inverse transpose
 	o.VFX_VARYING_NORMAL = normalize(TransformDirectionVFXToWorld(mul((float3x3)elementToVFX,i.normal)));

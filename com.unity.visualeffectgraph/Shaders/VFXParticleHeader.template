@@ -23,6 +23,9 @@ StructuredBuffer<uint> indirectBuffer;
 ByteAddressBuffer deadListCount;
 #endif
 
+//TODOPAUL
+ByteAddressBuffer elementToVFXBufferPrevious;
+
 CBUFFER_START(outputParams)
 	float nbMax;
 	float systemSeed;

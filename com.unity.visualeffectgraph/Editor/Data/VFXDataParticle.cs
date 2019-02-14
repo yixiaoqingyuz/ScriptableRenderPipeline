@@ -370,12 +370,6 @@ namespace UnityEditor.VFX
 
         public override IEnumerable<VFXContext> InitImplicitContexts()
         {
-            if (!NeedsSort())
-            {
-                m_Contexts = m_Owners;
-                return Enumerable.Empty<VFXContext>();
-            }
-
             m_Contexts = new List<VFXContext>(m_Owners.Count + 1);
             int index = 0;
 
@@ -387,15 +381,34 @@ namespace UnityEditor.VFX
                 m_Contexts.Add(m_Owners[index]);
             }
 
-            // Then the camera sort
-            var cameraSort = VFXContext.CreateImplicitContext<VFXCameraSort>(this);
-            m_Contexts.Add(cameraSort);
+            var implicitContext = new List<VFXContext>();
+            if (NeedsSort())
+            {
+                // Then the camera sort
+                var cameraSort = VFXContext.CreateImplicitContext<VFXCameraSort>(this);
+                implicitContext.Add(cameraSort);
+                m_Contexts.Add(cameraSort);
+            }
+
+            if (true) //TODOPAUL
+            {
+                for (int outputIndex = index; outputIndex < m_Owners.Count; ++outputIndex)
+                {
+                    var currentOutputContext = m_Owners[index];
+                    var blockChilren = currentOutputContext.children;
+
+                    var motionVector = VFXContext.CreateImplicitContext<VFXMotionVector>(this);
+                    motionVector.SetEncapsulatedOutput(currentOutputContext);
+                    implicitContext.Add(motionVector);
+                    m_Contexts.Add(motionVector);
+                }
+            }
 
             // And finally output
             for (; index < m_Owners.Count; ++index)
                 m_Contexts.Add(m_Owners[index]);
 
-            return new VFXContext[] { cameraSort };
+            return implicitContext;
         }
 
         public bool NeedsIndirectBuffer()
@@ -410,6 +423,7 @@ namespace UnityEditor.VFX
 
         public override void FillDescs(
             List<VFXGPUBufferDesc> outBufferDescs,
+            List<VFXTemporaryGPUBufferDesc> outTemporaryBufferDescs,
             List<VFXEditorSystemDesc> outSystemDescs,
             VFXExpressionGraph expressionGraph,
             Dictionary<VFXContext, VFXContextCompiledData> contextToCompiledData,
@@ -527,6 +541,12 @@ namespace UnityEditor.VFX
                 systemBufferMappings.Add(new VFXMapping("sortBufferB", sortBufferBIndex));
             }
 
+            int elementToVFXBuffer = -1;
+            if (true) //TODOPAUL
+            {
+                elementToVFXBuffer = outTemporaryBufferDescs.Count;
+                outTemporaryBufferDescs.Add(new VFXTemporaryGPUBufferDesc() { frameCount = 2u, desc = new VFXGPUBufferDesc { type = ComputeBufferType.Raw, capacity = capacity, size = 64, stride = 4 } });
+            }
 
             var taskDescs = new List<VFXEditorTaskDesc>();
             var bufferMappings = new List<VFXMapping>();
@@ -534,6 +554,8 @@ namespace UnityEditor.VFX
 
             for (int i = 0; i < m_Contexts.Count; ++i)
             {
+                var temporaryBufferMappings = new List<VFXMappingTemporary>();
+
                 var context = m_Contexts[i];
                 var contextData = contextToCompiledData[context];
 
@@ -541,6 +563,15 @@ namespace UnityEditor.VFX
                 taskDesc.type = context.taskType;
 
                 bufferMappings.Clear();
+
+                if (context is VFXMotionVector)
+                {
+                    temporaryBufferMappings.Add(new VFXMappingTemporary() { pastFrameIndex = 0u, perCameraBuffer = true, mapping = new VFXMapping("elementToVFXBuffer", elementToVFXBuffer) });
+                }
+                else if (context.contextType == VFXContextType.kOutput)
+                {
+                    temporaryBufferMappings.Add(new VFXMappingTemporary() { pastFrameIndex = 1u, perCameraBuffer = true, mapping = new VFXMapping("elementToVFXBufferPrevious", elementToVFXBuffer) });
+                }
 
                 if (attributeBufferIndex != -1)
                     bufferMappings.Add(new VFXMapping("attributeBuffer", attributeBufferIndex));
@@ -601,6 +632,7 @@ namespace UnityEditor.VFX
                 }
 
                 taskDesc.buffers = bufferMappings.ToArray();
+                taskDesc.temporaryBuffers = temporaryBufferMappings.ToArray();
                 taskDesc.values = uniformMappings.ToArray();
                 taskDesc.parameters = cpuMappings.Concat(contextData.parameters).ToArray();
                 taskDesc.shaderSourceIndex = contextToCompiledData[context].indexInShaderSource;

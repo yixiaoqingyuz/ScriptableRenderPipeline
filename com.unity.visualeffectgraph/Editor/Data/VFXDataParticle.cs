@@ -545,7 +545,7 @@ namespace UnityEditor.VFX
             if (true) //TODOPAUL
             {
                 elementToVFXBuffer = outTemporaryBufferDescs.Count;
-                outTemporaryBufferDescs.Add(new VFXTemporaryGPUBufferDesc() { frameCount = 2u, desc = new VFXGPUBufferDesc { type = ComputeBufferType.Raw, capacity = capacity, size = 64, stride = 4 } });
+                outTemporaryBufferDescs.Add(new VFXTemporaryGPUBufferDesc() { frameCount = 2u, desc = new VFXGPUBufferDesc { type = ComputeBufferType.Raw, size = capacity * 64, stride = 4 } });
             }
 
             var taskDescs = new List<VFXEditorTaskDesc>();

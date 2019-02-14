@@ -243,7 +243,7 @@ MonoBehaviour:
     x: 149
     y: -377
     width: 958
-    height: 1641
+    height: 1640
 --- !u!114 &114350483966674976
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -267,6 +267,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614592}
   - {fileID: 8926484042661614597}
   - {fileID: 8926484042661614602}
+  - {fileID: 8926484042661614673}
   m_UIPosition: {x: 0, y: 0}
   m_UICollapsed: 1
   m_UISuperCollapsed: 0
@@ -1247,13 +1248,13 @@ VisualEffectResource:
       *= scaleX;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEY_CURRENT\n\t\t\t\t\t\tsize3.y
       *= scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z
       *= scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tfloat4x4 elementToVFX
-      = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\t//Retrieve
-      previous elementToVFX\n\t\t\t\tfloat4x4 previousElementToVFX = (float4x4)0;\n\t\t\t\t\n\t\t\t\t[unroll]\n\t\t\t\tfor
-      (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow) \n\t\t\t\t\t[unroll]\t\n\t\t\t\t\tfor
+      = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\tfloat4x4
+      previousElementToVFX = (float4x4)0;\n\t\t\t\t\n\t\t\t\tUNITY_UNROLL\n\t\t\t\tfor
+      (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow)\n\t\t\t\t{\n\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\tfor
       (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t\t{\n\t\t\t\t\t\tuint
       itIndexMatrix = itIndexMatrixCol * 4 + itIndexMatrixRow;\n\t\t\t\t\t\tuint read
       = elementToVFXBufferPrevious.Load((index * 16 + itIndexMatrix) << 2);\n\t\t\t\t\t\tpreviousElementToVFX[itIndexMatrixRow][itIndexMatrixCol]
-      = asfloat(read);\n\t\t\t\t\t}\n\t\t\t\t\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(i.pos,1.0f)).xyz;\n\t\t\t\tfloat4
+      = asfloat(read);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\t\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(i.pos,1.0f)).xyz;\n\t\t\t\tfloat4
       csPos = TransformPositionVFXToClip(vPos);\n\t\t\t\to.VFX_VARYING_POSCS = csPos;\n\t\t\t\t\n\t\t\t\tfloat3
       oldvPos = mul(previousElementToVFX,float4(i.pos,1.0f)).xyz;\n\t\t\t\tfloat4
       oldcsPos = TransformPositionVFXToClip(oldvPos);\n\t\t\t\t\n\t\t\t\tfloat2 velocity
@@ -1315,18 +1316,18 @@ VisualEffectResource:
       SCENESELECTIONPASS\n\t\t\t\t// We use depth prepass for scene selection in the
       editor, this code allow to output the outline correctly\n\t\t\t\toutColor =
       float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t#else\n\t\t\t\toutColor = (float4)0;\n\t\t#endif\n\t\t#endif\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
-      { \"LightMode\"=\"MotionVectors\" }\n\t\t\n\t\t\tZWrite On\n\t\t\tBlend Off\n\t\t\t\n\t\t\t//
-      If velocity pass (motion vectors) is enabled we tag the stencil so it don't
-      perform CameraMotionVelocity\n\t\t\tStencil\n\t\t\t{\n\t\t\t\tWriteMask 128\n\t\t\t\tRef
-      128\n\t\t\t\tComp Always\n\t\t\t\tPass Replace\n\t\t\t}\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
-      target 4.5\n\t\t\t#define UNITY_MATERIAL_LIT\n\t\t\t#pragma multi_compile _
-      WRITE_NORMAL_BUFFER\n\t\t\t\n\t\t\tstruct ps_input\n\t\t\t{\t\t\n\t\t\t\tfloat4
-      pos : SV_POSITION;\n\t\t\t\tfloat4 uvAndVelocity : TEXCOORD0;\n\t\t\t\t#if USE_ALPHA_TEST
-      || USE_FLIPBOOK_INTERPOLATION || VFX_USE_ALPHA_CURRENT\n\t\t\t\t// x: alpha
-      threshold\n\t\t\t\t// y: frame blending factor\n\t\t\t\t// z: alpha\n\t\t\t\t//
-      w: smoothness\n\t\t\t\tnointerpolation float4 builtInInterpolants : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#ifdef
-      WRITE_NORMAL_BUFFER\n\t\t\t\tfloat4 normal : TEXCOORD2; // normal scale is stored
-      in w\n\t\t\t\t#if HDRP_USE_NORMAL_MAP\n\t\t\t\tfloat4 tangent : TEXCOORD3;\n\t\t\t\t#endif\n\t\t\t\t#endif\n\t\t\t};\n\t\t\n\t\t#define
+      { \"LightMode\"=\"MotionVectors\" }\n\t\t\t\n\t\t\t// If velocity pass (motion
+      vectors) is enabled we tag the stencil so it don't perform CameraMotionVelocity\n\t\t\tStencil\n\t\t\t{\n\t\t\t\tWriteMask
+      128\n\t\t\t\tRef 128\n\t\t\t\tComp Always\n\t\t\t\tPass Replace\n\t\t\t}\n\t\t\n\t\t\tZWrite
+      On\n\t\t\tBlend Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma target 4.5\n\t\t\t#define
+      UNITY_MATERIAL_LIT\n\t\t\t#pragma multi_compile _ WRITE_NORMAL_BUFFER\n\t\t\t\n\t\t\tstruct
+      ps_input\n\t\t\t{\t\t\n\t\t\t\tfloat4 pos : SV_POSITION;\n\t\t\t\tfloat4 uvAndVelocity
+      : TEXCOORD0;\t\n\t\t\t\t#if USE_ALPHA_TEST || USE_FLIPBOOK_INTERPOLATION ||
+      VFX_USE_ALPHA_CURRENT\n\t\t\t\t// x: alpha threshold\n\t\t\t\t// y: frame blending
+      factor\n\t\t\t\t// z: alpha\n\t\t\t\t// w: smoothness\n\t\t\t\tnointerpolation
+      float4 builtInInterpolants : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#ifdef WRITE_NORMAL_BUFFER\n\t\t\t\tfloat4
+      normal : TEXCOORD2; // normal scale is stored in w\n\t\t\t\t#if HDRP_USE_NORMAL_MAP\n\t\t\t\tfloat4
+      tangent : TEXCOORD3;\n\t\t\t\t#endif\n\t\t\t\t#endif\n\t\t\t};\n\t\t\n\t\t#define
       VFX_VARYING_PS_INPUTS ps_input\n\t\t#define VFX_VARYING_POSCS pos\n\t\t#define
       VFX_VARYING_ALPHA builtInInterpolants.z\n\t\t#define VFX_VARYING_ALPHATHRESHOLD
       builtInInterpolants.x\n\t\t#define VFX_VARYING_FRAMEBLEND builtInInterpolants.y\n\t\t#define
@@ -1377,13 +1378,13 @@ VisualEffectResource:
       *= scaleX;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEY_CURRENT\n\t\t\t\t\t\tsize3.y
       *= scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z
       *= scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tfloat4x4 elementToVFX
-      = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\t//Retrieve
-      previous elementToVFX\n\t\t\t\tfloat4x4 previousElementToVFX = (float4x4)0;\n\t\t\t\t\n\t\t\t\t[unroll]\n\t\t\t\tfor
-      (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow) \n\t\t\t\t\t[unroll]\t\n\t\t\t\t\tfor
+      = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\tfloat4x4
+      previousElementToVFX = (float4x4)0;\n\t\t\t\t\n\t\t\t\tUNITY_UNROLL\n\t\t\t\tfor
+      (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow)\n\t\t\t\t{\n\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\tfor
       (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t\t{\n\t\t\t\t\t\tuint
       itIndexMatrix = itIndexMatrixCol * 4 + itIndexMatrixRow;\n\t\t\t\t\t\tuint read
       = elementToVFXBufferPrevious.Load((index * 16 + itIndexMatrix) << 2);\n\t\t\t\t\t\tpreviousElementToVFX[itIndexMatrixRow][itIndexMatrixCol]
-      = asfloat(read);\n\t\t\t\t\t}\n\t\t\t\t\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(i.pos,1.0f)).xyz;\n\t\t\t\tfloat4
+      = asfloat(read);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\t\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(i.pos,1.0f)).xyz;\n\t\t\t\tfloat4
       csPos = TransformPositionVFXToClip(vPos);\n\t\t\t\to.VFX_VARYING_POSCS = csPos;\n\t\t\t\t\n\t\t\t\tfloat3
       oldvPos = mul(previousElementToVFX,float4(i.pos,1.0f)).xyz;\n\t\t\t\tfloat4
       oldcsPos = TransformPositionVFXToClip(oldvPos);\n\t\t\t\t\n\t\t\t\tfloat2 velocity
@@ -1442,7 +1443,7 @@ VisualEffectResource:
       normalize(lerp(normalWS,mul(n,tbn),normalScale));\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\n\t\t\t\tVFXComputePixelOutputToNormalBuffer(i,normalWS,uvData,outNormalBuffer);\n\t\t#else\n\t\t\t\tfloat
       alpha = VFXGetFragmentColor(i).a;\n\t\t#if HDRP_USE_BASE_COLOR_MAP_ALPHA\n\t\t\t\talpha
       *= VFXGetTextureColor(VFX_SAMPLER(baseColorMap),i).a;\n\t\t#endif\t\n\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t#endif\n\t\t\t\toutVelocity
-      = (float4)0.0f;\n\t\t\t\toutVelocity.rg = i.VFX_VARYING_VELOCITY;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
+      = 0;\n\t\t\t\toutVelocity.rg = i.VFX_VARYING_VELOCITY;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
       { \"LightMode\"=\"GBuffer\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t\tWriteMask
       7\n\t\t\t\tRef  2\n\t\t\t\tComp Always\n\t\t\t\tPass Replace\n\t\t\t}\t\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
       target 4.5\n\t\t\t\n\t\t\t#pragma multi_compile _ LIGHT_LAYERS\n\t\t\t#pragma
@@ -1523,13 +1524,13 @@ VisualEffectResource:
       *= scaleX;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEY_CURRENT\n\t\t\t\t\t\tsize3.y
       *= scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z
       *= scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tfloat4x4 elementToVFX
-      = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\t//Retrieve
-      previous elementToVFX\n\t\t\t\tfloat4x4 previousElementToVFX = (float4x4)0;\n\t\t\t\t\n\t\t\t\t[unroll]\n\t\t\t\tfor
-      (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow) \n\t\t\t\t\t[unroll]\t\n\t\t\t\t\tfor
+      = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\tfloat4x4
+      previousElementToVFX = (float4x4)0;\n\t\t\t\t\n\t\t\t\tUNITY_UNROLL\n\t\t\t\tfor
+      (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow)\n\t\t\t\t{\n\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\tfor
       (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t\t{\n\t\t\t\t\t\tuint
       itIndexMatrix = itIndexMatrixCol * 4 + itIndexMatrixRow;\n\t\t\t\t\t\tuint read
       = elementToVFXBufferPrevious.Load((index * 16 + itIndexMatrix) << 2);\n\t\t\t\t\t\tpreviousElementToVFX[itIndexMatrixRow][itIndexMatrixCol]
-      = asfloat(read);\n\t\t\t\t\t}\n\t\t\t\t\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(i.pos,1.0f)).xyz;\n\t\t\t\tfloat4
+      = asfloat(read);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\t\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(i.pos,1.0f)).xyz;\n\t\t\t\tfloat4
       csPos = TransformPositionVFXToClip(vPos);\n\t\t\t\to.VFX_VARYING_POSCS = csPos;\n\t\t\t\t\n\t\t\t\tfloat3
       oldvPos = mul(previousElementToVFX,float4(i.pos,1.0f)).xyz;\n\t\t\t\tfloat4
       oldcsPos = TransformPositionVFXToClip(oldvPos);\n\t\t\t\t\n\t\t\t\tfloat2 velocity
@@ -1684,13 +1685,13 @@ VisualEffectResource:
       *= scaleX;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEY_CURRENT\n\t\t\t\t\t\tsize3.y
       *= scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z
       *= scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tfloat4x4 elementToVFX
-      = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\t//Retrieve
-      previous elementToVFX\n\t\t\t\tfloat4x4 previousElementToVFX = (float4x4)0;\n\t\t\t\t\n\t\t\t\t[unroll]\n\t\t\t\tfor
-      (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow) \n\t\t\t\t\t[unroll]\t\n\t\t\t\t\tfor
+      = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\tfloat4x4
+      previousElementToVFX = (float4x4)0;\n\t\t\t\t\n\t\t\t\tUNITY_UNROLL\n\t\t\t\tfor
+      (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow)\n\t\t\t\t{\n\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\tfor
       (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t\t{\n\t\t\t\t\t\tuint
       itIndexMatrix = itIndexMatrixCol * 4 + itIndexMatrixRow;\n\t\t\t\t\t\tuint read
       = elementToVFXBufferPrevious.Load((index * 16 + itIndexMatrix) << 2);\n\t\t\t\t\t\tpreviousElementToVFX[itIndexMatrixRow][itIndexMatrixCol]
-      = asfloat(read);\n\t\t\t\t\t}\n\t\t\t\t\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(i.pos,1.0f)).xyz;\n\t\t\t\tfloat4
+      = asfloat(read);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\t\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(i.pos,1.0f)).xyz;\n\t\t\t\tfloat4
       csPos = TransformPositionVFXToClip(vPos);\n\t\t\t\to.VFX_VARYING_POSCS = csPos;\n\t\t\t\t\n\t\t\t\tfloat3
       oldvPos = mul(previousElementToVFX,float4(i.pos,1.0f)).xyz;\n\t\t\t\tfloat4
       oldcsPos = TransformPositionVFXToClip(oldvPos);\n\t\t\t\t\n\t\t\t\tfloat2 velocity
@@ -1775,13 +1776,12 @@ VisualEffectResource:
       1\n#define VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.visualeffectgraph/Shaders/RenderPipeline/HDRP/VFXDefines.hlsl\"\n\n\nCBUFFER_START(parameters)\n
       \   float currentFrameIndex;\n    uint3 PADDING_0;\nCBUFFER_END\n\n\n#include
       \"Packages/com.unity.visualeffectgraph/Shaders/Common/VFXCommonCompute.cginc\"\n#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.cginc\"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nCBUFFER_START(params)\n\tuint
-      nbMax;\n\tuint dispatchWidth;\n\tuint systemSeed;\nCBUFFER_END\n\nCBUFFER_START(cameraParams)\n\tfloat3
-      cameraPosition;\nCBUFFER_END\n\nByteAddressBuffer attributeBuffer;\nRWByteAddressBuffer
-      elementToVFXBuffer;\n\n#if VFX_HAS_INDIRECT_DRAW\nStructuredBuffer<uint> indirectBuffer;\n#endif\n\n#if
-      USE_DEAD_LIST_COUNT\nByteAddressBuffer deadListCount;\n#endif\n\n\n\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\nvoid
-      CSMain(uint3 groupId\t\t: SV_GroupID,\n\t\t\tuint3 groupThreadId\t: SV_GroupThreadID)\n{\n\tuint
-      threshold = nbMax;\n\tuint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.cginc\"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nByteAddressBuffer
+      attributeBuffer;\nRWByteAddressBuffer elementToVFXBuffer;\n#if VFX_USE_ALIVE_CURRENT\nStructuredBuffer<uint>
+      deadListOut;\n#endif\n\n#if VFX_HAS_INDIRECT_DRAW\nStructuredBuffer<uint> indirectBuffer;\n#endif\n\nCBUFFER_START(updateParams)\n
+      \   uint nbMax;\n\tuint dispatchWidth;\n\tuint systemSeed;\nCBUFFER_END\n\n\n\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\nvoid
+      CSMain(uint3 groupId          : SV_GroupID,\n            uint3 groupThreadId
+      \   : SV_GroupThreadID)\n{\n\tuint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP
       + groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\n\tuint index = id;\n\tif
       (id < nbMax)\n\t{\n\t\tfloat3 position = asfloat(attributeBuffer.Load3((index
       * 0x8 + 0x0) << 2));\nfloat size = asfloat(attributeBuffer.Load((index * 0x1
@@ -1794,13 +1794,13 @@ VisualEffectResource:
       (float)0;\nfloat scaleX = (float)1;\nfloat scaleY = (float)1;\nfloat scaleZ
       = (float)1;\n\n\n\t\t\n\t\t\n\t\tfloat3 size3 = float3(size,size,size);\n\t\t#if
       VFX_USE_SCALEX_CURRENT\n\t\tsize3.x *= scaleX;\n\t\t#endif\n\t\t#if VFX_USE_SCALEY_CURRENT\n\t\tsize3.y
-      *= scaleY;\n\t\t#endif\n\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\tsize3.z *= scaleZ;\n\t\t#endif\n\t\t\n\t\t\n\t\tfloat4x4
-      elementToVFX = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);\n\t\tfor
-      (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow) for (int
-      itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t{\n\t\t\tuint
-      itIndexMatrix = itIndexMatrixCol * 4 + itIndexMatrixRow;\n\t\t\tfloat read =
-      elementToVFX[itIndexMatrixRow][itIndexMatrixCol];\n\t\t\telementToVFXBuffer.Store((index
-      * 16 + itIndexMatrix) << 2, asuint(read));\n\t\t}\n\t}\n}\n"
+      *= scaleY;\n\t\t#endif\n\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\tsize3.z *= scaleZ;\n\t\t#endif\n\t\t\n\t\tfloat4x4
+      elementToVFX = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\n\t\tUNITY_UNROLL\n\t\tfor
+      (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow)\n\t\t{\n\t\t\tUNITY_UNROLL\n\t\t\tfor
+      (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t{\n\t\t\t\tuint
+      itIndexMatrix = itIndexMatrixCol * 4 + itIndexMatrixRow;\n\t\t\t\tfloat value
+      = elementToVFX[itIndexMatrixRow][itIndexMatrixCol];\n\t\t\t\telementToVFXBuffer.Store((index
+      * 16 + itIndexMatrix) << 2, asuint(value));\n\t\t\t}\n\t\t}\n\t}\n}\n"
   m_Infos:
     m_Expressions:
       m_Expressions:
@@ -2359,7 +2359,7 @@ VisualEffectResource:
         - m_ExpressionIndex: 54
           m_Value: {fileID: 2800000, guid: 039eecbca64d7d746baf0dd7d360fe32, type: 3}
         - m_ExpressionIndex: 61
-          m_Value: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+          m_Value: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
       m_Bool:
         m_Array: []
     m_ExposedExpressions: []
@@ -2554,9 +2554,9 @@ VisualEffectResource:
     m_TemporaryBuffers:
     - desc:
         type: 1
-        size: 64
+        size: 2048
         layout: []
-        capacity: 32
+        capacity: 0
         stride: 4
       frameCount: 2
     m_CPUBuffers:
@@ -2840,7 +2840,7 @@ MonoBehaviour:
       m_Type:
         m_SerializableType: UnityEngine.Mesh, UnityEngine.CoreModule, Version=0.0.0.0,
           Culture=neutral, PublicKeyToken=null
-      m_SerializableObject: '{"obj":{"fileID":10208,"guid":"0000000000000000e000000000000000","type":0}}'
+      m_SerializableObject: '{"obj":{"fileID":10202,"guid":"0000000000000000e000000000000000","type":0}}'
     m_Space: 2147483647
   m_Property:
     name: mesh
@@ -4856,3 +4856,71 @@ MonoBehaviour:
   m_Direction: 1
   m_LinkedSlots:
   - {fileID: 8926484042661614591}
+--- !u!114 &8926484042661614673
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 330e0fca1717dde4aaa144f48232aa64, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Parent: {fileID: 114350483966674976}
+  m_Children: []
+  m_UIPosition: {x: 0, y: 0}
+  m_UICollapsed: 1
+  m_UISuperCollapsed: 0
+  m_InputSlots: []
+  m_OutputSlots:
+  - {fileID: 8926484042661614674}
+  m_exposedName: New float
+  m_exposed: 0
+  m_Order: 0
+  m_Category: 
+  m_Min:
+    m_Type:
+      m_SerializableType: 
+    m_SerializableObject: 
+  m_Max:
+    m_Type:
+      m_SerializableType: 
+    m_SerializableObject: 
+  m_Tooltip: 
+  m_Nodes: []
+--- !u!114 &8926484042661614674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f780aa281814f9842a7c076d436932e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Parent: {fileID: 0}
+  m_Children: []
+  m_UIPosition: {x: 0, y: 0}
+  m_UICollapsed: 1
+  m_UISuperCollapsed: 0
+  m_MasterSlot: {fileID: 8926484042661614674}
+  m_MasterData:
+    m_Owner: {fileID: 8926484042661614673}
+    m_Value:
+      m_Type:
+        m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
+          PublicKeyToken=b77a5c561934e089
+      m_SerializableObject: 0
+    m_Space: 2147483647
+  m_Property:
+    name: o
+    m_serializedType:
+      m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+    attributes: []
+  m_Direction: 1
+  m_LinkedSlots: []

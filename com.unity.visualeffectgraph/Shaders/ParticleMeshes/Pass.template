@@ -38,7 +38,8 @@ VFX_VARYING_PS_INPUTS vert(vs_input i, uint instanceID : SV_InstanceID)
 	float4x4 previousElementToVFX = (float4x4)0;
 	
 	UNITY_UNROLL
-	for (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow) 
+	for (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow)
+	{
 		UNITY_UNROLL
 		for (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)
 		{
@@ -46,6 +47,7 @@ VFX_VARYING_PS_INPUTS vert(vs_input i, uint instanceID : SV_InstanceID)
 			uint read = elementToVFXBufferPrevious.Load((index * 16 + itIndexMatrix) << 2);
 			previousElementToVFX[itIndexMatrixRow][itIndexMatrixCol] = asfloat(read);
 		}
+	}
 	
 	float3 vPos = mul(elementToVFX,float4(i.pos,1.0f)).xyz;
 	float4 csPos = TransformPositionVFXToClip(vPos);

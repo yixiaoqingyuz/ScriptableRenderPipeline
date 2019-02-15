@@ -15,7 +15,7 @@ StructuredBuffer<uint> indirectBuffer;
 #endif
 
 CBUFFER_START(updateParams)
-    uint nbMax;
+	uint nbMax;
 	uint dispatchWidth;
 	uint systemSeed;
 CBUFFER_END
@@ -31,12 +31,12 @@ void CSMain(uint3 groupId          : SV_GroupID,
 	if (id < nbMax)
 	{
 		${VFXLoadAttributes}
-		${VFXStoreAttributes}
+		${VFXProcessBlocks}
 		${VFXLoadSize}
 		float4x4 elementToVFX = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);
 		
 		UNITY_UNROLL
-		for (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow)
+		for (int itIndexMatrixRow = 0; itIndexMatrixRow < 3; ++itIndexMatrixRow)
 		{
 			UNITY_UNROLL
 			for (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)
@@ -46,5 +46,6 @@ void CSMain(uint3 groupId          : SV_GroupID,
 				elementToVFXBuffer.Store((index * 16 + itIndexMatrix) << 2, asuint(value));
 			}
 		}
+		elementToVFXBuffer.Store((index*16 + 15) << 2, alive ? currentFrameIndex : 0u);
 	}
 }

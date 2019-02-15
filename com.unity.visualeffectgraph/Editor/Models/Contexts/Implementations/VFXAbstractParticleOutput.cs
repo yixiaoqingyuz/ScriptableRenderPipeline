@@ -162,13 +162,18 @@ namespace UnityEditor.VFX
 
         public override VFXExpressionMapper GetExpressionMapper(VFXDeviceTarget target)
         {
+            var mapper = new VFXExpressionMapper();
             if (target == VFXDeviceTarget.GPU)
             {
                 var gpuMapper = VFXExpressionMapper.FromBlocks(activeChildrenWithImplicit);
                 gpuMapper.AddExpressions(CollectGPUExpressions(GetExpressionsFromSlots(this)), -1);
-                return gpuMapper;
+                mapper = gpuMapper;
             }
-            return new VFXExpressionMapper();
+            if (true) //-- TODOPAUL if motion vector
+            {
+                mapper.AddExpression(VFXBuiltInExpression.FrameIndex, "currentFrameIndex", -1);
+            }
+            return mapper;
         }
 
         protected override IEnumerable<VFXPropertyWithValue> inputProperties

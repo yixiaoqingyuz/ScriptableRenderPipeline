@@ -568,7 +568,7 @@ namespace UnityEditor.VFX
                 {
                     temporaryBufferMappings.Add(new VFXMappingTemporary() { pastFrameIndex = 0u, perCameraBuffer = true, mapping = new VFXMapping("elementToVFXBuffer", elementToVFXBuffer) });
                 }
-                else if (context.contextType == VFXContextType.kOutput)
+                else if (context.contextType == VFXContextType.kOutput) //TODOPAUL && Need Motion Vector
                 {
                     temporaryBufferMappings.Add(new VFXMappingTemporary() { pastFrameIndex = 1u, perCameraBuffer = true, mapping = new VFXMapping("elementToVFXBufferPrevious", elementToVFXBuffer) });
                 }

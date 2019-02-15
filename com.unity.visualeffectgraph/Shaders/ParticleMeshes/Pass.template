@@ -34,11 +34,16 @@ VFX_VARYING_PS_INPUTS vert(vs_input i, uint instanceID : SV_InstanceID)
 	${VFXLoadSize}
 	
 	float4x4 elementToVFX = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);
-	
+	float3 vPos = mul(elementToVFX,float4(i.pos,1.0f)).xyz;
+	float4 csPos = TransformPositionVFXToClip(vPos);
+	o.VFX_VARYING_POSCS = csPos;
+
+	#ifdef VFX_VARYING_VELOCITY
 	float4x4 previousElementToVFX = (float4x4)0;
-	
+	previousElementToVFX[3] = float4(0,0,0,1);
+
 	UNITY_UNROLL
-	for (int itIndexMatrixRow = 0; itIndexMatrixRow < 4; ++itIndexMatrixRow)
+	for (int itIndexMatrixRow = 0; itIndexMatrixRow < 3; ++itIndexMatrixRow)
 	{
 		UNITY_UNROLL
 		for (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)
@@ -48,18 +53,20 @@ VFX_VARYING_PS_INPUTS vert(vs_input i, uint instanceID : SV_InstanceID)
 			previousElementToVFX[itIndexMatrixRow][itIndexMatrixCol] = asfloat(read);
 		}
 	}
-	
-	float3 vPos = mul(elementToVFX,float4(i.pos,1.0f)).xyz;
-	float4 csPos = TransformPositionVFXToClip(vPos);
-	o.VFX_VARYING_POSCS = csPos;
+
+	uint previousFrameIndex = elementToVFXBufferPrevious.Load((index * 16 + 15) << 2);
 	
 	float3 oldvPos = mul(previousElementToVFX,float4(i.pos,1.0f)).xyz;
 	float4 oldcsPos = TransformPositionVFXToClip(oldvPos);
 	
 	float2 velocity = (csPos.xy/csPos.w) - (oldcsPos.xy/oldcsPos.w);
 	velocity.y *= -1.0f;
-	
-	#ifdef VFX_VARYING_VELOCITY
+
+	if (currentFrameIndex - previousFrameIndex != 1)
+	{
+		//velocity = 0.0f;
+	}
+
 	o.VFX_VARYING_VELOCITY = velocity;
 	#endif
 	
@@ -75,7 +82,7 @@ VFX_VARYING_PS_INPUTS vert(vs_input i, uint instanceID : SV_InstanceID)
 	${VFXVertexSetFlipbooksInterpolants}
 
 	${VFXVertexAdditionalProcess}
-			
+
 	return o;
 }
 

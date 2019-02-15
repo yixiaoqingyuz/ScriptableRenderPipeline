@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [5.7.0] - 2019-XX-XX
+### Fixed
+- Better Handling of Null or Missing Parameter Binders (Editor + Runtime)
 
 ## [5.6.0] - 2019-02-21
 
@@ -13,8 +15,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Code refactor: all macros with ARGS have been swapped with macros with PARAM. This is because the ARGS macros were incorrectly named.
 
 ## [5.4.0-preview] - 2019-02-11
-### Added
-
 ### Fixed
 - Incorrect toggle rectangle in VisualEffect inspector
 - Shader compilation with SimpleLit and debug display

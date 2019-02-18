@@ -10,13 +10,13 @@ namespace UnityEngine.VFX.Utils
         [VFXParameterBinding("System.UInt32"), SerializeField]
         protected ExposedParameter m_BoneCount = "BoneCount";
 
-        [VFXParameterBinding("Texture2D"), SerializeField]
+        [VFXParameterBinding("UnityEngine.Texture2D"), SerializeField]
         protected ExposedParameter m_PositionMap = "PositionMap";
 
-        [VFXParameterBinding("Texture2D"), SerializeField]
+        [VFXParameterBinding("UnityEngine.Texture2D"), SerializeField]
         protected ExposedParameter m_TargetPositionMap = "TargetPositionMap";
 
-        [VFXParameterBinding("Texture2D"), SerializeField]
+        [VFXParameterBinding("UnityEngine.Texture2D"), SerializeField]
         protected ExposedParameter m_RadiusPositionMap = "RadiusPositionMap";
 
         public enum RadiusMode
@@ -133,7 +133,7 @@ namespace UnityEngine.VFX.Utils
 
         public override string ToString()
         {
-            return string.Format("Hierarchy: {0} -> {1}", HierarchyRoot.name, m_PositionMap);
+            return string.Format("Hierarchy: {0} -> {1}", HierarchyRoot == null ? "(null)" : HierarchyRoot.name, m_PositionMap);
         }
     }
 }

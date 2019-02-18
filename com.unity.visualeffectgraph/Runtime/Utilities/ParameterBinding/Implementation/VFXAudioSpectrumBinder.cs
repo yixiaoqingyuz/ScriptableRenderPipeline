@@ -23,7 +23,7 @@ namespace UnityEngine.VFX.Utils
         protected ExposedParameter m_TextureParameter = "SpectrumTexture";
 
         public FFTWindow FFTWindow = FFTWindow.BlackmanHarris;
-        public int Samples = 64;
+        public uint Samples = 64;
         public AudioSourceMode Mode = AudioSourceMode.AudioSource;
         public AudioSource AudioSource;
 
@@ -35,7 +35,7 @@ namespace UnityEngine.VFX.Utils
         {
             bool mode = (Mode == AudioSourceMode.AudioSource ? AudioSource != null : true);
             bool texture = component.HasTexture(TextureParameter);
-            bool count = component.HasInt(CountParameter);
+            bool count = component.HasUInt(CountParameter);
 
             return mode && texture && count;
         }
@@ -61,6 +61,7 @@ namespace UnityEngine.VFX.Utils
             }
 
             m_Texture.SetPixels(m_ColorCache);
+            m_Texture.name = "AudioSpectrum" + Samples;
             m_Texture.Apply();
         }
 
@@ -68,7 +69,7 @@ namespace UnityEngine.VFX.Utils
         {
             UpdateTexture();
             component.SetTexture(TextureParameter, m_Texture);
-            component.SetInt(CountParameter, Samples);
+            component.SetUInt(CountParameter, Samples);
         }
 
         public override string ToString()

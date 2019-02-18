@@ -21,14 +21,6 @@ namespace UnityEngine.VFX.Utils
             m_VisualEffect = GetComponent<VisualEffect>();
         }
 
-        private void OnDestroy()
-        {
-#if UNITY_EDITOR
-            foreach (var binding in m_Bindings)
-                UnityEditor.Undo.DestroyObjectImmediate(binding);
-#endif
-        }
-
         void Update()
         {
             if (!m_ExecuteInEditor && Application.isEditor && !Application.isPlaying) return;

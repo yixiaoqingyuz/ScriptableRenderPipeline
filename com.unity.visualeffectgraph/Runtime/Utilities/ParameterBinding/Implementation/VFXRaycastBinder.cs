@@ -57,7 +57,9 @@ namespace UnityEngine.VFX.Utils
 
         public override bool IsValid(VisualEffect component)
         {
-            return component.HasVector3(m_TargetPosition_position) && component.HasVector3(m_TargetNormal_direction) && component.HasBool(m_TargetHit) && RaycastSource != null;
+            return component.HasVector3(m_TargetPosition_position) &&
+                component.HasVector3(m_TargetNormal_direction) &&
+                component.HasBool(m_TargetHit) && RaycastSource != null;
         }
 
         public override void UpdateBinding(VisualEffect component)

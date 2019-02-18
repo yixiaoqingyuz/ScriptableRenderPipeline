@@ -62,9 +62,9 @@ VFX_VARYING_PS_INPUTS vert(vs_input i, uint instanceID : SV_InstanceID)
 	float2 velocity = (csPos.xy/csPos.w) - (oldcsPos.xy/oldcsPos.w);
 	velocity.y *= -1.0f;
 
-	if (currentFrameIndex - previousFrameIndex != 1)
+	if (asuint(currentFrameIndex) - previousFrameIndex != 1u)
 	{
-		//velocity = 0.0f;
+		velocity = 0.0f;
 	}
 
 	o.VFX_VARYING_VELOCITY = velocity;

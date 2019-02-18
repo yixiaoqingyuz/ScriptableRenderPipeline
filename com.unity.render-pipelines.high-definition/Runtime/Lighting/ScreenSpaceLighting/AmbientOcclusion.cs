@@ -92,19 +92,21 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public AmbientOcclusionSystem(HDRenderPipelineAsset hdAsset)
         {
-            m_Settings = hdAsset.renderPipelineSettings;
+            m_Settings = hdAsset.currentPlatformRenderPipelineSettings;
             m_Resources = hdAsset.renderPipelineResources;
 
-            if (!hdAsset.renderPipelineSettings.supportSSAO)
+            if (!hdAsset.currentPlatformRenderPipelineSettings.supportSSAO)
                 return;
 
-            bool supportMSAA = hdAsset.renderPipelineSettings.supportMSAA;
+            bool supportMSAA = hdAsset.currentPlatformRenderPipelineSettings.supportMSAA;
 
             // Destination targets
             m_AmbientOcclusionTex = RTHandles.Alloc(Vector2.one,
                 filterMode: FilterMode.Bilinear,
                 colorFormat: GraphicsFormat.R8_UNorm,
                 enableRandomWrite: true,
+                xrInstancing: true,
+                useDynamicScale: true,
                 name: "Ambient Occlusion"
             );
 
@@ -114,6 +116,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     filterMode: FilterMode.Bilinear,
                     colorFormat: GraphicsFormat.R8G8_UNorm,
                     enableRandomWrite: true,
+                    xrInstancing: true,
+                    useDynamicScale: true,
                     name: "Ambient Occlusion MSAA"
                 );
 
@@ -178,27 +182,27 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             RTHandles.Release(m_MultiAmbientOcclusionTex);
 
             RTHandles.Release(m_LinearDepthTex);
-            
+
             RTHandles.Release(m_LowDepth1Tex);
             RTHandles.Release(m_LowDepth2Tex);
             RTHandles.Release(m_LowDepth3Tex);
             RTHandles.Release(m_LowDepth4Tex);
-            
+
             RTHandles.Release(m_TiledDepth1Tex);
             RTHandles.Release(m_TiledDepth2Tex);
             RTHandles.Release(m_TiledDepth3Tex);
             RTHandles.Release(m_TiledDepth4Tex);
-            
+
             RTHandles.Release(m_Occlusion1Tex);
             RTHandles.Release(m_Occlusion2Tex);
             RTHandles.Release(m_Occlusion3Tex);
             RTHandles.Release(m_Occlusion4Tex);
-            
+
             RTHandles.Release(m_Combined1Tex);
             RTHandles.Release(m_Combined2Tex);
             RTHandles.Release(m_Combined3Tex);
         }
-        
+
 #if ENABLE_RAYTRACING
         public void InitRaytracing(HDRaytracingManager raytracingManager, SharedRTManager sharedRTManager)
         {
@@ -209,13 +213,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public bool IsActive(HDCamera camera, AmbientOcclusion settings) => camera.frameSettings.IsEnabled(FrameSettingsField.SSAO) && settings.intensity.value > 0f;
 
-        public void Render(CommandBuffer cmd, HDCamera camera, SharedRTManager sharedRTManager, ScriptableRenderContext renderContext)
+        public void Render(CommandBuffer cmd, HDCamera camera, SharedRTManager sharedRTManager, ScriptableRenderContext renderContext, uint frameCount)
         {
 
 #if ENABLE_RAYTRACING
             HDRaytracingEnvironment rtEnvironement = m_RayTracingManager.CurrentEnvironment();
             if (m_Settings.supportRayTracing && rtEnvironement != null && rtEnvironement.raytracedAO)
-                m_RaytracingAmbientOcclusion.RenderAO(camera, cmd, m_AmbientOcclusionTex, renderContext);
+                m_RaytracingAmbientOcclusion.RenderAO(camera, cmd, m_AmbientOcclusionTex, renderContext, frameCount);
             else
 #endif
             {
@@ -323,8 +327,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 depthBufferBits: DepthBits.None,
                 autoGenerateMips: false,
                 enableMSAA: false,
+                useDynamicScale: true,
                 enableRandomWrite: uav,
                 filterMode: FilterMode.Point,
+                xrInstancing: true,
                 name: name
             );
         }
@@ -336,11 +342,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 dimension: TextureDimension.Tex2DArray,
                 colorFormat: format,
                 depthBufferBits: DepthBits.None,
-                slices: 16,
+                slices: 16, // XRTODO: multiply by eyeCount and handle indexing in shader
                 autoGenerateMips: false,
                 enableMSAA: false,
+                useDynamicScale: true,
                 enableRandomWrite: uav,
                 filterMode: FilterMode.Point,
+                xrInstancing: true,
                 name: name
             );
         }

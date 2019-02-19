@@ -55,18 +55,15 @@ VFX_VARYING_PS_INPUTS vert(vs_input i, uint instanceID : SV_InstanceID)
 	}
 
 	uint previousFrameIndex = elementToVFXBufferPrevious.Load((index * 16 + 15) << 2);
-	
-	float3 oldvPos = mul(previousElementToVFX,float4(i.pos,1.0f)).xyz;
-	float4 oldcsPos = TransformPositionVFXToClip(oldvPos);
-	
-	float2 velocity = (csPos.xy/csPos.w) - (oldcsPos.xy/oldcsPos.w);
-	velocity.y *= -1.0f;
-
-	if (asuint(currentFrameIndex) - previousFrameIndex != 1u)
+	float2 velocity = (float2)0.0f;
+	if (asuint(currentFrameIndex) - previousFrameIndex == 1u)
 	{
-		velocity = 0.0f;
+		float3 oldvPos = mul(previousElementToVFX,float4(i.pos,1.0f)).xyz;
+		float4 oldcsPos = TransformPositionVFXToPreviousClip(oldvPos);
+		float4 csPosNonJittered = TransformPositionVFXToNonJitteredClip(vPos);
+		velocity = (csPosNonJittered.xy/csPosNonJittered.w) - (oldcsPos.xy/oldcsPos.w);
+		velocity.y *= -1.0f;
 	}
-
 	o.VFX_VARYING_VELOCITY = velocity;
 	#endif
 	

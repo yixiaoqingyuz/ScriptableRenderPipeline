@@ -84,8 +84,8 @@ ${VFXEnd}
 #endif	
 		VFXClipFragmentColor(alpha,i);
 #endif
-		outVelocity = 0;
-		outVelocity.rg = i.VFX_VARYING_VELOCITY;
+		outVelocity = 0.0f;
+		EncodeVelocity(i.VFX_VARYING_VELOCITY * 0.5f, outVelocity);
 	}
 	ENDHLSL
 }

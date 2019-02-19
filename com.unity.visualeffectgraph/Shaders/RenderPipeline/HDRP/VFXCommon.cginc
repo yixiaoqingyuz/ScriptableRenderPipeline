@@ -2,12 +2,40 @@
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/ShaderPass/ShaderPass.cs.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/AtmosphericScattering/AtmosphericScattering.hlsl"
 
+float4 VFXTransformPositionWorldToNonJitteredClip(float3 posWS)
+{
+#if VFX_WORLD_SPACE
+    posWS = GetCameraRelativePositionWS(posWS);
+#endif
+    return mul(_NonJitteredViewProjMatrix, float4(posWS, 1.0f));
+}
+
+float4 VFXTransformPositionWorldToPreviousClip(float3 posWS)
+{
+#if VFX_WORLD_SPACE && (SHADEROPTIONS_CAMERA_RELATIVE_RENDERING != 0)
+    posWS -= _PrevCamPosRWS;
+#endif
+    return mul(_PrevViewProjMatrix, float4(posWS, 1.0f));
+}
+
 float4 VFXTransformPositionWorldToClip(float3 posWS)
 {
 #if VFX_WORLD_SPACE
     posWS = GetCameraRelativePositionWS(posWS);
 #endif
     return TransformWorldToHClip(posWS);
+}
+
+float4 VFXTransformPositionObjectToNonJitteredClip(float3 posOS)
+{
+    float3 posWS = TransformObjectToWorld(posOS);
+    return mul(_NonJitteredViewProjMatrix, float4(posWS, 1.0f));
+}
+
+float4 VFXTransformPositionObjectToPreviousClip(float3 posOS)
+{
+    float3 posWS = TransformObjectToWorld(posOS);
+    return mul(_PrevViewProjMatrix, float4(posWS, 1.0f));
 }
 
 float4 VFXTransformPositionObjectToClip(float3 posOS)

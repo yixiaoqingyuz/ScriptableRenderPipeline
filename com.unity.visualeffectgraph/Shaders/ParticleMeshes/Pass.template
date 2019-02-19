@@ -38,7 +38,7 @@ VFX_VARYING_PS_INPUTS vert(vs_input i, uint instanceID : SV_InstanceID)
 	float4 csPos = TransformPositionVFXToClip(vPos);
 	o.VFX_VARYING_POSCS = csPos;
 
-	#ifdef VFX_VARYING_VELOCITY
+	#if defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)
 	float4x4 previousElementToVFX = (float4x4)0;
 	previousElementToVFX[3] = float4(0,0,0,1);
 
@@ -55,16 +55,13 @@ VFX_VARYING_PS_INPUTS vert(vs_input i, uint instanceID : SV_InstanceID)
 	}
 
 	uint previousFrameIndex = elementToVFXBufferPrevious.Load((index * 16 + 15) << 2);
-	float2 velocity = (float2)0.0f;
+	o.VFX_VARYING_VELOCITY_CPOS = o.VFX_VARYING_VELOCITY_CPOS_PREVIOUS = float4(0.0f, 0.0f, 0.0f, 1.0f);
 	if (asuint(currentFrameIndex) - previousFrameIndex == 1u)
 	{
 		float3 oldvPos = mul(previousElementToVFX,float4(i.pos,1.0f)).xyz;
-		float4 oldcsPos = TransformPositionVFXToPreviousClip(oldvPos);
-		float4 csPosNonJittered = TransformPositionVFXToNonJitteredClip(vPos);
-		velocity = (csPosNonJittered.xy/csPosNonJittered.w) - (oldcsPos.xy/oldcsPos.w);
-		velocity.y *= -1.0f;
+		o.VFX_VARYING_VELOCITY_CPOS_PREVIOUS = TransformPositionVFXToPreviousClip(oldvPos);
+		o.VFX_VARYING_VELOCITY_CPOS = TransformPositionVFXToNonJitteredClip(vPos);
 	}
-	o.VFX_VARYING_VELOCITY = velocity;
 	#endif
 	
 	#ifdef VFX_VARYING_NORMAL // TODO Should use inverse transpose

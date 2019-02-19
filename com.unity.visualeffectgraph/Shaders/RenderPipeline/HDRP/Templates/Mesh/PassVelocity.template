@@ -22,7 +22,7 @@ Pass
 	struct ps_input
 	{		
 		float4 pos : SV_POSITION;
-		float4 uvAndVelocity : TEXCOORD0;	
+		float2 uv : TEXCOORD0;
 		#if USE_ALPHA_TEST || USE_FLIPBOOK_INTERPOLATION || VFX_USE_ALPHA_CURRENT
 		// x: alpha threshold
 		// y: frame blending factor
@@ -36,6 +36,8 @@ Pass
 		float4 tangent : TEXCOORD3;
 		#endif
 		#endif
+		float4 cPosPrevious : TEXCOORD4;
+		float4 cPosNonJiterred : TEXCOORD5;
 	};
 
 #define VFX_VARYING_PS_INPUTS ps_input
@@ -43,8 +45,9 @@ Pass
 #define VFX_VARYING_ALPHA builtInInterpolants.z
 #define VFX_VARYING_ALPHATHRESHOLD builtInInterpolants.x
 #define VFX_VARYING_FRAMEBLEND builtInInterpolants.y
-#define VFX_VARYING_UV uvAndVelocity.xy
-#define VFX_VARYING_VELOCITY uvAndVelocity.zw
+#define VFX_VARYING_UV uv.xy
+#define VFX_VARYING_VELOCITY_CPOS cPosNonJiterred
+#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS cPosPrevious
 
 #ifdef WRITE_NORMAL_BUFFER
 #define VFX_VARYING_NORMAL normal.xyz
@@ -84,8 +87,13 @@ ${VFXEnd}
 #endif	
 		VFXClipFragmentColor(alpha,i);
 #endif
+		float2 velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) - (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);
+		#if UNITY_UV_STARTS_AT_TOP
+			velocity.y = -velocity.y;
+		#endif
+
 		outVelocity = 0.0f;
-		EncodeVelocity(i.VFX_VARYING_VELOCITY * 0.5f, outVelocity);
+		EncodeVelocity(velocity * 0.5f, outVelocity);
 	}
 	ENDHLSL
 }

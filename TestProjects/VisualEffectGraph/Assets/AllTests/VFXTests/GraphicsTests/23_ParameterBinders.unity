@@ -379,46 +379,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 140386254}
   m_CullTransparentMesh: 0
---- !u!28 &176552153
-Texture2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  serializedVersion: 2
-  m_Width: 7
-  m_Height: 1
-  m_CompleteImageSize: 56
-  m_TextureFormat: 17
-  m_MipCount: 1
-  m_IsReadable: 1
-  m_StreamingMipmaps: 0
-  m_StreamingMipmapsPriority: 0
-  m_AlphaIsTransparency: 0
-  m_ImageCount: 1
-  m_TextureDimension: 2
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
-  m_LightmapFormat: 0
-  m_ColorSpace: 0
-  image data: 56
-  _typelessdata: 84bd7b303baa003c78c331403baa003c0639fe413baa003c583becb93baa003c773d2ec03baa003cae3f93be3baa003c5b3b6ebbc347003c
-  m_StreamData:
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &178800317
 GameObject:
   m_ObjectHideFlags: 0
@@ -1784,46 +1744,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1059031384}
   m_CullTransparentMesh: 0
---- !u!28 &1108956336
-Texture2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  serializedVersion: 2
-  m_Width: 7
-  m_Height: 1
-  m_CompleteImageSize: 56
-  m_TextureFormat: 17
-  m_MipCount: 1
-  m_IsReadable: 1
-  m_StreamingMipmaps: 0
-  m_StreamingMipmapsPriority: 0
-  m_AlphaIsTransparency: 0
-  m_ImageCount: 1
-  m_TextureDimension: 2
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
-  m_LightmapFormat: 0
-  m_ColorSpace: 0
-  image data: 56
-  _typelessdata: 60405eb63baa003c84bd7b303baa003c84bd7b303baa003c60405eb63baa003c583becb93baa003c583becb93baa003cae3f93be3baa003c
-  m_StreamData:
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &1133309027
 GameObject:
   m_ObjectHideFlags: 0
@@ -2258,7 +2178,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 49e30205f3eee0442927737523c18b81, type: 3}
+  m_audioClip: {fileID: 8300000, guid: fd0f389a978b55e498d26907224277d0, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
@@ -2446,46 +2366,6 @@ MonoScript:
   m_ExecutionOrder: 0
   m_ClassName: VFXAudioSpectrumBinder
   m_Namespace: UnityEngine.VFX.Utils
---- !u!28 &1414439151
-Texture2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: AudioSpectrum64
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  serializedVersion: 2
-  m_Width: 64
-  m_Height: 1
-  m_CompleteImageSize: 256
-  m_TextureFormat: 18
-  m_MipCount: 1
-  m_IsReadable: 1
-  m_StreamingMipmaps: 0
-  m_StreamingMipmapsPriority: 0
-  m_AlphaIsTransparency: 0
-  m_ImageCount: 1
-  m_TextureDimension: 2
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
-  m_LightmapFormat: 0
-  m_ColorSpace: 0
-  image data: 256
-  _typelessdata: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-  m_StreamData:
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &1448428318
 GameObject:
   m_ObjectHideFlags: 0
@@ -2741,19 +2621,19 @@ VisualEffect:
       m_Array: []
     m_NamedObject:
       m_Array:
-      - m_Value: {fileID: 1414439151}
+      - m_Value: {fileID: 0}
         m_Name: AudioSpectrum
         m_Overridden: 1
-      - m_Value: {fileID: 1108956336}
+      - m_Value: {fileID: 0}
         m_Name: Tree_PositionMap
         m_Overridden: 1
-      - m_Value: {fileID: 2104454618}
+      - m_Value: {fileID: 0}
         m_Name: Tree_RadiusMap
         m_Overridden: 1
-      - m_Value: {fileID: 176552153}
+      - m_Value: {fileID: 0}
         m_Name: Tree_TargetPositionMap
         m_Overridden: 1
-      - m_Value: {fileID: 1745969561}
+      - m_Value: {fileID: 0}
         m_Name: MultiPosMap
         m_Overridden: 1
     m_Bool:
@@ -3498,46 +3378,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1731343382}
   m_CullTransparentMesh: 0
---- !u!28 &1745969561
-Texture2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 23_ParameterBinders_PositionMap
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  serializedVersion: 2
-  m_Width: 10
-  m_Height: 1
-  m_CompleteImageSize: 160
-  m_TextureFormat: 20
-  m_MipCount: 1
-  m_IsReadable: 1
-  m_StreamingMipmaps: 0
-  m_StreamingMipmapsPriority: 0
-  m_AlphaIsTransparency: 0
-  m_ImageCount: 1
-  m_TextureDimension: 2
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 0
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
-  m_LightmapFormat: 0
-  m_ColorSpace: 0
-  image data: 160
-  _typelessdata: 6666c6bf000000003d0ab73f0000803f7b14eebf0000e03f000000000000803fb4c80e405839b4bf000000000000803f8fc23540ae473140000000000000803f77be1fc0be9f02c0000000000000803fd57809bfcba115c0000000000000803fc1ca71c0621038c0000000000000803f6210d83f560e4dc0000000000000803f48e19a3f1f856b40000000000000803fa4706dc033337340000000000000803f
-  m_StreamData:
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &1764344724
 GameObject:
   m_ObjectHideFlags: 0
@@ -4017,46 +3857,6 @@ Transform:
   m_Father: {fileID: 70232085}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!28 &2104454618
-Texture2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  serializedVersion: 2
-  m_Width: 7
-  m_Height: 1
-  m_CompleteImageSize: 14
-  m_TextureFormat: 15
-  m_MipCount: 1
-  m_IsReadable: 1
-  m_StreamingMipmaps: 0
-  m_StreamingMipmapsPriority: 0
-  m_AlphaIsTransparency: 0
-  m_ImageCount: 1
-  m_TextureDimension: 2
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
-  m_LightmapFormat: 0
-  m_ColorSpace: 0
-  image data: 14
-  _typelessdata: 662e662e662e662e662e662e662e
-  m_StreamData:
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &2137579971
 GameObject:
   m_ObjectHideFlags: 0

@@ -106,6 +106,7 @@ namespace UnityEngine.VFX.Test
                 {
                     animator.Rebind();
                 }
+                var audioSources = Resources.FindObjectsOfTypeAll<AudioSource>();
 #endif
 
                 int waitFrameCount = (int)(simulateTime / frequency);
@@ -113,6 +114,11 @@ namespace UnityEngine.VFX.Test
                 int expectedFrameIndex = startFrameIndex + waitFrameCount;
                 while (Time.frameCount != expectedFrameIndex)
                 {
+#if UNITY_EDITOR
+                    foreach (var audioSource in audioSources)
+                        if (audioSource.clip != null)
+                            audioSource.PlayDelayed(Mathf.Repeat(simulateTime, audioSource.clip.length));
+#endif
                     yield return null;
                 }
 

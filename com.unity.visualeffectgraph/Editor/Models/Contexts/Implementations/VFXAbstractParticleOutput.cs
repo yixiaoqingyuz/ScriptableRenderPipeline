@@ -94,8 +94,13 @@ namespace UnityEditor.VFX
         [VFXSetting(VFXSettingAttribute.VisibleFlags.InInspector), SerializeField]
         protected bool preRefraction = false;
 
+        [VFXSetting(VFXSettingAttribute.VisibleFlags.InInspector), SerializeField]
+        protected bool generateMotionVectors = false;
+
         // IVFXSubRenderer interface
         public virtual bool hasShadowCasting { get { return castShadows; } }
+
+        public virtual bool hasMotionVector { get { return generateMotionVectors; } }
 
         public bool HasIndirectDraw()   { return indirectDraw || HasSorting(); }
         public bool HasSorting()        { return sort == SortMode.On || (sort == SortMode.Auto && (blendMode == BlendMode.Alpha || blendMode == BlendMode.AlphaPremultiplied)); }
@@ -169,7 +174,8 @@ namespace UnityEditor.VFX
                 gpuMapper.AddExpressions(CollectGPUExpressions(GetExpressionsFromSlots(this)), -1);
                 mapper = gpuMapper;
             }
-            if (true) //-- TODOPAUL if motion vector
+
+            if (generateMotionVectors)
             {
                 mapper.AddExpression(VFXBuiltInExpression.FrameIndex, "currentFrameIndex", -1);
             }
@@ -233,11 +239,8 @@ namespace UnityEditor.VFX
                         break;
                 }
 
-                VisualEffectResource asset = GetResource();
-                if (asset != null)
                 {
-                    var settings = asset.rendererSettings;
-                    if (settings.motionVectorGenerationMode == MotionVectorGenerationMode.Object)
+                    if (hasMotionVector)
                         yield return "USE_MOTION_VECTORS_PASS";
                     if (hasShadowCasting)
                         yield return "USE_CAST_SHADOWS_PASS";

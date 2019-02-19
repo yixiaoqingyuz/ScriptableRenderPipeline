@@ -435,16 +435,6 @@ public class VisualEffectAssetEditor : Editor
         bool enable = GUI.enabled; //Everything in external asset is disabled by default
         GUI.enabled = true;
 
-        //Temp TODOPAUL
-        EditorGUI.BeginChangeCheck();
-
-        MotionVectorGenerationMode newMotionVectorGenerationMode = (MotionVectorGenerationMode)EditorGUILayout.EnumPopup(EditorGUIUtility.TrTextContent("Motion Vector Mode"), (MotionVectorGenerationMode)motionVectorRenderModeProperty.intValue);
-        if (EditorGUI.EndChangeCheck())
-        {
-            motionVectorRenderModeProperty.intValue = (int)newMotionVectorGenerationMode;
-            resourceObject.ApplyModifiedProperties();
-        }
-
         EditorGUI.BeginChangeCheck();
         EditorGUI.showMixedValue = resourceUpdateModeProperty.hasMultipleDifferentValues;
         VFXUpdateMode newUpdateMode = (VFXUpdateMode)EditorGUILayout.EnumPopup(EditorGUIUtility.TrTextContent("Update Mode"), (VFXUpdateMode)resourceUpdateModeProperty.intValue);

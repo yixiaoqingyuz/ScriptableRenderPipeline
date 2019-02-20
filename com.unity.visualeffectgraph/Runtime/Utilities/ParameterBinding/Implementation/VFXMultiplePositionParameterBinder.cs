@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine.Experimental.VFX;
 
-namespace UnityEngine.VFX.Utils
+namespace UnityEngine.Experimental.VFX.Utility
 {
     [AddComponentMenu("VFX/Utilities/Parameters/VFX Multiple Position Binder")]
     [VFXBinder("Point Cache/Multiple Position Binder")]

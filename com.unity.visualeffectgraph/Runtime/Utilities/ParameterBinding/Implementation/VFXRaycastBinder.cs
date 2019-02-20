@@ -1,7 +1,7 @@
 #if VFX_HAS_PHYSICS
 using UnityEngine.Experimental.VFX;
 
-namespace UnityEngine.VFX.Utils
+namespace UnityEngine.Experimental.VFX.Utility
 {
     [AddComponentMenu("VFX/Utilities/Parameters/VFX Raycast Binder")]
     [VFXBinder("Physics/Raycast")]

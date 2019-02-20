@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine.Experimental.VFX;
 
-namespace UnityEngine.VFX.Utils
+namespace UnityEngine.Experimental.VFX.Utility
 {
     [AddComponentMenu("VFX/Utilities/Parameters/VFX Hierarchy AttributeMap Binder")]
     [VFXBinder("Point Cache/Hierarchy to Attribute Map")]

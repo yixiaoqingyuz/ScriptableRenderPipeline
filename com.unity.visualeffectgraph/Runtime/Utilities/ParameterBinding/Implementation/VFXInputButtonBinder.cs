@@ -1,6 +1,6 @@
 using UnityEngine.Experimental.VFX;
 
-namespace UnityEngine.VFX.Utils
+namespace UnityEngine.Experimental.VFX.Utility
 {
     [AddComponentMenu("VFX/Utilities/Parameters/VFX Input Button Binder")]
     [VFXBinder("Input/Button")]

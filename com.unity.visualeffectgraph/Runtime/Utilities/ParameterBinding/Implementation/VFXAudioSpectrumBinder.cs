@@ -2,7 +2,7 @@
 using System;
 using UnityEngine.Experimental.VFX;
 
-namespace UnityEngine.VFX.Utils
+namespace UnityEngine.Experimental.VFX.Utility
 {
     [AddComponentMenu("VFX/Utilities/Parameters/VFX Audio Spectrum Binder")]
     [VFXBinder("Audio/Audio Spectrum to AttributeMap")]

@@ -15,6 +15,7 @@ using System.Reflection;
 #endif
 using NUnit.Framework;
 using Object = UnityEngine.Object;
+using UnityEngine.Experimental.VFX.Utility;
 
 namespace UnityEngine.VFX.Test
 {
@@ -108,18 +109,27 @@ namespace UnityEngine.VFX.Test
                 }
                 var audioSources = Resources.FindObjectsOfTypeAll<AudioSource>();
 #endif
+                var paramBinders = Resources.FindObjectsOfTypeAll<VFXParameterBinder>();
+                foreach (var paramBinder in paramBinders)
+                {
+                    var binders = paramBinder.GetParameterBinders<VFXBinderBase>();
+                    foreach (var binder in binders)
+                    {
+                        binder.Reset();
+                    }
+                }
 
                 int waitFrameCount = (int)(simulateTime / frequency);
                 int startFrameIndex = Time.frameCount;
                 int expectedFrameIndex = startFrameIndex + waitFrameCount;
                 while (Time.frameCount != expectedFrameIndex)
                 {
+                    yield return null;
 #if UNITY_EDITOR
                     foreach (var audioSource in audioSources)
                         if (audioSource.clip != null)
                             audioSource.PlayDelayed(Mathf.Repeat(simulateTime, audioSource.clip.length));
 #endif
-                    yield return null;
                 }
 
                 Texture2D actual = null;

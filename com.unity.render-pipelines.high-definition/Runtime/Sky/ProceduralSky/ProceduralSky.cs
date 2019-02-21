@@ -2,6 +2,7 @@ using UnityEngine.Rendering;
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
+    [VolumeComponentMenu("Sky/Procedural Sky")]
     [SkyUniqueID((int)SkyType.ProceduralSky)]
     public class ProceduralSky : SkySettings
     {

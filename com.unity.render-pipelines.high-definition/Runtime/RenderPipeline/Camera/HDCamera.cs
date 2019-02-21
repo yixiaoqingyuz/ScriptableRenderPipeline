@@ -196,6 +196,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public bool dithering => m_AdditionalCameraData != null && m_AdditionalCameraData.dithering;
 
+        public bool stopNaNs => m_AdditionalCameraData != null && m_AdditionalCameraData.stopNaNs;
+
         public HDPhysicalCamera physicalParameters => m_AdditionalCameraData?.physicalParameters;
 
         public bool invertFaceCulling
@@ -243,6 +245,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             Reset();
         }
 
+        public bool IsTAAEnabled()
+        {
+            return antialiasing == AntialiasingMode.TemporalAntialiasing;
+        }
+
         // Pass all the systems that may want to update per-camera data here.
         // That way you will never update an HDCamera and forget to update the dependent system.
         public void Update(FrameSettings currentFrameSettings, VolumetricLightingSystem vlSys, MSAASamples msaaSamples)
@@ -260,6 +267,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 if (!m_frameSettings.IsEnabled(FrameSettingsField.Postprocess) || !CoreUtils.ArePostProcessesEnabled(camera))
                     antialiasing = AntialiasingMode.None;
+#if UNITY_EDITOR
                 else if (camera.cameraType == CameraType.SceneView)
                 {
                     var mode = HDRenderPipelinePreferences.sceneViewAntialiasing;
@@ -269,6 +277,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     else
                         antialiasing = mode;
                 }
+#endif
                 else if (m_AdditionalCameraData != null)
                     antialiasing = m_AdditionalCameraData.antialiasing;
                 else
@@ -802,7 +811,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             frameIndex &= 1;
 
             return rtHandleSystem.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16G16B16A16_SFloat,
-                                        enableRandomWrite: true, useMipMap: true, autoGenerateMips: false,
+                                        enableRandomWrite: true, useMipMap: true, autoGenerateMips: false, xrInstancing: true,
                                         name: string.Format("CameraColorBufferMipChain{0}", frameIndex));
         }
 

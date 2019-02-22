@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Better Handling of Null or Missing Parameter Binders (Editor + Runtime)
+- Undo Redo while changing space
+- Type declaration was unmodifiable due to exception during space intialization 
+
 
 ## [5.6.0] - 2019-02-21
 

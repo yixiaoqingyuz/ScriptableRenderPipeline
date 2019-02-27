@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.Experimental.Rendering.HDPipeline.RenderPipelineSettings;
+using UnityEngine.Experimental.Rendering;
 
 namespace UnityEditor.Experimental.Rendering.HDPipeline
 {
@@ -9,12 +12,13 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         static readonly GUIContent k_LightingSectionTitle = EditorGUIUtility.TrTextContent("Lighting");
         static readonly GUIContent k_MaterialSectionTitle = EditorGUIUtility.TrTextContent("Material");
         static readonly GUIContent k_PostProcessSectionTitle = EditorGUIUtility.TrTextContent("Post-processing");
-        static readonly GUIContent k_LightLoopSubTitle = EditorGUIUtility.TrTextContent("Light Loop");
+        static readonly GUIContent k_LightLoopSubTitle = EditorGUIUtility.TrTextContent("Lights");
 
         static readonly GUIContent k_CookiesSubTitle = EditorGUIUtility.TrTextContent("Cookies");
         static readonly GUIContent k_ReflectionsSubTitle = EditorGUIUtility.TrTextContent("Reflections");
         static readonly GUIContent k_SkySubTitle = EditorGUIUtility.TrTextContent("Sky");
         static readonly GUIContent k_DecalsSubTitle = EditorGUIUtility.TrTextContent("Decals");
+        static readonly GUIContent k_DecalsMetalAndAOSubTitle = EditorGUIUtility.TrTextContent("Decals Metal And AO");
         static readonly GUIContent k_ShadowSubTitle = EditorGUIUtility.TrTextContent("Shadow");
         static readonly GUIContent k_ShadowAtlasSubTitle = EditorGUIUtility.TrTextContent("Atlas");
         static readonly GUIContent k_DynamicResolutionSubTitle = EditorGUIUtility.TrTextContent("Dynamic resolution");
@@ -46,7 +50,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         static readonly GUIContent k_SupportTransparentDepthPrepass = EditorGUIUtility.TrTextContent("Transparent Depth Prepass", "When disabled, HDRP removes all transparent depth prepass Shader variants when you build for the Unity Player. This decreases build time.");
         static readonly GUIContent k_SupportTransparentDepthPostpass = EditorGUIUtility.TrTextContent("Transparent Depth Postpass", "When disabled, HDRP removes all transparent depth postpass Shader variants when you build for the Unity Player. This decreases build time.");
         static readonly GUIContent k_SupportRaytracing = EditorGUIUtility.TrTextContent("Realtime Raytracing");
-        static readonly GUIContent k_EditorRaytracingFilterLayerMask = EditorGUIUtility.TrTextContent("Raytracing Filter Layer Mask for SceneView and Preview");
 
         const string k_CacheErrorFormat = "This configuration will lead to more than 2 GB reserved for this cache at runtime! ({0} requested) Only {1} element will be reserved instead.";
         const string k_CacheInfoFormat = "Reserving {0} in memory at runtime.";
@@ -71,14 +74,14 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         static readonly GUIContent k_SkyLightingOverrideMaskContent = EditorGUIUtility.TrTextContent("Lighting Override Mask", "Specifies the layer mask HDRP uses to override sky lighting.");
         const string k_SkyLightingHelpBoxContent = "Be careful, Sky Lighting Override Mask is set to Everything. This is most likely a mistake as it serves no purpose.";
 
-        static readonly GUIContent k_MaxDirectionalContent = EditorGUIUtility.TrTextContent("Maximum Directional Lights on Screen", "Sets the maximum number of Directional Lights HDRP can handle on screen at once.");
-        static readonly GUIContent k_MaxPonctualContent = EditorGUIUtility.TrTextContent("Maximum Punctual Lights on Screen", "Sets the maximum number of Point and Spot Lights HDRP can handle on screen at once.");
-        static readonly GUIContent k_MaxAreaContent = EditorGUIUtility.TrTextContent("Maximum Area Lights on Screen", "Sets the maximum number of area Lights HDRP can handle on screen at once.");
+        static readonly GUIContent k_MaxDirectionalContent = EditorGUIUtility.TrTextContent("Maximum Directional on Screen", "Sets the maximum number of Directional Lights HDRP can handle on screen at once.");
+        static readonly GUIContent k_MaxPonctualContent = EditorGUIUtility.TrTextContent("Maximum Punctual on Screen", "Sets the maximum number of Point and Spot Lights HDRP can handle on screen at once.");
+        static readonly GUIContent k_MaxAreaContent = EditorGUIUtility.TrTextContent("Maximum Area on Screen", "Sets the maximum number of area Lights HDRP can handle on screen at once.");
         static readonly GUIContent k_MaxEnvContent = EditorGUIUtility.TrTextContent("Maximum Environment Lights on Screen", "Sets the maximum number of environment Lights HDRP can handle on screen at once.");
         static readonly GUIContent k_MaxDecalContent = EditorGUIUtility.TrTextContent("Maximum Decals on Screen", "Sets the maximum number of Decals HDRP can handle on screen at once.");
 
         static readonly GUIContent k_ResolutionContent = EditorGUIUtility.TrTextContent("Resolution", "Specifies the resolution of the shadow Atlas.");
-        static readonly GUIContent k_Map16bContent = EditorGUIUtility.TrTextContent("16-bit", "When enabled, this forces HDRP to use 16-bit shadow maps.");
+        static readonly GUIContent k_PrecisionContent = EditorGUIUtility.TrTextContent("Precision", "Select the shadow map bit depth, this forces HDRP to use selected bit depth for shadow maps.");
         static readonly GUIContent k_DynamicRescaleContent = EditorGUIUtility.TrTextContent("Dynamic Rescale", "When enabled, scales the shadow map size using the screen size of the Light to leave more space for other shadows in the atlas.");
         static readonly GUIContent k_MaxRequestContent = EditorGUIUtility.TrTextContent("Maximum Shadow on Screen", "Sets the maximum number of shadows HDRP can handle on screen at once. See the documentation for details on how many shadows each light type casts.");
 
@@ -88,7 +91,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         static readonly GUIContent k_MetalAndAOContent = EditorGUIUtility.TrTextContent("Metal and Ambient Occlusion Properties", "When enabled, Decals affect metal and ambient occlusion properties.");
         static readonly GUIContent k_FilteringQuality = EditorGUIUtility.TrTextContent("Filtering Qualities", "Specifies the quality of shadows. See the documentation for details on the algorithm HDRP uses for each preset.");
 
-        static readonly GUIContent k_Enabled = EditorGUIUtility.TrTextContent("Enable", "When enabled, HDRP dynamically lowers the resolution of render tagets to reduce the workload on the GPU.");
+        static readonly GUIContent k_Enabled = EditorGUIUtility.TrTextContent("Enable", "When enabled, HDRP dynamically lowers the resolution of render targets to reduce the workload on the GPU.");
         static readonly GUIContent k_MaxPercentage = EditorGUIUtility.TrTextContent("Maximum Screen Percentage", "Sets the maximum screen percentage that dynamic resolution can reach.");
         static readonly GUIContent k_MinPercentage = EditorGUIUtility.TrTextContent("Minimum Screen Percentage", "Sets the minimum screen percentage that dynamic resolution can reach.");
         static readonly GUIContent k_DynResType = EditorGUIUtility.TrTextContent("Dynamic Resolution Type", "Specifies the type of dynamic resolution that HDRP uses.");
@@ -98,5 +101,58 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 
         static readonly GUIContent k_LutSize = EditorGUIUtility.TrTextContent("Grading LUT Size", "Sets size of the internal and external color grading lookup textures (LUTs).");
         static readonly GUIContent k_LutFormat = EditorGUIUtility.TrTextContent("Grading LUT Format", "Specifies the encoding format for color grading lookup textures. Lower precision formats are faster and use less memory at the expense of color precision.");
+
+        static readonly GUIContent[] k_ShadowBitDepthNames = { new GUIContent("32 bit"),  new GUIContent("16 bit") };
+        static readonly int[] k_ShadowBitDepthValues = { (int) DepthBits.Depth32, (int) DepthBits.Depth16};
+
+        const string memoryDrawback = "Adds GPU memory";
+        const string shaderVariantDrawback = "Adds Shader Variants";
+        const string lotShaderVariantDrawback = "Adds multiple Shader Variants";
+        const string gBufferDrawback = "Adds a GBuffer";
+        const string lotGBufferDrawback = "Adds GBuffers";
+        const string dBufferDrawback = "Adds a DBuffer";
+        const string lotDBufferDrawback = "Adds DBuffers";
+        static readonly Dictionary<GUIContent, string> k_SupportDrawbacks = new Dictionary<GUIContent, string>
+        {
+            //k_SupportLitShaderModeContent is special case handled separately
+            //k_SupportShadowMaskContent is special case handled separately
+            { k_SupportSSRContent                  , memoryDrawback },
+            { k_SupportSSAOContent                 , memoryDrawback },
+            { k_SupportedSSSContent                , memoryDrawback },
+            { k_SupportVolumetricContent           , memoryDrawback },
+            //k_SupportLightLayerContent is special case handled separately
+            { k_MSAASampleCountContent             , memoryDrawback },
+            { k_SupportDecalContent                , string.Format("{0}, {1}", memoryDrawback, lotDBufferDrawback) },
+            { k_MetalAndAOContent                  , string.Format("{0}, {1}", memoryDrawback, dBufferDrawback) },
+            { k_SupportMotionVectorContent         , memoryDrawback },
+            { k_SupportRuntimeDebugDisplayContent  , shaderVariantDrawback },
+            { k_SupportDitheringCrossFadeContent   , shaderVariantDrawback },
+            { k_SupportDistortion                  , "" },
+            { k_SupportTransparentBackface         , shaderVariantDrawback },
+            { k_SupportTransparentDepthPrepass     , shaderVariantDrawback },
+            { k_SupportTransparentDepthPostpass    , shaderVariantDrawback },
+            { k_SupportRaytracing                  , string.Format("{0}, {1}", memoryDrawback, lotShaderVariantDrawback) }
+        };
+
+        static Dictionary<SupportedLitShaderMode, string> k_SupportLitShaderModeDrawbacks = new Dictionary<SupportedLitShaderMode, string>
+        {
+            { SupportedLitShaderMode.ForwardOnly, lotShaderVariantDrawback },
+            { SupportedLitShaderMode.DeferredOnly, string.Format("{0}, {1}", shaderVariantDrawback, lotGBufferDrawback) },
+            { SupportedLitShaderMode.Both, string.Format("{0}, {1}", lotShaderVariantDrawback, lotGBufferDrawback) }
+        };
+
+        static Dictionary<SupportedLitShaderMode, string> k_SupportShadowMaskDrawbacks = new Dictionary<SupportedLitShaderMode, string>
+        {
+            { SupportedLitShaderMode.ForwardOnly, string.Format("{0}, {1}", shaderVariantDrawback, memoryDrawback) },
+            { SupportedLitShaderMode.DeferredOnly, string.Format("{0}, {1}, {2}", shaderVariantDrawback, memoryDrawback, gBufferDrawback) },
+            { SupportedLitShaderMode.Both, string.Format("{0}, {1}, {2}", shaderVariantDrawback, memoryDrawback, gBufferDrawback) }
+        };
+
+        static Dictionary<SupportedLitShaderMode, string> k_SupportLightLayerDrawbacks = new Dictionary<SupportedLitShaderMode, string>
+        {
+            { SupportedLitShaderMode.ForwardOnly, memoryDrawback },
+            { SupportedLitShaderMode.DeferredOnly, string.Format("{0}, {1}", memoryDrawback, gBufferDrawback) },
+            { SupportedLitShaderMode.Both, string.Format("{0}, {1}", memoryDrawback, gBufferDrawback) }
+        };
     }
 }

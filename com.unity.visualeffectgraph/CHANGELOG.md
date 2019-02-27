@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [5.7.0] - 2019-XX-XX
 ### Added
 - Addressing mode for Sequential blocks
+- Invert transform available on GPU
 
 ### Fixed
 - Better Handling of Null or Missing Parameter Binders (Editor + Runtime)

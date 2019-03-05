@@ -48,15 +48,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public bool IsActive()
         {
-            bool dofActive = focusMode.value != DepthOfFieldMode.Off && (IsNearLayerActive() || IsFarLayerActive());
-
-            if (dofActive && XRGraphics.enabled)
-            {
-                Debug.LogWarning("DepthOfField is not supported with VR.");
-                dofActive = false;
-            }
-
-            return dofActive;
+            return focusMode.value != DepthOfFieldMode.Off && (IsNearLayerActive() || IsFarLayerActive());
         }
 
         public bool IsNearLayerActive() => nearMaxBlur > 0f && nearFocusEnd > 0f;
@@ -65,8 +57,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     }
 
     [Serializable]
-    public sealed class DepthOfFieldModeParameter : VolumeParameter<DepthOfFieldMode> { public DepthOfFieldModeParameter(DepthOfFieldMode value, bool overriden = false) : base(value, overriden) { } }
+    public sealed class DepthOfFieldModeParameter : VolumeParameter<DepthOfFieldMode> { public DepthOfFieldModeParameter(DepthOfFieldMode value, bool overrideState = false) : base(value, overrideState) { } }
 
     [Serializable]
-    public sealed class DepthOfFieldResolutionParameter : VolumeParameter<DepthOfFieldResolution> { public DepthOfFieldResolutionParameter(DepthOfFieldResolution value, bool overriden = false) : base(value, overriden) { } }
+    public sealed class DepthOfFieldResolutionParameter : VolumeParameter<DepthOfFieldResolution> { public DepthOfFieldResolutionParameter(DepthOfFieldResolution value, bool overrideState = false) : base(value, overrideState) { } }
 }

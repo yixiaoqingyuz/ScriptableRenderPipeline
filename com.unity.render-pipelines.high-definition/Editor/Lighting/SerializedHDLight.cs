@@ -30,7 +30,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             public SerializedProperty volumetricDimmer;
             public SerializedProperty lightUnit;
             public SerializedProperty displayAreaLightEmissiveMesh;
-            public SerializedProperty lightLayers;
+            public SerializedProperty renderingLayerMask;
             public SerializedProperty shadowNearPlane;
             public SerializedProperty shadowSoftness;
             public SerializedProperty blockerSampleCount;
@@ -39,6 +39,14 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             public SerializedProperty sunDiskSize;
             public SerializedProperty sunHaloSize;
             public SerializedProperty areaLightCookie;   // We can't use default light cookies because the cookie gets reset by some safety measure on C++ side... :/
+            public SerializedProperty areaLightShadowCone;
+#if ENABLE_RAYTRACING
+            public SerializedProperty useRayTracedShadows;
+#endif
+            public SerializedProperty evsmExponent;
+            public SerializedProperty evsmLightLeakBias;
+            public SerializedProperty evsmVarianceBias;
+            public SerializedProperty evsmBlurPasses;
 
             // Improved moment shadows data
             public SerializedProperty lightAngle;
@@ -83,7 +91,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 
         //contain serialized property that are mainly used to draw inspector
         public LightEditor.Settings settings;
-        
+
         // Used for UI only; the processing code must use LightTypeExtent and LightType
         public LightShape editorLightShape;
 
@@ -104,13 +112,12 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                     volumetricDimmer = o.Find(x => x.volumetricDimmer),
                     lightUnit = o.Find(x => x.lightUnit),
                     displayAreaLightEmissiveMesh = o.Find(x => x.displayAreaLightEmissiveMesh),
-                    lightLayers = o.Find(x => x.lightLayers),
                     fadeDistance = o.Find(x => x.fadeDistance),
                     affectDiffuse = o.Find(x => x.affectDiffuse),
                     affectSpecular = o.Find(x => x.affectSpecular),
                     nonLightmappedOnly = o.Find(x => x.nonLightmappedOnly),
                     lightTypeExtent = o.Find(x => x.lightTypeExtent),
-                    spotLightShape = o.Find(x => x.spotLightShape),
+                    spotLightShape = o.Find("m_SpotLightShape"),
                     shapeWidth = o.Find(x => x.shapeWidth),
                     shapeHeight = o.Find(x => x.shapeHeight),
                     aspectRatio = o.Find(x => x.aspectRatio),
@@ -125,7 +132,15 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                     sunDiskSize = o.Find(x => x.sunDiskSize),
                     sunHaloSize = o.Find(x => x.sunHaloSize),
                     areaLightCookie = o.Find(x => x.areaLightCookie),
-                    
+                    areaLightShadowCone = o.Find(x => x.areaLightShadowCone),
+#if ENABLE_RAYTRACING
+                    useRayTracedShadows = o.Find(x => x.useRayTracedShadows),
+#endif
+                    evsmExponent = o.Find(x => x.evsmExponent),
+                    evsmVarianceBias = o.Find(x => x.evsmVarianceBias),
+                    evsmLightLeakBias = o.Find(x => x.evsmLightLeakBias),
+                    evsmBlurPasses = o.Find(x => x.evsmBlurPasses),
+
                     // Moment light
                     lightAngle = o.Find(x => x.lightAngle),
                     kernelSize = o.Find(x => x.kernelSize),
@@ -135,7 +150,8 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                     useOldInspector = o.Find(x => x.useOldInspector),
                     showFeatures = o.Find(x => x.featuresFoldout),
                     showAdditionalSettings = o.Find(x => x.showAdditionalSettings),
-                    useVolumetric = o.Find(x => x.useVolumetric)
+                    useVolumetric = o.Find(x => x.useVolumetric),
+                    renderingLayerMask = settings.renderingLayerMask
                 };
 
             // TODO: Review this once AdditionalShadowData is refactored

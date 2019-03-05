@@ -9,6 +9,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     public class HDRaytracingEnvironment : MonoBehaviour
     {
 #if ENABLE_RAYTRACING
+
+        // The set of raytracing passes that we support
+        public enum RaytracingPass
+        {
+            AmbientOcclusion = 0,
+            Reflection = (1<<0),
+            AreaShadow = (1<<1) ,
+            PrimaryVisibility = (1<<2),
+        }
+        public readonly static int numRaytracingPasses = 4;
+
         // Generic Ray Data
         [Range(0.0f, 0.1f)]
         public float rayBias = 0.001f;
@@ -17,6 +28,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // Ambient Occlusion Data
         // Flag that defines if the Ambient Occlusion should be Ray-traced
         public bool raytracedAO = false;
+
+        // Culling mask that defines the layers that the subscene used for this effect should use
+        public LayerMask aoLayerMask = -1;
 
         // Filter Type for the ambient occlusion
         public enum AOFilterMode
@@ -54,6 +68,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // Flag that defines if the Reflections should be Ray-traced
         public bool raytracedReflections = false;
 
+        // Culling mask that defines the layers that the subscene used for this effect should use
+        public LayerMask reflLayerMask = -1;
+
         // Generic reflection Data
         // Max Ray Length for the Reflections
         [Range(0.001f, 50.0f)]
@@ -81,6 +98,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // Reflection Quarter Res Data
         [Range(0.01f, 1.0f)]
         public float reflTemporalAccumulationWeight = 0.1f;
+        [Range(1, 5)]
+        public int reflSpatialFilterRadius = 3;
 
         // Data for the integration modeJe su
         // Number of Samples for the integration
@@ -100,6 +119,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // Flag that defines if raytraced objects should be rendered
         public bool raytracedObjects = false;
 
+        // Culling mask that defines the layers that the subscene used for this effect should use
+        public LayerMask raytracedLayerMask = -1;
+
         // This is the maximal depth that a ray can have for the primary visibility pass
         const int maxRayDepth = 10;
         [Range(1, maxRayDepth)]
@@ -112,14 +134,18 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         /////////////////////////////////////////////////////////////////////////////////////////////////
         // Area Light Shadows
         public bool raytracedShadows = false;
-        [Range(2, 32)]
+
+        // Culling mask that defines the layers that the subscene used for this effect should use
+        public LayerMask shadowLayerMask = -1;
+
+        [Range(1, 32)]
         public int shadowNumSamples = 4;
         [Range(0, 4)]
         public int numAreaLightShadows = 1;
         [Range(1, 27)]
-        public int shadowFilterRadius = 10;
+        public int shadowFilterRadius = 1;
         [Range(0.001f, 9.0f)]
-        public float shadowFilterSigma = 5.0f;
+        public float shadowFilterSigma = 0.001f;
 
         void Start()
         {

@@ -38,6 +38,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         TransparentPrepass = 8,
         [FrameSettingsField(0, autoName: TransparentPostpass)]
         TransparentPostpass = 9,
+        [FrameSettingsField(0, autoName: TransparentsWriteVelocity, customOrderInGroup: 7)]
+        TransparentsWriteVelocity = 16,
         [FrameSettingsField(0, autoName: MotionVectors)]
         MotionVectors = 10,
         [FrameSettingsField(0, autoName: ObjectMotionVectors, positiveDependencies: new[] { MotionVectors })]
@@ -50,8 +52,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         Distortion = 14,
         [FrameSettingsField(0, autoName: Postprocess)]
         Postprocess = 15,
-        [FrameSettingsField(0, autoName: AfterPostprocess)]
-        AfterPostprocess = 16,
+        [FrameSettingsField(0, autoName: AfterPostprocess, customOrderInGroup: 15)]
+        AfterPostprocess = 17,
 
         //lighting settings from 20 to 39
         [FrameSettingsField(1, autoName: Shadow)]
@@ -78,6 +80,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         LightLayers = 30,
         [FrameSettingsField(1, autoName: ExposureControl, customOrderInGroup: 32)]
         ExposureControl = 32,
+        SpecularLighting = 33,
 
         //async settings from 40 to 59
         [FrameSettingsField(2, autoName: AsyncCompute)]
@@ -168,6 +171,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 (uint)FrameSettingsField.ComputeMaterialVariants,
                 (uint)FrameSettingsField.FPTLForForwardOpaque,
                 (uint)FrameSettingsField.BigTilePrepass,
+                (uint)FrameSettingsField.TransparentsWriteVelocity,
+                (uint)FrameSettingsField.SpecularLighting,
             })
         };
         /// <summary>Default FrameSettings for realtime ReflectionProbe/PlanarReflectionProbe renderer.</summary>
@@ -211,6 +216,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 (uint)FrameSettingsField.ComputeMaterialVariants,
                 (uint)FrameSettingsField.FPTLForForwardOpaque,
                 (uint)FrameSettingsField.BigTilePrepass,
+                (uint)FrameSettingsField.SpecularLighting,
             })
         };
         /// <summary>Default FrameSettings for baked or custom ReflectionProbe/PlanarReflectionProbe renderer.</summary>
@@ -319,10 +325,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.ReprojectionForVolumetrics] &= !preview;
 
             sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.LightLayers] &= renderPipelineSettings.supportLightLayers && !preview;
-            sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.ExposureControl] &= !reflection;
+            sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.ExposureControl] &= !reflection && !preview;
 
             // Planar and real time cubemap doesn't need post process and render in FP16
-            bool postprocess = sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.Postprocess] &= !reflection && !preview && !stereoDoubleWide;
+            sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.Postprocess] &= !reflection && !preview;
 
             sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.TransparentPrepass] &= renderPipelineSettings.supportTransparentDepthPrepass && !preview;
 
@@ -340,12 +346,16 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.SSAOAsync] &= async;
             sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.ContactShadowsAsync] &= async;
             sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.VolumeVoxelizationsAsync] &= async;
+			
+            // XRTODO: workaround for lighting issues with single-pass double-wide (disable tile lighting)
+            sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.BigTilePrepass] &= !stereoDoubleWide;
+            sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.DeferredTile] &= !stereoDoubleWide;
 
             // Deferred opaque are always using Fptl. Forward opaque can use Fptl or Cluster, transparent use cluster.
             // When MSAA is enabled we disable Fptl as it become expensive compare to cluster
             // In HD, MSAA is only supported for forward only rendering, no MSAA in deferred mode (for code complexity reasons)
-            // Disable FPTL for stereo for now
-            bool fptlForwardOpaque = sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.FPTLForForwardOpaque] &= !msaa && !XRGraphics.enabled;
+            // XRTODO: fix FPTL for stereo (disabled for now)
+            sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.FPTLForForwardOpaque] &= !msaa && !stereo;
         }
 
         /// <summary>Aggregation is default with override of the renderer then sanitazed depending on supported features of hdrpasset.</summary>
@@ -359,7 +369,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 camera,
                 additionalData,
                 ref hdrpAsset.GetDefaultFrameSettings(additionalData?.defaultFrameSettings ?? FrameSettingsRenderType.Camera), //fallback on Camera for SceneCamera and PreviewCamera
-                hdrpAsset.GetRenderPipelineSettings()
+                hdrpAsset.currentPlatformRenderPipelineSettings
                 );
 
         // Note: this version is the one tested as there is issue getting HDRenderPipelineAsset in batchmode in unit test framework currently.

@@ -72,7 +72,7 @@ Shader "HDRP/TerrainLit"
     #pragma multi_compile_instancing
     #pragma instancing_options assumeuniformscaling nomatrices nolightprobe nolightmap
 
-	#pragma multi_compile __ TERRAIN_SURFACE_MASK_ENABLED
+	#pragma multi_compile_local __ TERRAIN_SURFACE_MASK_ENABLED
 	
     //-------------------------------------------------------------------------------------
     // Define

@@ -29,7 +29,7 @@ Shader "Hidden/Lightweight Render Pipeline/Terrain/Lit (Add Pass)"
 
 	HLSLINCLUDE
 	
-	#pragma multi_compile __ TERRAIN_SURFACE_MASK_ENABLED
+	#pragma multi_compile_local __ TERRAIN_SURFACE_MASK_ENABLED
 	
 	ENDHLSL
 	

@@ -419,11 +419,6 @@ namespace UnityEditor.ShaderGraph.Drawing
             previewManager.RenderPreviews();
             m_BlackboardProvider.HandleGraphChanges();
             m_GroupHashSet.Clear();
-            foreach (GroupData groupData in m_Graph.removedGroups)
-            {
-                var group = m_GraphView.graphElements.ToList().OfType<ShaderGroup>().First(g => g.userData == groupData);
-                m_GraphView.RemoveElement(group);
-            }
 
             foreach (var node in m_Graph.removedNodes)
             {
@@ -441,6 +436,12 @@ namespace UnityEditor.ShaderGraph.Drawing
                         m_GroupHashSet.Add(shaderGroup);
                     }
                 }
+            }
+
+            foreach (GroupData groupData in m_Graph.removedGroups)
+            {
+                var group = m_GraphView.graphElements.ToList().OfType<ShaderGroup>().First(g => g.userData == groupData);
+                m_GraphView.RemoveElement(group);
             }
 
             foreach (var groupData in m_Graph.addedGroups)

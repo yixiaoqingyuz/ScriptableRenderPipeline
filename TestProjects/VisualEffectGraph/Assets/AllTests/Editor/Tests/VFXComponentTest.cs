@@ -185,6 +185,34 @@ namespace UnityEditor.VFX.Test
         }
 
         [UnityTest]
+        public IEnumerator CreateComponent_And_Graph_Restart_Component_Expected()
+        {
+            EditorApplication.ExecuteMenuItem("Window/General/Game");
+            var graph = CreateGraph_And_System();
+
+            yield return null;
+
+            while (m_mainObject.GetComponent<VisualEffect>() != null)
+            {
+                UnityEngine.Object.DestroyImmediate(m_mainObject.GetComponent<VisualEffect>());
+            }
+            var vfxComponent = m_mainObject.AddComponent<VisualEffect>();
+            vfxComponent.visualEffectAsset = graph.visualEffectResource.asset;
+            Assert.DoesNotThrow(() => VisualEffectUtility.GetSpawnerState(vfxComponent, 0));
+
+            while (VisualEffectUtility.GetSpawnerState(vfxComponent, 0).totalTime < 1.0f)
+            {
+                yield return null;
+            }
+
+            vfxComponent.enabled = false;
+            vfxComponent.enabled = true;
+            yield return null;
+
+            Assert.IsTrue(VisualEffectUtility.GetSpawnerState(vfxComponent, 0).totalTime < 1.0f);
+        }
+
+        [UnityTest]
         public IEnumerator CreateComponent_And_Graph_Modify_It_To_Generate_Expected_Exception()
         {
             EditorApplication.ExecuteMenuItem("Window/General/Game");

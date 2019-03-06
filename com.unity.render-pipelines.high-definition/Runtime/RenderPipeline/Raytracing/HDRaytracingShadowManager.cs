@@ -20,6 +20,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // Array that holds the shadow textures for the area lights
         RTHandleSystem.RTHandle m_AreaShadowTextureArray = null;
+        RTHandleSystem.RTHandle m_AreaShadowHistoryArray = null;
 
         // String values
         const string m_RayGenShaderName = "RayGenShadows";
@@ -58,6 +59,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_DenoiseBuffer0 = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16G16B16A16_SFloat, enableRandomWrite: true, useDynamicScale: true, useMipMap: false, name: "DenoiseBuffer0");
             m_DenoiseBuffer1 = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16G16B16A16_SFloat, enableRandomWrite: true, useDynamicScale: true, useMipMap: false, name: "DenoiseBuffer1");
             m_AreaShadowTextureArray = RTHandles.Alloc(Vector2.one, slices:4, dimension:TextureDimension.Tex2DArray, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16_SFloat, enableRandomWrite: true, useDynamicScale: true, useMipMap: false, name: "AreaShadowArrayBuffer");
+            m_AreaShadowHistoryArray = RTHandles.Alloc(Vector2.one, slices:4, dimension:TextureDimension.Tex2DArray, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16G16_SFloat, enableRandomWrite: true, useDynamicScale: true, useMipMap: false, name: "AreaShadowHistoryBuffer");
         }
 
         public RTHandleSystem.RTHandle GetIntegrationTexture()
@@ -68,6 +70,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public void Release()
         {
             RTHandles.Release(m_AreaShadowTextureArray);
+            RTHandles.Release(m_AreaShadowHistoryArray);
             RTHandles.Release(m_DenoiseBuffer0);
             RTHandles.Release(m_DenoiseBuffer1);
         }
@@ -111,6 +114,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.SetGlobalInt(HDShaderIDs._RaytracingFrameIndex, frameIndex);
 
             // Grab the kernels
+            int applyTAAKernel      = shadowFilter.FindKernel("AreaShadowApplyTAA");
             int estimateNoiseKernel = shadowFilter.FindKernel("AreaShadowEstimateNoise");
             int firstDenoiseKernel  = shadowFilter.FindKernel("AreaShadowDenoiseFirstPass");
             int secondDenoiseKernel = shadowFilter.FindKernel("AreaShadowDenoiseSecondPass");
@@ -163,7 +167,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     cmd.SetRaytracingTextureParam(shadowsShader, m_RayGenShaderName, HDShaderIDs._AreaCookieTextures, m_LightLoop.areaLightCookieManager.GetTexCache());
 
                     // Set the output texture
-                    cmd.SetRaytracingTextureParam(shadowsShader, m_RayGenShaderName, HDShaderIDs._RaytracedAreaShadowOutput, m_DenoiseBuffer0);
+                    cmd.SetRaytracingTextureParam(shadowsShader, m_RayGenShaderName, HDShaderIDs._RaytracedAreaShadowOutput, m_DenoiseBuffer1);
 
                     // Run the shadow evaluation
                     cmd.DispatchRays(shadowsShader, m_RayGenShaderName, (uint)hdCamera.actualWidth, (uint)hdCamera.actualHeight, 1);
@@ -183,6 +187,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     // Global parameters
                     cmd.SetComputeIntParam(shadowFilter, _DenoiseRadius, rtEnvironement.shadowFilterRadius);
                     cmd.SetComputeIntParam(shadowFilter, HDShaderIDs._RaytracingShadowSlot, m_LightLoop.m_lightList.lights[lightIdx].rayTracedAreaShadowIndex);
+
+                    // TAA on raytraced raw data (Sn, Un)
+                    cmd.SetComputeTextureParam(shadowFilter, applyTAAKernel, HDShaderIDs._DenoiseInputTexture, m_DenoiseBuffer1);
+                    cmd.SetComputeTextureParam(shadowFilter, applyTAAKernel, HDShaderIDs._DenoiseOutputTextureRW, m_DenoiseBuffer0);
+                    cmd.SetComputeTextureParam(shadowFilter, applyTAAKernel, HDShaderIDs._AreaShadowHistoryRW, m_AreaShadowHistoryArray);
+                    cmd.DispatchCompute(shadowFilter, applyTAAKernel, numTilesX, numTilesY, 1);
 
                     if (rtEnvironement.shadowFilterRadius > 0)
                     {

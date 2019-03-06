@@ -3,6 +3,7 @@
 ** https://eheitzresearch.wordpress.com/705-2/
 */
 
+#pragma kernel AreaShadowApplyTAA
 #pragma kernel AreaShadowEstimateNoise
 #pragma kernel AreaShadowDenoiseFirstPass   AREA_SHADOW_DENOISE=AreaShadowDenoiseFirstPass
 #pragma kernel AreaShadowDenoiseSecondPass  AREA_SHADOW_DENOISE=AreaShadowDenoiseSecondPass  FINAL_PASS
@@ -29,6 +30,9 @@ int                     _DenoiseRadius;
 int                     _RaytracingShadowSlot;
 RWTexture2DArray<float> _AreaShadowTextureRW;
 
+// FIXME TAA
+RWTexture2DArray<float2> _AreaShadowHistoryRW;
+
 // Bilateral filter parameters
 #define NORMAL_WEIGHT   1.0
 #define PLANE_WEIGHT    1.0
@@ -48,6 +52,23 @@ float gaussian(float radius, float sigma)
 {
     return exp(-sqr(radius / sigma));
 }
+
+// FIXME TAA
+[numthreads(AREA_BILLATERAL_TILE_SIZE, AREA_BILLATERAL_TILE_SIZE, 1)]
+void AreaShadowApplyTAA(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
+{
+    // Fetch the current pixel coordinate
+    uint2 centerCoord = groupId * AREA_BILLATERAL_TILE_SIZE + groupThreadId;
+    centerCoord.x = centerCoord.x + (unity_StereoEyeIndex * _ScreenSize.x);
+
+    //_DenoiseOutputTextureRW[centerCoord] = _DenoiseInputTexture[centerCoord];
+
+    static const float PERSISTENCE = 0.8;
+    const float2 filteredValue = PERSISTENCE * _AreaShadowHistoryRW[uint3(centerCoord, _RaytracingShadowSlot)] + (1.0 - PERSISTENCE) * _DenoiseInputTexture[centerCoord].xy;
+    _AreaShadowHistoryRW[uint3(centerCoord, _RaytracingShadowSlot)] = filteredValue;
+    _DenoiseOutputTextureRW[centerCoord] = float4(filteredValue, _DenoiseInputTexture[centerCoord].zw);
+}
+
 
 // ----------------------------------------------------------------------------
 // Noise Estimation Kernel

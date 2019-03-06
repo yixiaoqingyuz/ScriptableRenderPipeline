@@ -1,4 +1,4 @@
-Shader "Hidden/HDRenderPipeline/OpaqueAtmosphericScattering"
+Shader "Hidden/HDRP/OpaqueAtmosphericScattering"
 {
     HLSLINCLUDE
         #pragma target 4.5
@@ -7,29 +7,34 @@ Shader "Hidden/HDRenderPipeline/OpaqueAtmosphericScattering"
         #pragma multi_compile _ DEBUG_DISPLAY
 
         // #pragma enable_d3d11_debug_symbols
-
-        float4x4 _PixelCoordToViewDirWS; // Actually just 3x3, but Unity can only set 4x4
-
-        Texture2DMS<float> _DepthTextureMS;
         
         #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
         #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
         #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
         #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/AtmosphericScattering/AtmosphericScattering.hlsl"
+        #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Sky/SkyUtils.hlsl"
+
+        float4x4 _PixelCoordToViewDirWS; // Actually just 3x3, but Unity can only set 4x4
+
+        TEXTURE2D_X_MSAA(float, _DepthTextureMS);
 
         struct Attributes
         {
             uint vertexID : SV_VertexID;
+            UNITY_VERTEX_INPUT_INSTANCE_ID
         };
 
         struct Varyings
         {
             float4 positionCS : SV_POSITION;
+            UNITY_VERTEX_OUTPUT_STEREO
         };
 
         Varyings Vert(Attributes input)
         {
             Varyings output;
+            UNITY_SETUP_INSTANCE_ID(input);
+            UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
             output.positionCS = GetFullScreenTriangleVertexPosition(input.vertexID);
             return output;
         }
@@ -37,11 +42,6 @@ Shader "Hidden/HDRenderPipeline/OpaqueAtmosphericScattering"
         inline float4 AtmosphericScatteringCompute(Varyings input, float3 V, float depth)
         {
             PositionInputs posInput = GetPositionInput_Stereo(input.positionCS.xy, _ScreenSize.zw, depth, UNITY_MATRIX_I_VP, UNITY_MATRIX_V, unity_StereoEyeIndex);
-
-#if defined(UNITY_SINGLE_PASS_STEREO)
-            // XRTODO: fixup and consolidate stereo code relying on _PixelCoordToViewDirWS
-            V = -normalize(posInput.positionWS);
-#endif
 
             if (depth == UNITY_RAW_FAR_CLIP_VALUE)
             {
@@ -58,18 +58,20 @@ Shader "Hidden/HDRenderPipeline/OpaqueAtmosphericScattering"
 
         float4 Frag(Varyings input) : SV_Target
         {
+            UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
             float2 positionSS = input.positionCS.xy;
-            float3 V          = normalize(mul(float3(positionSS, 1.0), (float3x3)_PixelCoordToViewDirWS));
-            float  depth      = LOAD_TEXTURE2D(_CameraDepthTexture, (int2)positionSS).x;
+            float3 V          = GetSkyViewDirWS(positionSS, (float3x3)_PixelCoordToViewDirWS);
+            float  depth      = LoadCameraDepth(positionSS);
 
             return AtmosphericScatteringCompute(input, V, depth);
         }
 
         float4 FragMSAA(Varyings input, uint sampleIndex: SV_SampleIndex) : SV_Target
         {
+            UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
             float2 positionSS = input.positionCS.xy;
-            float3 V          = normalize(mul(float3(positionSS, 1.0), (float3x3)_PixelCoordToViewDirWS));
-            float  depth      = _DepthTextureMS.Load((int2)positionSS, sampleIndex).x;
+            float3 V          = GetSkyViewDirWS(positionSS, (float3x3)_PixelCoordToViewDirWS);
+            float  depth      = LOAD_TEXTURE2D_X_MSAA(_DepthTextureMS, (int2)positionSS, sampleIndex).x;
 
             return AtmosphericScatteringCompute(input, V, depth);
         }

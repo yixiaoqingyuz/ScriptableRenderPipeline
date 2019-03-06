@@ -122,6 +122,11 @@ namespace UnityEditor.VFX.Block
                     case AttributeMapSampleMode.Sample3DLOD:
                         properties = properties.Concat(PropertiesFromType("InputPropertiesSample3DLOD"));
                         break;
+                    case AttributeMapSampleMode.RandomConstantPerParticle:
+                        properties = properties.Concat(PropertiesFromType("InputPropertiesRandomConstant"));
+                        break;
+                    default:
+                        break;
                 }
 
                 // Need Composition Input Properties?
@@ -191,19 +196,21 @@ namespace UnityEditor.VFX.Block
                     string samplePos = "0";
                     switch (SampleMode)
                     {
-                        case AttributeMapSampleMode.IndexRelative: samplePos = "relativePos * count"; break;
+                        case AttributeMapSampleMode.IndexRelative: samplePos = "clamp(relativePos * count,  0u, count - 1u)"; break;
                         case AttributeMapSampleMode.Index: samplePos = "index % count"; break;
                         case AttributeMapSampleMode.Sequential: samplePos = "particleId % count"; break;
                         case AttributeMapSampleMode.Random: samplePos = "RAND * count"; break;
-                        case AttributeMapSampleMode.RandomConstantPerParticle: samplePos = "FIXED_RAND(0x8ef09666) * count"; break; // TODO expose hash
+                        case AttributeMapSampleMode.RandomConstantPerParticle: samplePos = "FIXED_RAND(Seed) * count"; break;
                     }
 
                     output += string.Format(@"
 uint width, height;
 attributeMap.t.GetDimensions(width, height);
 uint count = width * height;
-uint id = clamp(uint({0}), 0, count - 1);
-{1} value = ({1})attributeMap.t.Load(int3(id % width, id / width,0));
+uint id = {0};
+uint y = id / width;
+uint x = id - y * width;
+{1} value = ({1})attributeMap.t.Load(int3(x, y, 0));
 {2}
 ", samplePos, GetCompatTypeString(valueType), biasScale);
                 }
@@ -259,6 +266,11 @@ uint id = clamp(uint({0}), 0, count - 1);
             [Tooltip("Absolute index to sample")]
             public Vector3 SamplePosition = Vector2.zero;
             public float LOD = 0.0f;
+        }
+        public class InputPropertiesRandomConstant
+        {
+            [Tooltip("Seed to compute the constant random")]
+            public uint Seed = 0;
         }
 
         public class InputPropertiesBlend

@@ -44,6 +44,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             ReflectionProbes
         }
 
+        Hash128[] m_StateHashes;
         HDProbeBakedState[] m_HDProbeBakedStates = new HDProbeBakedState[0];
         float m_DateSinceLastLegacyWarning = float.MinValue;
         Dictionary<UnityEngine.Rendering.RenderPipeline, float> m_DateSinceLastInvalidSRPWarning 
@@ -170,8 +171,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             if (operationCount > 0)
             {
                 // == 4. ==
-                var cubemapSize = (int)hdPipeline.renderPipelineSettings.lightLoopSettings.reflectionCubemapSize;
-                var planarSize = (int)hdPipeline.renderPipelineSettings.lightLoopSettings.planarReflectionTextureSize;
+                var cubemapSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.reflectionCubemapSize;
+                var planarSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionTextureSize;
                 var cubeRT = HDRenderUtilities.CreateReflectionProbeRenderTarget(cubemapSize);
                 var planarRT = HDRenderUtilities.CreatePlanarProbeRenderTarget(planarSize);
 
@@ -294,10 +295,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
 
                 // Update state hash
-                var allBakedhash = new Hash128();
+                Array.Resize(ref m_StateHashes, m_HDProbeBakedStates.Length);
                 for (int i = 0; i < m_HDProbeBakedStates.Length; ++i)
-                    HashUtilities.AppendHash(ref m_HDProbeBakedStates[i].probeBakedHash, ref allBakedhash);
-                stateHash = allBakedhash;
+                    m_StateHashes[i] = m_HDProbeBakedStates[i].probeBakedHash;
+                stateHashes = m_StateHashes;
             }
 
             handle.ExitStage((int)BakingStages.ReflectionProbes);
@@ -314,8 +315,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 return false;
             }
 
-            var cubemapSize = (int)hdPipeline.renderPipelineSettings.lightLoopSettings.reflectionCubemapSize;
-            var planarSize = (int)hdPipeline.renderPipelineSettings.lightLoopSettings.planarReflectionTextureSize;
+            var cubemapSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.reflectionCubemapSize;
+            var planarSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionTextureSize;
 
             var cubeRT = HDRenderUtilities.CreateReflectionProbeRenderTarget(cubemapSize);
             var planarRT = HDRenderUtilities.CreatePlanarProbeRenderTarget(planarSize);
@@ -504,7 +505,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 case ProbeSettings.ProbeType.ReflectionProbe:
                     {
                         var positionSettings = ProbeCapturePositionSettings.ComputeFrom(probe, null);
-                        HDRenderUtilities.Render(probe.settings, positionSettings, cubeRT, forceFlipY: true);
+                        HDRenderUtilities.Render(probe.settings, positionSettings, cubeRT,
+                            forceFlipY: true,
+                            forceInvertBackfaceCulling: true, // Cubemap have an RHS standard, so we need to invert the face culling
+                            (uint)StaticEditorFlags.ReflectionProbeStatic
+                        );
                         HDBakingUtilities.CreateParentDirectoryIfMissing(targetFile);
                         HDTextureUtilities.WriteTextureFileToDisk(cubeRT, targetFile);
                         break;
@@ -546,7 +551,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         importer.filterMode = FilterMode.Bilinear;
                         importer.generateCubemap = TextureImporterGenerateCubemap.AutoCubemap;
                         importer.mipmapEnabled = false;
-                        importer.textureCompression = hd.renderPipelineSettings.lightLoopSettings.reflectionCacheCompressed
+                        importer.textureCompression = hd.currentPlatformRenderPipelineSettings.lightLoopSettings.reflectionCacheCompressed
                             ? TextureImporterCompression.Compressed
                             : TextureImporterCompression.Uncompressed;
                         importer.textureShape = TextureImporterShape.TextureCube;
@@ -561,7 +566,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         importer.sRGBTexture = false;
                         importer.filterMode = FilterMode.Bilinear;
                         importer.mipmapEnabled = false;
-                        importer.textureCompression = hd.renderPipelineSettings.lightLoopSettings.planarReflectionCacheCompressed
+                        importer.textureCompression = hd.currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionCacheCompressed
                             ? TextureImporterCompression.Compressed
                             : TextureImporterCompression.Uncompressed;
                         importer.textureShape = TextureImporterShape.Texture2D;

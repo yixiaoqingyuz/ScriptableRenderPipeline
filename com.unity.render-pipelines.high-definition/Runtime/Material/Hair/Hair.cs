@@ -18,7 +18,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         //-----------------------------------------------------------------------------
 
         // Main structure that store the user data (i.e user input of master node in material graph)
-        [GenerateHLSL(PackingRules.Exact, false, true, 1400)]
+        [GenerateHLSL(PackingRules.Exact, false, false, true, 1400)]
         public struct SurfaceData
         {
             [SurfaceDataAttributes("MaterialFeatures")]
@@ -43,8 +43,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public float perceptualSmoothness;
 
             // SSS
-            [SurfaceDataAttributes("Diffusion Profile")]
-            public uint diffusionProfile;
+            [SurfaceDataAttributes("Diffusion Profile Hash")]
+            public uint diffusionProfileHash;
             [SurfaceDataAttributes("Subsurface Mask")]
             public float subsurfaceMask;
 
@@ -54,8 +54,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public float thickness;
 
             // Anisotropic
-            [SurfaceDataAttributes("Tangent", true)]
-            public Vector3 tangentWS;
+            [SurfaceDataAttributes("Hair Strand Direction", true)]
+            public Vector3 hairStrandDirectionWS;
 
             // Kajiya kay
             [SurfaceDataAttributes("Secondary Smoothness")]
@@ -79,7 +79,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // BSDFData
         //-----------------------------------------------------------------------------
 
-        [GenerateHLSL(PackingRules.Exact, false, true, 1450)]
+        [GenerateHLSL(PackingRules.Exact, false, false, true, 1450)]
         public struct BSDFData
         {
             public uint materialFeatures;
@@ -102,7 +102,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public float perceptualRoughness;
 
             // SSS
-            public uint diffusionProfile;
+            public uint diffusionProfileIndex;
             public float subsurfaceMask;
 
             // Transmission
@@ -113,9 +113,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             // Anisotropic
             [SurfaceDataAttributes("", true)]
-            public Vector3 tangentWS;
-            [SurfaceDataAttributes("", true)]
-            public Vector3 bitangentWS;
+            public Vector3 hairStrandDirectionWS;
             public float roughnessT;
             public float roughnessB;
             public float anisotropy;
@@ -153,10 +151,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             PreIntegratedFGD.instance.RenderInit(PreIntegratedFGD.FGDIndex.FGD_GGXAndDisneyDiffuse, cmd);
         }
 
-        public override void Bind()
+        public override void Bind(CommandBuffer cmd)
         {
-            PreIntegratedFGD.instance.Bind(PreIntegratedFGD.FGDIndex.FGD_GGXAndDisneyDiffuse);
-            LTCAreaLight.instance.Bind();
+            PreIntegratedFGD.instance.Bind(cmd, PreIntegratedFGD.FGDIndex.FGD_GGXAndDisneyDiffuse);
+            LTCAreaLight.instance.Bind(cmd);
         }
     }
 }

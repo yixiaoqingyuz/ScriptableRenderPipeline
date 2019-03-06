@@ -115,8 +115,26 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public ShaderVariantLogLevel shaderVariantLogLevel = ShaderVariantLogLevel.Disabled;
 
         [SerializeField]
+        [Obsolete("Use diffusionProfileSettingsList instead")]
         public DiffusionProfileSettings diffusionProfileSettings;
 
+        [SerializeField]
+        public DiffusionProfileSettings[] diffusionProfileSettingsList = new DiffusionProfileSettings[0];
+
+        [NonSerialized]
+        DiffusionProfileSettings m_DefaultDiffusionProfileSettings;
+        public DiffusionProfileSettings defaultDiffusionProfileSettings
+        {
+            get
+            {
+                if (m_DefaultDiffusionProfileSettings == null)
+                {
+                    m_DefaultDiffusionProfileSettings = ScriptableObject.CreateInstance<DiffusionProfileSettings>();
+                    m_DefaultDiffusionProfileSettings.SetDefaultParams();
+                }
+                return m_DefaultDiffusionProfileSettings;
+            }
+        }
 
         // HDRP use GetRenderingLayerMaskNames to create its light linking system
         // Mean here we define our name for light linking.
@@ -197,6 +215,30 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             get
             {
                 return renderPipelineEditorResources == null ? null : renderPipelineEditorResources.shaderGraphs.autodeskInteractiveMasked;
+            }
+        }
+
+        public override Shader terrainDetailLitShader
+        {
+            get
+            {
+                return renderPipelineEditorResources == null ? null : renderPipelineEditorResources.shaders.terrainDetailLitShader;
+            }
+        }
+
+        public override Shader terrainDetailGrassShader
+        {
+            get
+            {
+                return renderPipelineEditorResources == null ? null : renderPipelineEditorResources.shaders.terrainDetailGrassShader;
+            }
+        }
+
+        public override Shader terrainDetailGrassBillboardShader
+        {
+            get
+            {
+                return renderPipelineEditorResources == null ? null : renderPipelineEditorResources.shaders.terrainDetailGrassBillboardShader;
             }
         }
 

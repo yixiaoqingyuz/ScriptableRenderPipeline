@@ -23,6 +23,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         DBufferRender,
         DBufferPrepareDrawData,
         DBufferNormal,
+        DecalsForwardEmissive,
         DisplayDebugDecalsAtlas,
         DisplayDebugViewMaterial,
         DebugViewMaterialGBuffer,
@@ -82,6 +83,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         VolumeUpdate,
 
         // Post-processing
+        StopNaNs,
         Exposure,
         TemporalAntialiasing,
         DepthOfField,

@@ -47,15 +47,11 @@ struct Light
 
 int GetPerObjectLightIndex(int index)
 {
-#if USE_STRUCTURED_BUFFER_FOR_LIGHT_DATA
-    return _AdditionalLightsBuffer[unity_LightData.x + index];
-#else
     // The following code is more optimal than indexing unity_4LightIndices0.
     // Conditional moves are branch free even on mali-400
     half2 lightIndex2 = (index < 2.0h) ? unity_LightIndices[0].xy : unity_LightIndices[0].zw;
     half i_rem = (index < 2.0h) ? index : index - 2.0h;
     return (i_rem < 1.0h) ? lightIndex2.x : lightIndex2.y;
-#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -356,11 +352,11 @@ half3 SampleLightmap(float2 lightmapUV, half3 normalWS)
     half4 transformCoords = half4(1, 1, 0, 0);
         
 #ifdef DIRLIGHTMAP_COMBINED
-    return SampleDirectionalLightmap(TEXTURE2D_PARAM(unity_Lightmap, samplerunity_Lightmap),
-        TEXTURE2D_PARAM(unity_LightmapInd, samplerunity_Lightmap),
+    return SampleDirectionalLightmap(TEXTURE2D_ARGS(unity_Lightmap, samplerunity_Lightmap),
+        TEXTURE2D_ARGS(unity_LightmapInd, samplerunity_Lightmap),
         lightmapUV, transformCoords, normalWS, encodedLightmap, decodeInstructions);
 #elif defined(LIGHTMAP_ON)
-    return SampleSingleLightmap(TEXTURE2D_PARAM(unity_Lightmap, samplerunity_Lightmap), lightmapUV, transformCoords, encodedLightmap, decodeInstructions);
+    return SampleSingleLightmap(TEXTURE2D_ARGS(unity_Lightmap, samplerunity_Lightmap), lightmapUV, transformCoords, encodedLightmap, decodeInstructions);
 #else
     return half3(0.0, 0.0, 0.0);
 #endif

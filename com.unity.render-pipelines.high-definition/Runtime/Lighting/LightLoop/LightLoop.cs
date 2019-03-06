@@ -195,13 +195,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         ReflectionProbeCache m_ReflectionProbeCache;
 
         // Structure for cookies used by directional and spotlights
+        public TextureCache2D cookieTexArray { get { return m_CookieTexArray; } }
         TextureCache2D m_CookieTexArray;
 
         // Structure for cookies used by point lights
+        public TextureCacheCubemap cubeCookieTexArray { get { return m_CubeCookieTexArray; } }
         TextureCacheCubemap m_CubeCookieTexArray;
         List<Matrix4x4> m_Env2DCaptureVP = new List<Matrix4x4>();
+        List<float> m_Env2DCaptureForward = new List<float>();
 
         // Structure for cookies used by area lights
+        public LTCAreaLightCookieManager areaLightCookieManager { get { return m_AreaLightCookieManager; } }
         LTCAreaLightCookieManager m_AreaLightCookieManager;
 
         // For now we don't use shadow cascade borders.
@@ -502,9 +506,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_lightList = new LightList();
             m_lightList.Allocate();
             m_Env2DCaptureVP.Clear();
+            m_Env2DCaptureForward.Clear();
             for (int i = 0, c = Mathf.Max(1, lightLoopSettings.planarReflectionProbeCacheSize); i < c; ++i)
+            {
                 m_Env2DCaptureVP.Add(Matrix4x4.identity);
-
+                m_Env2DCaptureForward.Add(0);
+                m_Env2DCaptureForward.Add(0);
+                m_Env2DCaptureForward.Add(0);
+            }
 
             GlobalLightLoopSettings gLightLoopSettings = hdAsset.currentPlatformRenderPipelineSettings.lightLoopSettings;
             m_CookieTexArray = new TextureCache2D("Cookie");
@@ -950,6 +959,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             lightData.shadowIndex = lightData.cookieIndex = -1;
 
+
             if (lightComponent != null && lightComponent.cookie != null)
             {
                 lightData.tileCookie = lightComponent.cookie.wrapMode == TextureWrapMode.Repeat ? 1 : 0;
@@ -1006,10 +1016,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             }
 
+            lightData.contactShadowIndex = -1;
+
             // Fallback to the first non shadow casting directional light.
             m_CurrentSunLight = m_CurrentSunLight == null ? lightComponent : m_CurrentSunLight;
-
-            lightData.contactShadowIndex = -1;
 
             // The first directional light with contact shadow enabled is always taken as dominant light
             if (GetDominantLightWithShadows(additionalShadowData, light, lightComponent))
@@ -1180,8 +1190,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             lightData.specularDimmer        = lightDistanceFade * (additionalLightData.affectSpecular ? additionalLightData.lightDimmer * m_FrameSettings.specularGlobalDimmer : 0);
             lightData.volumetricLightDimmer = lightDistanceFade * (additionalLightData.volumetricDimmer);
 
+            lightData.contactShadowIndex = -1;
             lightData.cookieIndex = -1;
             lightData.shadowIndex = -1;
+#if ENABLE_RAYTRACING
+            lightData.rayTracedAreaShadowIndex = -1;
+#endif
 
             if (lightComponent != null && lightComponent.cookie != null)
             {
@@ -1219,10 +1233,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 lightData.volumetricShadowDimmer = 1.0f;
             }
 
-            #if ENABLE_RAYTRACING
-            if(gpuLightType == GPULightType.Rectangle && lightComponent.shadows != LightShadows.None && areaShadowIndex < maxAreaLightShadows)
+#if ENABLE_RAYTRACING
+            if(gpuLightType == GPULightType.Rectangle && lightComponent.shadows != LightShadows.None && areaShadowIndex < maxAreaLightShadows && additionalLightData.useRayTracedShadows)
             {
-                lightData.shadowIndex = areaShadowIndex;
+                lightData.rayTracedAreaShadowIndex = areaShadowIndex;
                 additionalLightData.shadowIndex = -1;
                 areaShadowIndex++;
             }
@@ -1232,7 +1246,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 lightData.shadowIndex = shadowIndex;
                 additionalLightData.shadowIndex = shadowIndex;
             }
-            #else
+#else
             // fix up shadow information
             lightData.shadowIndex = shadowIndex;
             #endif
@@ -1253,7 +1267,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 lightData.nonLightMappedOnly = 0;
             }
 
-            lightData.contactShadowIndex = -1;
 
             m_lightList.lights.Add(lightData);
 
@@ -1465,16 +1478,18 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             var influenceToWorld = probe.influenceToWorld;
 
             // 31 bits index, 1 bit cache type
-            var envIndex = -1;
+            var envIndex = int.MinValue;
             switch (probe)
             {
                 case PlanarReflectionProbe planarProbe:
                     {
-                        if (!hdCamera.frameSettings.IsEnabled(FrameSettingsField.RealtimePlanarReflection))
+                        if (probe.mode == ProbeSettings.Mode.Realtime
+                            && !hdCamera.frameSettings.IsEnabled(FrameSettingsField.RealtimePlanarReflection))
                             break;
 
                         var fetchIndex = m_ReflectionPlanarProbeCache.FetchSlice(cmd, probe.texture);
-                        envIndex = (fetchIndex << 1) | (int)EnvCacheType.Texture2D;
+                        // Indices start at 1, because -0 == 0, we can know from the bit sign which cache to use
+                        envIndex = fetchIndex == -1 ? int.MinValue : -(fetchIndex + 1);
 
                         var renderData = planarProbe.renderData;
                         var worldToCameraRHSMatrix = renderData.worldToCameraRHS;
@@ -1487,29 +1502,35 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         // get the device dependent projection matrix
                         var gpuProj = GL.GetGPUProjectionMatrix(projectionMatrix, true);
                         var gpuView = worldToCameraRHSMatrix;
-
                         var vp = gpuProj * gpuView;
                         m_Env2DCaptureVP[fetchIndex] = vp;
+
+                        var capturedForwardWS = renderData.captureRotation * Vector3.forward;
+                        //capturedForwardWS.z *= -1; // Transform to RHS standard
+                        m_Env2DCaptureForward[fetchIndex * 3 + 0] = capturedForwardWS.x;
+                        m_Env2DCaptureForward[fetchIndex * 3 + 1] = capturedForwardWS.y;
+                        m_Env2DCaptureForward[fetchIndex * 3 + 2] = capturedForwardWS.z;
                         break;
                     }
-                case HDAdditionalReflectionData cubeProbe:
+                case HDAdditionalReflectionData _:
                     {
                         envIndex = m_ReflectionProbeCache.FetchSlice(cmd, probe.texture);
-                        envIndex = envIndex << 1 | (int)EnvCacheType.Cubemap;
+                        // Indices start at 1, because -0 == 0, we can know from the bit sign which cache to use
+                        envIndex = envIndex == -1 ? int.MinValue : (envIndex + 1);
 
                         // Calculate settings to use for the probe
                         var probePositionSettings = ProbeCapturePositionSettings.ComputeFrom(probe, camera.transform);
                         HDRenderUtilities.ComputeCameraSettingsFromProbeSettings(
                             probe.settings, probePositionSettings,
-                            out CameraSettings cameraSettings, out CameraPositionSettings cameraPositionSettings
+                            out _, out var cameraPositionSettings
                         );
                         capturePosition = cameraPositionSettings.position;
 
                         break;
                     }
             }
-            // -1 means that the texture is not ready yet (ie not convolved/compressed yet)
-            if (envIndex == -1)
+            // int.MinValue means that the texture is not ready yet (ie not convolved/compressed yet)
+            if (envIndex == int.MinValue)
                 return false;
 
             // Build light data
@@ -1524,12 +1545,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             switch (influence.envShape)
             {
                 case EnvShapeType.Box:
-            envLightData.blendNormalDistancePositive = influence.boxBlendNormalDistancePositive;
-            envLightData.blendNormalDistanceNegative = influence.boxBlendNormalDistanceNegative;
-            envLightData.blendDistancePositive = influence.boxBlendDistancePositive;
-            envLightData.blendDistanceNegative = influence.boxBlendDistanceNegative;
-            envLightData.boxSideFadePositive = influence.boxSideFadePositive;
-            envLightData.boxSideFadeNegative = influence.boxSideFadeNegative;
+                    envLightData.blendNormalDistancePositive = influence.boxBlendNormalDistancePositive;
+                    envLightData.blendNormalDistanceNegative = influence.boxBlendNormalDistanceNegative;
+                    envLightData.blendDistancePositive = influence.boxBlendDistancePositive;
+                    envLightData.blendDistanceNegative = influence.boxBlendDistanceNegative;
+                    envLightData.boxSideFadePositive = influence.boxSideFadePositive;
+                    envLightData.boxSideFadeNegative = influence.boxSideFadeNegative;
                     break;
                 case EnvShapeType.Sphere:
                     envLightData.blendNormalDistancePositive.x = influence.sphereBlendNormalDistance;
@@ -1916,7 +1937,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                         // Manage shadow requests
                         #if ENABLE_RAYTRACING
-                        if (additionalLightData.WillRenderShadows() && gpuLightType != GPULightType.Rectangle)
+                        if (additionalLightData.WillRenderShadows() && !additionalLightData.useRayTracedShadows)
                         #else
                         if (additionalLightData.WillRenderShadows())
                         #endif
@@ -2028,7 +2049,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         if (probeIndex < cullResults.visibleReflectionProbes.Length)
                         {
                             var probe = cullResults.visibleReflectionProbes[probeIndex];
-                            if (probe.reflectionProbe == null || probe.reflectionProbe.Equals(null))
+                            if (probe.reflectionProbe == null || probe.reflectionProbe.Equals(null) || !probe.reflectionProbe.isActiveAndEnabled)
                                 continue;
 
                             // Exclude env lights based on hdCamera.probeLayerMask
@@ -2039,10 +2060,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                             // probe.texture can be null when we are adding a reflection probe in the editor
                             if (additional.texture == null || envLightCount >= m_MaxEnvLightsOnScreen)
-                                continue;
-
-                            // Work around the culling issues. TODO: fix culling in C++.
-                            if (probe.reflectionProbe == null || !probe.reflectionProbe.isActiveAndEnabled)
                                 continue;
 
                             // Work around the data issues.
@@ -2554,6 +2571,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 cmd.SetGlobalInt(HDShaderIDs._CookieSizePOT, pot);
                 cmd.SetGlobalTexture(HDShaderIDs._Env2DTextures, m_ReflectionPlanarProbeCache.GetTexCache());
                 cmd.SetGlobalMatrixArray(HDShaderIDs._Env2DCaptureVP, m_Env2DCaptureVP);
+                cmd.SetGlobalFloatArray(HDShaderIDs._Env2DCaptureForward, m_Env2DCaptureForward);
 
                 cmd.SetGlobalBuffer(HDShaderIDs._DirectionalLightDatas, m_DirectionalLightDatas);
                 cmd.SetGlobalInt(HDShaderIDs._DirectionalLightCount, m_lightList.directionalLights.Count);
@@ -2630,7 +2648,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             bool needsContactShadows = (m_CurrentSunLight != null && sunShadowData != null && sunShadowData.contactShadows) || m_DominantLightIndex != -1;
             if (!m_EnableContactShadow || !needsContactShadows)
             {
-                cmd.SetGlobalTexture(HDShaderIDs._DeferredShadowTexture, Texture2D.blackTexture);
+                cmd.SetGlobalTexture(HDShaderIDs._DeferredShadowTexture, TextureXR.GetBlackTexture());
                 return;
             }
             cmd.SetGlobalTexture(HDShaderIDs._DeferredShadowTexture, deferredShadowRT);
@@ -2691,7 +2709,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 int numTilesX = (hdCamera.actualWidth  + (deferredShadowTileSize - 1)) / deferredShadowTileSize;
                 int numTilesY = (hdCamera.actualHeight + (deferredShadowTileSize - 1)) / deferredShadowTileSize;
 
-                cmd.DispatchCompute(screenSpaceShadowComputeShader, kernel, numTilesX, numTilesY, 1);
+                cmd.DispatchCompute(screenSpaceShadowComputeShader, kernel, numTilesX, numTilesY, XRGraphics.computePassCount);
             }
         }
 
@@ -2774,7 +2792,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         }
                         else
                         {
-                            cmd.DispatchCompute(deferredComputeShader, kernel, numTilesX, numTilesY, 1);
+                            cmd.DispatchCompute(deferredComputeShader, kernel, numTilesX, numTilesY, XRGraphics.computePassCount);
                         }
                     }
                 }

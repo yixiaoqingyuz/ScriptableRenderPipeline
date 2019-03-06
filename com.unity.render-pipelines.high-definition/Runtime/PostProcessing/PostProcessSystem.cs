@@ -404,7 +404,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         // Build the color grading lut
                         using (new ProfilingSample(cmd, "Color Grading LUT Builder", CustomSamplerId.ColorGradingLUTBuilder.GetSampler()))
                         {
-                            DoColorGrading(cmd, cs, kernel);
+                            DoColorGrading(cmd, camera, cs, kernel);
                         }
 
                         // Setup the rest of the effects
@@ -428,7 +428,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     // TODO: User effects go here
 
                     if (dynResHandler.SoftwareDynamicResIsEnabled() &&     // Dynamic resolution is on.
-                        camera.antialiasing == AntialiasingMode.FastApproximateAntialiasing)
+                        camera.antialiasing == AntialiasingMode.FastApproximateAntialiasing &&
+                        !camera.outputLogFootage)
                     {
                         using (new ProfilingSample(cmd, "FXAA", CustomSamplerId.FXAA.GetSampler()))
                         {
@@ -1800,7 +1801,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         #region Color Grading
 
         // TODO: User lut support
-        void DoColorGrading(CommandBuffer cmd, ComputeShader cs, int kernel)
+        void DoColorGrading(CommandBuffer cmd, HDCamera camera, ComputeShader cs, int kernel)
         {
             // Prepare data
             var lmsColorBalance = GetColorBalanceCoeffs(m_WhiteBalance.temperature.value, m_WhiteBalance.tint.value);
@@ -1814,15 +1815,19 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             ComputeSplitToning(out var splitShadows, out var splitHighlights);
 
             // Setup lut builder compute & grab the kernel we need
+            var tonemappingMode = m_Tonemapping.mode.value;
             var builderCS = m_Resources.shaders.lutBuilder3DCS;
-            string kernelName;
+            string kernelName = "KBuild_NoTonemap"; ;
 
-            switch (m_Tonemapping.mode.value)
+            if (m_Tonemapping.IsActive())
             {
-                case TonemappingMode.Neutral: kernelName = "KBuild_NeutralTonemap"; break;
-                case TonemappingMode.ACES:    kernelName = "KBuild_AcesTonemap"; break;
-                case TonemappingMode.Custom:  kernelName = "KBuild_CustomTonemap"; break;
-                default:                      kernelName = "KBuild_NoTonemap"; break;
+                switch (tonemappingMode)
+                {
+                    case TonemappingMode.Neutral:  kernelName = "KBuild_NeutralTonemap"; break;
+                    case TonemappingMode.ACES:     kernelName = "KBuild_AcesTonemap"; break;
+                    case TonemappingMode.Custom:   kernelName = "KBuild_CustomTonemap"; break;
+                    case TonemappingMode.External: kernelName = "KBuild_ExternalTonemap"; break;
+                }
             }
 
             int builderKernel = builderCS.FindKernel(kernelName);
@@ -1859,7 +1864,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.SetComputeTextureParam(builderCS, builderKernel, HDShaderIDs._CurveSatVsSat, m_Curves.satVsSat.value.GetTexture());
 
             // Artist-driven tonemap curve
-            if (m_Tonemapping.mode.value == TonemappingMode.Custom)
+            if (tonemappingMode == TonemappingMode.Custom)
             {
                 m_HableCurve.Init(
                     m_Tonemapping.toeStrength.value,
@@ -1878,6 +1883,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 cmd.SetComputeVectorParam(builderCS, HDShaderIDs._ShoSegmentA, m_HableCurve.uniforms.shoSegmentA);
                 cmd.SetComputeVectorParam(builderCS, HDShaderIDs._ShoSegmentB, m_HableCurve.uniforms.shoSegmentB);
             }
+            else if (tonemappingMode == TonemappingMode.External)
+            {
+                cmd.SetComputeTextureParam(builderCS, builderKernel, HDShaderIDs._LogLut3D, m_Tonemapping.lutTexture.value);
+                cmd.SetComputeVectorParam(builderCS, HDShaderIDs._LogLut3D_Params, new Vector4(1f / m_LutSize, m_LutSize - 1f, m_Tonemapping.lutContribution.value, 0f));
+            }
 
             // Generate the lut
             // See the note about Metal & Intel in LutBuilder3D.compute
@@ -1893,7 +1903,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             float postExposureLinear = Mathf.Pow(2f, m_ColorAdjustments.postExposure);
 
             // Setup the uber shader
-            var logLutSettings = new Vector4(1f / m_LutSize, m_LutSize - 1f, postExposureLinear, 0f);
+            var logLutSettings = new Vector4(1f / m_LutSize, m_LutSize - 1f, postExposureLinear, camera.outputLogFootage ? 1f : 0f);
             cmd.SetComputeTextureParam(cs, kernel, HDShaderIDs._LogLut3D, m_InternalLogLut);
             cmd.SetComputeVectorParam(cs, HDShaderIDs._LogLut3D_Params, logLutSettings);
         }
@@ -2053,7 +2063,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
             }
 
-            if (m_PostProcessEnabled)
+            if (m_PostProcessEnabled && !camera.outputLogFootage)
             {
                 if (camera.antialiasing == AntialiasingMode.FastApproximateAntialiasing && !swDynamicResIsOn)
                     m_FinalPassMaterial.EnableKeyword("FXAA");

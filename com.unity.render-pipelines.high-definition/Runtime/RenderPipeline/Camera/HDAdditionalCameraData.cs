@@ -157,6 +157,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public ref FrameSettings renderingPathCustomFrameSettings => ref m_RenderingPathCustomFrameSettings;
 
+        public bool outputLogFootage = false;
+
         // Use for debug windows
         // When camera name change we need to update the name in DebugWindows.
         // This is the purpose of this class

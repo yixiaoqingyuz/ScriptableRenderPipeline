@@ -112,6 +112,16 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public Matrix4x4[] prevViewProjMatrixStereo = new Matrix4x4[2];
 
+        public bool outputLogFootage
+        {
+            get => m_AdditionalCameraData != null && m_AdditionalCameraData.outputLogFootage;
+            set
+            {
+                if (m_AdditionalCameraData != null)
+                    m_AdditionalCameraData.outputLogFootage = value;
+            }
+        }
+
         // Always true for cameras that just got added to the pool - needed for previous matrices to
         // avoid one-frame jumps/hiccups with temporal effects (motion blur, TAA...)
         public bool isFirstFrame { get; private set; }

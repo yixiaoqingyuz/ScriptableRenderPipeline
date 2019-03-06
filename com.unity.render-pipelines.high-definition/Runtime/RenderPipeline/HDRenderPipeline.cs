@@ -1348,6 +1348,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                                 ExecuteRenderRequest(renderRequest, renderContext, cmd, framePass);
                                 cmd.SetInvertCulling(false);
                             }
+                            renderContext.ExecuteCommandBuffer(cmd);
+                            CommandBufferPool.Release(cmd);
+                            renderContext.Submit();
+                            cmd = CommandBufferPool.Get();
                         }
 
                         using (new ProfilingSample(

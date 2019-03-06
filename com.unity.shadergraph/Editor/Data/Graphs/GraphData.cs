@@ -106,7 +106,6 @@ namespace UnityEditor.ShaderGraph
         {
             get { return m_PastedNodes; }
         }
-
         #endregion
 
         #region Group Data
@@ -231,7 +230,6 @@ namespace UnityEditor.ShaderGraph
         }
 
         public MessageManager messageManager { get; set; }
-
         public bool isSubGraph { get; set; }
 
         [NonSerialized]
@@ -253,7 +251,6 @@ namespace UnityEditor.ShaderGraph
                         m_OutputNode = (AbstractMaterialNode)GetNodes<IMasterNode>().FirstOrDefault();
                     }
                 }
-
 
                 return m_OutputNode;
             }

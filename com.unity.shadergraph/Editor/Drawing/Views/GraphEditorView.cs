@@ -114,7 +114,7 @@ namespace UnityEditor.ShaderGraph.Drawing
                     }
                 };
             }
-            
+
             if (m_FloatingWindowsLayout.masterPreviewSize.x > 0f && m_FloatingWindowsLayout.masterPreviewSize.y > 0f)
             {
                 previewManager.ResizeMasterPreview(m_FloatingWindowsLayout.masterPreviewSize);
@@ -327,13 +327,11 @@ namespace UnityEditor.ShaderGraph.Drawing
                 }
             }
 
-
             UpdateEdgeColors(nodesToUpdate);
-
             return graphViewChange;
         }
 
-        void SetGroupPosition(ShaderGroup groupNode)//, GraphElement element)
+        void SetGroupPosition(ShaderGroup groupNode)
         {
             var pos = groupNode.GetPosition();
             groupNode.userData.position = new Vector2(pos.x, pos.y);

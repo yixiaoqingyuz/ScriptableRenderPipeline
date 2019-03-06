@@ -30,8 +30,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         DirectSpotBox = 1 << 6,
         IndirectReflectionProbe = 1 << 7,
         IndirectPlanarProbe = 1 << 8,
-        IndirectSky = 1 << 9,
-        SSReflection = 1 << 10,
     }
 
     public static class DebugLightHierarchyExtensions

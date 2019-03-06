@@ -7,33 +7,18 @@ using static UnityEngine.Experimental.Rendering.HDPipeline.MaterialDebugSettings
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
+    /// <summary>Engine lighting property.</summary>
     [Flags]
     public enum LightingProperty
     {
         None = 0,
+        /// <summary>Render only diffuse.</summary>
         DiffuseOnly = 1 << 0,
+        /// <summary>Render only specular.</summary>
         SpecularOnly = 1 << 1,
-
-        All = DiffuseOnly | SpecularOnly,
     }
 
-    [Flags]
-    public enum LightFilterProperty
-    {
-        None = 0,
-        DirectDirectional = 1 << 0,
-        DirectPunctual = 1 << 1,
-        DirectRectangle = 1 << 2,
-        DirectTube = 1 << 3,
-        DirectSpotCone = 1 << 4,
-        DirectSpotPyramid = 1 << 5,
-        DirectSpotBox = 1 << 6,
-        IndirectReflectionProbe = 1 << 7,
-        IndirectPlanarProbe = 1 << 8,
-        IndirectSky = 1 << 9,
-        SSReflection = 1 << 10,
-    }
-
+    /// <summary>Output a specific debug mode.</summary>
     public enum DebugFullScreen
     {
         None,
@@ -42,12 +27,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         MotionVectors
     }
 
+    /// <summary>Frame pass settings.</summary>
     public unsafe struct FramePassSettings
     {
+        /// <summary>Default settings.</summary>
         public static FramePassSettings @default = new FramePassSettings
         {
             m_MaterialProperty = MaterialSharedProperty.None,
-            m_LightingProperty = LightingProperty.All,
+            m_LightingProperty = LightingProperty.None,
             m_DebugFullScreen = DebugFullScreen.None,
             m_LightFilterProperty = DebugLightFilterMode.None
         };
@@ -66,6 +53,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
+        /// <summary>Create a new instance by copying values from <paramref name="other"/>.</summary>
+        /// <param name="other"></param>
         public FramePassSettings(FramePassSettings other)
         {
             m_MaterialProperty = other.m_MaterialProperty;
@@ -95,6 +84,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return ref *thisPtr;
         }
 
+        /// <summary>Set the light filter to use.</summary>
         public ref FramePassSettings SetLightFilter(DebugLightFilterMode filter)
         {
             m_LightFilterProperty = filter;
@@ -115,11 +105,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 case LightingProperty.SpecularOnly:
                     debug.SetDebugLightingMode(DebugLightingMode.SpecularLighting);
                     break;
-                case LightingProperty.All:
+                default:
+                {
                     debug.SetDebugLightingMode(DebugLightingMode.None);
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(m_LightingProperty));
+                }
             }
 
             debug.SetDebugLightFilterMode(m_LightFilterProperty);

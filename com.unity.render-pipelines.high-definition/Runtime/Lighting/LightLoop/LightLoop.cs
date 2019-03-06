@@ -1728,7 +1728,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // Return true if BakedShadowMask are enabled
         public bool PrepareLightsForGPU(CommandBuffer cmd, HDCamera hdCamera, CullingResults cullResults,
-            HDProbeCullingResults hdProbeCullingResults, DensityVolumeList densityVolumes, DebugDisplaySettings debugDisplaySettings)
+            HDProbeCullingResults hdProbeCullingResults, DensityVolumeList densityVolumes, DebugDisplaySettings debugDisplaySettings, FramePassData framePass)
         {
         #if ENABLE_RAYTRACING
             HDRaytracingEnvironment raytracingEnv = m_RayTracingManager.CurrentEnvironment();
@@ -1788,6 +1788,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     for (int lightIndex = 0, numLights = cullResults.visibleLights.Length; (lightIndex < numLights) && (sortCount < lightCount); ++lightIndex)
                     {
                         var light = cullResults.visibleLights[lightIndex];
+                        if (!framePass.IsLightEnabled(light.light.gameObject))
+                            continue;
+
                         var lightComponent = light.light;
 
                         // Light should always have additional data, however preview light right don't have, so we must handle the case by assigning HDUtils.s_DefaultHDAdditionalLightData
@@ -2051,7 +2054,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                             }
 
                             var probe = cullResults.visibleReflectionProbes[probeIndex];
-                            if (probe.reflectionProbe == null || probe.reflectionProbe.Equals(null) || !probe.reflectionProbe.isActiveAndEnabled)
+                            if (probe.reflectionProbe == null
+                                || probe.reflectionProbe.Equals(null) || !probe.reflectionProbe.isActiveAndEnabled
+                                || !framePass.IsLightEnabled(probe.reflectionProbe.gameObject))
                                 continue;
 
                             // Exclude env lights based on hdCamera.probeLayerMask
@@ -2088,6 +2093,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                             var planarProbeIndex = probeIndex - cullResults.visibleReflectionProbes.Length;
                             var probe = hdProbeCullingResults.visibleProbes[planarProbeIndex];
+                            if (!framePass.IsLightEnabled(probe.gameObject))
+                                continue;
 
                             // probe.texture can be null when we are adding a reflection probe in the editor
                             if (probe.texture == null || envLightCount >= k_MaxEnvLightsOnScreen)

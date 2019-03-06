@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
+    /// <summary>A collection of frame passes. To build one, <see cref="FramePassBuilder"/></summary>
     public class FramePassDataCollection : IEnumerable<FramePassData>, IDisposable
     {
         // Owned
@@ -14,6 +15,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             // Transfer ownership of the list
             => m_FramePassData = framePassData;
 
+        /// <summary>Enumerate the frame passes.</summary>
         public IEnumerator<FramePassData> GetEnumerator() =>
             (m_FramePassData ?? Enumerable.Empty<FramePassData>()).GetEnumerator();
 

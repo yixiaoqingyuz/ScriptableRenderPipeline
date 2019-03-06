@@ -151,9 +151,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public event Action<ScriptableRenderContext, HDCamera> customRender;
         public bool hasCustomRender { get { return customRender != null; } }
         
-        public FrameSettings renderingPathCustomFrameSettings = FrameSettings.defaultCamera;
+        [SerializeField, FormerlySerializedAs("renderingPathCustomFrameSettings")]
+        FrameSettings m_RenderingPathCustomFrameSettings = FrameSettings.defaultCamera;
         public FrameSettingsOverrideMask renderingPathCustomFrameSettingsOverrideMask;
         public FrameSettingsRenderType defaultFrameSettings;
+
+        public ref FrameSettings renderingPathCustomFrameSettings => ref m_RenderingPathCustomFrameSettings;
 
         FramePassDataCollection m_FramePassDataCollection = new FramePassDataCollection(null);
 

@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         /// <summary>Render only specular.</summary>
         SpecularOnly = 1 << 1,
     }
-
+    
     /// <summary>Output a specific debug mode.</summary>
     public enum DebugFullScreen
     {
@@ -106,7 +106,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     debug.SetDebugLightingMode(DebugLightingMode.SpecularLighting);
                     break;
                 default:
-                {
+        {
                     debug.SetDebugLightingMode(DebugLightingMode.None);
                     break;
                 }

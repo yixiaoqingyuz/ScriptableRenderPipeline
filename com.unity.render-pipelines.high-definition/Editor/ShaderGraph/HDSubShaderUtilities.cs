@@ -175,6 +175,8 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 new Dependency("SurfaceDescriptionInputs.uv3",                       "FragInputs.texCoord3"),
                 new Dependency("SurfaceDescriptionInputs.VertexColor",               "FragInputs.color"),
                 new Dependency("SurfaceDescriptionInputs.FaceSign",                  "FragInputs.isFrontFace"),
+
+                new Dependency("DepthOffset", "FragInputs.positionRWS"),
             };
         };
 
@@ -465,6 +467,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         public List<string> Includes;
         public string TemplateName;
         public string MaterialName;
+        public List<string> ExtraInstancingOptions;
         public List<string> ExtraDefines;
         public List<int> VertexShaderSlots;         // These control what slots are used by the pass vertex shader
         public List<int> PixelShaderSlots;          // These control what slots are used by the pass pixel shader
@@ -638,6 +641,16 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             ShaderGenerator vertexGraphInputs = new ShaderGenerator();
             ShaderSpliceUtil.BuildType(typeof(HDRPShaderStructs.VertexDescriptionInputs), activeFields, vertexGraphInputs);
 
+            ShaderGenerator instancingOptions = new ShaderGenerator();
+            {
+                instancingOptions.AddShaderChunk("#pragma multi_compile_instancing", true);
+                if (pass.ExtraInstancingOptions != null)
+                {
+                    foreach (var instancingOption in pass.ExtraInstancingOptions)
+                        instancingOptions.AddShaderChunk(instancingOption);
+                }
+            }
+
             ShaderGenerator defines = new ShaderGenerator();
             {
                 defines.AddShaderChunk(string.Format("#define SHADERPASS {0}", pass.ShaderPassName), true);
@@ -707,6 +720,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 
             // build the hash table of all named fragments      TODO: could make this Dictionary<string, ShaderGenerator / string>  ?
             Dictionary<string, string> namedFragments = new Dictionary<string, string>();
+            namedFragments.Add("InstancingOptions", instancingOptions.GetShaderString(0, false));
             namedFragments.Add("Defines", defines.GetShaderString(2, false));
             namedFragments.Add("Graph", graph.GetShaderString(2, false));
             namedFragments.Add("LightMode", pass.LightMode);

@@ -403,10 +403,18 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 if (unconstrainedSize > kDebugViewMaterialBufferLength)
                     Debug.LogError($"DebugViewMaterialBuffer is cannot handle {unconstrainedSize} elements. Only first {kDebugViewMaterialBufferLength} are kept.");
                 int size = Mathf.Min(kDebugViewMaterialBufferLength, unconstrainedSize);
-                m_DebugViewMaterial[0] = size;
-                for (int i = 0; i < size; ++i)
+                if (size == 0)
                 {
-                    m_DebugViewMaterial[i + 1] = value[i];
+                    m_DebugViewMaterial[0] = 1;
+                    m_DebugViewMaterial[1] = 0;
+                }
+                else
+                {
+                    m_DebugViewMaterial[0] = size;
+                    for (int i = 0; i < size; ++i)
+                    {
+                        m_DebugViewMaterial[i + 1] = value[i];
+                    }
                 }
             }
         }
@@ -444,7 +452,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public void DisableMaterialDebug()
         {
-            m_DebugViewMaterial[0] = 0;
+            m_DebugViewMaterial[0] = 1;
+            m_DebugViewMaterial[1] = 0;
             m_DebugViewEngine = 0;
             m_DebugViewVarying = DebugViewVarying.None;
             m_DebugViewProperties = DebugViewProperties.None;
@@ -469,7 +478,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
             else
             {
-                m_DebugViewMaterial[0] = 0;
+                m_DebugViewMaterial[0] = 1;
+                m_DebugViewMaterial[1] = 0;
             }
         }
 
@@ -501,14 +511,22 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_DebugViewGBuffer = value;
         }
 
-        public bool IsDebugGBufferEnabled()
-        {
-            return m_DebugViewGBuffer != 0;
-        }
+        public bool IsDebugGBufferEnabled() => m_DebugViewGBuffer != 0;
 
+        public bool IsDebugViewMaterialEnabled()
+        {
+            int size = m_DebugViewMaterial?[0] ?? 0;
+            bool enabled = false;
+            for (int i = 1; i <= size; ++i)
+            {
+                enabled |= m_DebugViewMaterial[i] != 0;
+            }
+            return enabled;
+        }
+        
         public bool IsDebugDisplayEnabled()
         {
-            return (m_DebugViewEngine != 0 || (m_DebugViewMaterial?[0] ?? 0) != 0 || m_DebugViewVarying != DebugViewVarying.None || m_DebugViewProperties != DebugViewProperties.None || m_DebugViewGBuffer != 0);
+            return (m_DebugViewEngine != 0 || IsDebugViewMaterialEnabled() || m_DebugViewVarying != DebugViewVarying.None || m_DebugViewProperties != DebugViewProperties.None || IsDebugGBufferEnabled());
         }
     }
 }

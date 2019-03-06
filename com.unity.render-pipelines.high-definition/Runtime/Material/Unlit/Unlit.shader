@@ -72,6 +72,10 @@ Shader "HDRP/Unlit"
         // TODO: Fix the code in legacy unity so we can customize the beahvior for GI
         _EmissionColor("Color", Color) = (1, 1, 1)
 
+        // For raytracing indirect illumination effects, we need to be able to define if the emissive part of the material should contribute or not (mainly for area light sources in order to avoid double contribution)
+        // By default, the emissive is contributing
+        [HideInInspector] _IncludeIndirectLighting("_IncludeIndirectLighting", Float) = 1.0
+
         // HACK: GI Baking system relies on some properties existing in the shader ("_MainTex", "_Cutoff" and "_Color") for opacity handling, so we need to store our version of those parameters in the hard-coded name the GI baking system recognizes.
         _MainTex("Albedo", 2D) = "white" {}
         _Color("Color", Color) = (1,1,1,1)
@@ -341,12 +345,14 @@ Shader "HDRP/Unlit"
     {
         Pass
         {
-            Name "ReflectionDXR"
-            Tags{ "LightMode" = "ReflectionDXR" }
+            Name "IndirectDXR"
+            Tags{ "LightMode" = "IndirectDXR" }
 
             HLSLPROGRAM
 
             #pragma raytracing test
+
+            #define SHADERPASS SHADERPASS_RAYTRACING_INDIRECT
 
             #include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/Raytracing/Shaders/RaytracingMacros.hlsl"
 
@@ -358,7 +364,7 @@ Shader "HDRP/Unlit"
             #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/Unlit/Unlit.hlsl"
 
             #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/Unlit/UnlitRaytracingData.hlsl"
-            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/ShaderPass/ShaderpassRaytracingReflection.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/ShaderPass/ShaderPassRaytracingIndirect.hlsl"
 
             ENDHLSL
         }
@@ -369,8 +375,10 @@ Shader "HDRP/Unlit"
             Tags{ "LightMode" = "ForwardDXR" }
 
             HLSLPROGRAM
-
+            
             #pragma raytracing test
+
+            #define SHADERPASS SHADERPASS_RAYTRACING_FORWARD
 
             #include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/Raytracing/Shaders/RaytracingMacros.hlsl"
 

@@ -266,6 +266,7 @@ MonoBehaviour:
   m_UIPosition: {x: 0, y: 0}
   m_UICollapsed: 1
   m_UISuperCollapsed: 0
+  title: 
   m_Owners:
   - {fileID: 114946465509916290}
   - {fileID: 114780028408030698}
@@ -1041,13 +1042,13 @@ VisualEffectResource:
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 26
+      - op: 25
         valueIndex: 3
         data[0]: 1
         data[1]: 0
         data[2]: -1
         data[3]: 1
-      - op: 77
+      - op: 71
         valueIndex: 4
         data[0]: -1
         data[1]: -1
@@ -1059,31 +1060,31 @@ VisualEffectResource:
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 78
+      - op: 72
         valueIndex: 6
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: -1
-      - op: 79
+      - op: 73
         valueIndex: 7
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: -1
-      - op: 26
+      - op: 25
         valueIndex: 8
         data[0]: 3
         data[1]: 2
         data[2]: -1
         data[3]: 1
-      - op: 27
+      - op: 26
         valueIndex: 9
         data[0]: 4
         data[1]: 5
         data[2]: -1
         data[3]: 1
-      - op: 13
+      - op: 12
         valueIndex: 10
         data[0]: 8
         data[1]: -1
@@ -1095,19 +1096,19 @@ VisualEffectResource:
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 13
+      - op: 12
         valueIndex: 12
         data[0]: 9
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 12
+      - op: 11
         valueIndex: 13
         data[0]: 9
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 26
+      - op: 25
         valueIndex: 14
         data[0]: 5
         data[1]: 6
@@ -1119,67 +1120,67 @@ VisualEffectResource:
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 28
+      - op: 27
         valueIndex: 16
         data[0]: 7
         data[1]: 6
         data[2]: -1
         data[3]: 1
-      - op: 80
+      - op: 74
         valueIndex: 17
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: -1
-      - op: 26
+      - op: 25
         valueIndex: 18
         data[0]: 15
         data[1]: 16
         data[2]: -1
         data[3]: 1
-      - op: 27
+      - op: 26
         valueIndex: 19
         data[0]: 12
         data[1]: 13
         data[2]: -1
         data[3]: 1
-      - op: 26
+      - op: 25
         valueIndex: 20
         data[0]: 14
         data[1]: 7
         data[2]: -1
         data[3]: 1
-      - op: 29
+      - op: 28
         valueIndex: 21
         data[0]: 6
         data[1]: 7
         data[2]: -1
         data[3]: 1
-      - op: 29
+      - op: 28
         valueIndex: 22
         data[0]: 11
         data[1]: 10
         data[2]: -1
         data[3]: 1
-      - op: 27
+      - op: 26
         valueIndex: 23
         data[0]: 20
         data[1]: 21
         data[2]: -1
         data[3]: 1
-      - op: 27
+      - op: 26
         valueIndex: 24
         data[0]: 18
         data[1]: 21
         data[2]: -1
         data[3]: 1
-      - op: 27
+      - op: 26
         valueIndex: 25
         data[0]: 19
         data[1]: 17
         data[2]: -1
         data[3]: 1
-      - op: 27
+      - op: 26
         valueIndex: 26
         data[0]: 22
         data[1]: 5
@@ -1221,19 +1222,19 @@ VisualEffectResource:
         data[1]: 27
         data[2]: 27
         data[3]: 27
-      - op: 20
+      - op: 19
         valueIndex: 45
         data[0]: 26
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 46
+      - op: 45
         valueIndex: 46
         data[0]: 32
         data[1]: 31
         data[2]: 30
         data[3]: 29
-      - op: 50
+      - op: 49
         valueIndex: 62
         data[0]: 28
         data[1]: 33
@@ -1257,13 +1258,13 @@ VisualEffectResource:
         data[1]: -1
         data[2]: -1
         data[3]: 3
-      - op: 35
+      - op: 34
         valueIndex: 71
         data[0]: 34
         data[1]: -1
         data[2]: -1
         data[3]: -1
-      - op: 76
+      - op: 70
         valueIndex: 87
         data[0]: -1
         data[1]: -1
@@ -1287,13 +1288,13 @@ VisualEffectResource:
         data[1]: -1
         data[2]: -1
         data[3]: -1
-      - op: 36
+      - op: 35
         valueIndex: 121
         data[0]: 40
         data[1]: -1
         data[2]: -1
         data[3]: -1
-      - op: 43
+      - op: 42
         valueIndex: 137
         data[0]: 41
         data[1]: 38
@@ -1305,30 +1306,24 @@ VisualEffectResource:
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 82
+      - op: 76
         valueIndex: 141
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 81
-        valueIndex: 142
+      - op: 75
+        valueIndex: 143
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: -1
       - op: 3
-        valueIndex: 144
+        valueIndex: 145
         data[0]: 36
         data[1]: 42
         data[2]: 37
         data[3]: -1
-      - op: 1
-        valueIndex: 147
-        data[0]: -1
-        data[1]: -1
-        data[2]: -1
-        data[3]: 1
       - op: 1
         valueIndex: 148
         data[0]: -1
@@ -1340,21 +1335,27 @@ VisualEffectResource:
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 3
+        data[3]: 1
       - op: 1
-        valueIndex: 152
+        valueIndex: 150
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 3
-      - op: 41
-        valueIndex: 155
+      - op: 1
+        valueIndex: 153
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
+        data[3]: 3
+      - op: 40
+        valueIndex: 156
         data[0]: 40
         data[1]: 39
         data[2]: -1
         data[3]: -1
       - op: 1
-        valueIndex: 171
+        valueIndex: 172
         data[0]: -1
         data[1]: -1
         data[2]: -1
@@ -1573,7 +1574,6 @@ VisualEffectResource:
       layout: []
       capacity: 0
       stride: 8
-    m_TemporaryBuffers: []
     m_CPUBuffers:
     - capacity: 1
       stride: 1
@@ -1604,7 +1604,7 @@ VisualEffectResource:
     - name: OnStop
       playSystems: 
       stopSystems: 00000000
-    m_RuntimeVersion: 10
+    m_RuntimeVersion: 8
     m_RendererSettings:
       motionVectorGenerationMode: 0
       shadowCastingMode: 0
@@ -1627,7 +1627,6 @@ VisualEffectResource:
     tasks:
     - type: 268435456
       buffers: []
-      temporaryBuffers: []
       values:
       - nameId: Rate
         index: 46
@@ -1671,7 +1670,6 @@ VisualEffectResource:
         index: 4
       - nameId: sourceAttributeBuffer
         index: 2
-      temporaryBuffers: []
       values:
       - nameId: Color_c
         index: 49
@@ -1696,7 +1694,6 @@ VisualEffectResource:
         index: 3
       - nameId: indirectBuffer
         index: 5
-      temporaryBuffers: []
       values:
       - nameId: deltaTime_a
         index: 43
@@ -1731,7 +1728,6 @@ VisualEffectResource:
         index: 6
       - nameId: deadListCount
         index: 4
-      temporaryBuffers: []
       values: []
       params: []
       processor: {fileID: 0}
@@ -1744,7 +1740,6 @@ VisualEffectResource:
         index: 5
       - nameId: deadListCount
         index: 4
-      temporaryBuffers: []
       values:
       - nameId: mainTexture
         index: 55

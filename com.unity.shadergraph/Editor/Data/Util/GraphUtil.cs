@@ -1064,7 +1064,7 @@ namespace UnityEditor.ShaderGraph
                 finalShader.AppendLine(@"#include ""Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl""");
                 finalShader.AppendNewLine();
 
-                finalShader.AppendLines(shaderProperties.GetPropertiesDeclaration(0));
+                finalShader.AppendLines(shaderProperties.GetPropertiesDeclaration(0, mode));
                 finalShader.AppendNewLine();
 
                 finalShader.AppendLines(surfaceDescriptionInputStruct.ToString());

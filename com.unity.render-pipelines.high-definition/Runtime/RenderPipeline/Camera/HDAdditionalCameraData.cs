@@ -157,6 +157,79 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         FramePassDataCollection m_FramePassDataCollection = new FramePassDataCollection(null);
 
+        /// <summary>Set frame passes to use.</summary>
+        /// <param name="framePasses">The frame passes to use</param>
+        /// <example>
+        /// <code>
+        /// using System.Collections.Generic;
+        /// using UnityEngine;
+        /// using UnityEngine.Experimental.Rendering;
+        /// using UnityEngine.Experimental.Rendering.HDPipeline;
+        /// using UnityEngine.Experimental.Rendering.HDPipeline.Attributes;
+        ///
+        /// [ExecuteAlways]
+        /// [RequireComponent(typeof(Camera))]
+        /// [RequireComponent(typeof(HDAdditionalCameraData))]
+        /// public class SetupFramePasses : MonoBehaviour
+        /// {
+        ///     private static RTHandleSystem.RTHandle m_ColorRT;
+        ///
+        ///     [SerializeField] private Texture m_Target;
+        ///     [SerializeField] private DebugFullScreen m_DebugFullScreen;
+        ///     [SerializeField] private DebugLightFilterMode m_DebugLightFilter;
+        ///     [SerializeField] private MaterialSharedProperty m_MaterialSharedProperty;
+        ///     [SerializeField] private LightingProperty m_LightingProperty;
+        ///     [SerializeField] private Buffers m_BuffersToCopy;
+        ///     [SerializeField] private List<GameObject> m_IncludedLights;
+        ///
+        ///
+        ///     void OnEnable()
+        ///     {
+        ///         var framePass = new FramePassSettings(FramePassSettings.@default)
+        ///             .SetLightFilter(m_DebugLightFilter);
+        ///         if (m_DebugFullScreen != DebugFullScreen.None)
+        ///             framePass = framePass.SetFullscreenOutput(m_DebugFullScreen);
+        ///         if (m_MaterialSharedProperty != MaterialSharedProperty.None)
+        ///             framePass = framePass.SetFullscreenOutput(m_MaterialSharedProperty);
+        ///         if (m_LightingProperty != LightingProperty.None)
+        ///             framePass = framePass.SetFullscreenOutput(m_LightingProperty);
+        ///
+        ///         var add = GetComponent<HDAdditionalCameraData>();
+        ///         add.SetFramePasses(
+        ///             new FramePassBuilder()
+        ///                 .Add(
+        ///                     framePass,
+        ///                     bufferId => m_ColorRT ?? (m_ColorRT = RTHandles.Alloc(512, 512)),
+        ///                     m_IncludedLights.Count > 0 ? m_IncludedLights : null,
+        ///                     new []{ m_BuffersToCopy },
+        ///                     (cmd, textures, properties) =>
+        ///                     {
+        ///                         if (m_Target != null)
+        ///                             cmd.Blit(textures[0], m_Target);
+        ///                     })
+        ///                 .Build()
+        ///         );
+        ///     }
+        ///
+        ///     private void OnGUI()
+        ///     {
+        ///         GUI.DrawTexture(new Rect(10, 10, 512, 256), m_Target);
+        ///     }
+        ///
+        ///     void OnDisable()
+        ///     {
+        ///         var add = GetComponent<HDAdditionalCameraData>();
+        ///         add.SetFramePasses(null);
+        ///     }
+        ///
+        ///     void OnValidate()
+        ///     {
+        ///         OnDisable();
+        ///         OnEnable();
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         public void SetFramePasses(FramePassDataCollection framePasses)
             => m_FramePassDataCollection = framePasses;
 

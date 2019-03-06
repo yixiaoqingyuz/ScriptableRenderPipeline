@@ -74,9 +74,19 @@ void Frag(  PackedVaryingsToPS packedInput,
 
 #if (SHADERPASS == SHADERPASS_DBUFFER_PROJECTOR) || (SHADERPASS == SHADERPASS_DBUFFER_MESH)
         uint2 htileCoord = input.positionSS.xy / 8;
-        uint oldVal = UnpackByte(_DecalHTile[COORD_TEXTURE2D_X(htileCoord)]);
-        oldVal |= surfaceData.HTileMask;
-        _DecalHTile[COORD_TEXTURE2D_X(htileCoord)] = PackByte(oldVal);
+        uint mask = surfaceData.HTileMask;
+#ifdef SUPPORTS_WAVE_INTRINSICS
+        mask = WaveActiveBitOr(mask);
+        if (WaveIsFirstLane())
+        {
+            // 64 / WaveSize atomics.
+            InterlockedOr(_DecalHTile[COORD_TEXTURE2D_X(htileCoord)], mask);
+        }
+#else
+        // 64 atomics.
+        InterlockedOr(_DecalHTile[COORD_TEXTURE2D_X(htileCoord)], mask);
+#endif
+
 #endif
 
 #if (SHADERPASS == SHADERPASS_DBUFFER_PROJECTOR) || (SHADERPASS == SHADERPASS_FORWARD_EMISSIVE_PROJECTOR)

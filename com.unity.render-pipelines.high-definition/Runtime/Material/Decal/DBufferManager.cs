@@ -32,8 +32,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 m_TextureShaderIDs[dbufferIndex] = HDShaderIDs._DBufferTexture[dbufferIndex];
             }
 
-            // We use 8x8 tiles in order to match the native GCN HTile as closely as possible.
-            m_HTile = RTHandles.Alloc(size => new Vector2Int((size.x + 7) / 8, (size.y + 7) / 8), filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R8_UNorm, enableRandomWrite: true, xrInstancing: true, useDynamicScale: true, name: "DBufferHTile"); // Enable UAV
+            // We use 8x8 tiles in order to match the native GCN HTile as closely as po   ssible.
+            m_HTile = RTHandles.Alloc(size => new Vector2Int((size.x + 7) / 8, (size.y + 7) / 8), filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R32_UInt, enableRandomWrite: true, xrInstancing: true, useDynamicScale: true, name: "DBufferHTile"); // Enable UAV
         }
 
         override public void DestroyBuffers()

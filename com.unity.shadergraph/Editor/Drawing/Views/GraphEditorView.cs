@@ -491,7 +491,7 @@ namespace UnityEditor.ShaderGraph.Drawing
                 if (edgeView != null)
                 {
                     var nodeView = (IShaderNodeView)edgeView.input.node;
-                    if (nodeView.node != null)
+                    if (nodeView?.node != null)
                     {
                         nodesToUpdate.Add(nodeView);
                     }

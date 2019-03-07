@@ -70,7 +70,7 @@
             "typeInfo": {
                 "fullName": "UnityEditor.ShaderGraph.TextureShaderProperty"
             },
-            "JSONnodeData": "{\n    \"m_Name\": \"Thread Map\",\n    \"m_GeneratePropertyBlock\": true,\n    \"m_Guid\": {\n        \"m_GuidSerialized\": \"7ed7227f-2a2c-4d93-9ca4-8f6beb19b4a1\"\n    },\n    \"m_DefaultReferenceName\": \"\",\n    \"m_OverrideReferenceName\": \"_ThreadMap\",\n    \"m_Value\": {\n        \"m_SerializedTexture\": \"\",\n        \"m_Guid\": \"0864a2ad592505446b25b8dfa63ffd80\"\n    },\n    \"m_Modifiable\": true,\n    \"m_DefaultType\": 2\n}"
+            "JSONnodeData": "{\n    \"m_Name\": \"Thread Map\",\n    \"m_GeneratePropertyBlock\": true,\n    \"m_Guid\": {\n        \"m_GuidSerialized\": \"7ed7227f-2a2c-4d93-9ca4-8f6beb19b4a1\"\n    },\n    \"m_DefaultReferenceName\": \"\",\n    \"m_OverrideReferenceName\": \"_ThreadMap\",\n    \"m_Value\": {\n        \"m_SerializedTexture\": \"\",\n        \"m_Guid\": \"cd19c89d4b2f99f439cb28098be331dc\"\n    },\n    \"m_Modifiable\": true,\n    \"m_DefaultType\": 2\n}"
         },
         {
             "typeInfo": {

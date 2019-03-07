@@ -24,8 +24,8 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 
             // Base (copy from LightEditor.cs)
             public readonly GUIContent outterAngle = new GUIContent("Outter Angle", "Controls the angle, in degrees, at the base of a Spot Light's cone.");
-            public readonly GUIContent cookieSizeX = new GUIContent("Size X", "Controls the width of the Cookie mask currently assigned to the Light.");
-            public readonly GUIContent cookieSizeY = new GUIContent("Size Y", "Controls the height of the Cookie mask currently assigned to the Light.");
+            public readonly GUIContent cookieSizeX = new GUIContent("Size X", "Sets the width of the Cookie mask currently assigned to the Light.");
+            public readonly GUIContent cookieSizeY = new GUIContent("Size Y", "Sets the height of the Cookie mask currently assigned to the Light.");
             public readonly GUIContent shadowBias = new GUIContent("Bias", "Controls the distance at which HDRP pushes shadows away from the Light. Useful for avoiding false self-shadowing artifacts.");
             public readonly GUIContent shadowNormalBias = new GUIContent("Normal Bias", "Controls distance at which HDRP shrinks the shadow casting surfaces along the surface normal. Useful for avoiding false self-shadowing artifacts.");
             public readonly GUIContent shadowNearPlane = new GUIContent("Near Plane", "Controls the value for the active Camera's Near clipping Plane for rendering shadows. Currently clamped to 0.1 units or 1% of the lights range property, whichever is lower.");
@@ -102,6 +102,14 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             public readonly GUIContent blockerSampleCount = new GUIContent("Blocker Sample Count", "Sample count HDRP uses to determine the size of the blocker.");
             public readonly GUIContent filterSampleCount = new GUIContent("Filter Sample Count");
             public readonly GUIContent minFilterSize = new GUIContent("Minimal size of the filter");
+            public readonly GUIContent areaLightShadowCone = new GUIContent("Shadow Cone", "Aperture of the cone used for shadowing the area light.");
+#if ENABLE_RAYTRACING
+            public readonly GUIContent useRayTracedShadows = new GUIContent("Use Ray traced shadows", "If selected, ray traced shadows are used in place of rasterized ones");
+#endif
+            public readonly GUIContent evsmExponent = new GUIContent("EVSM Exponent", "Exponent used for depth warping. Increasing this could reduce light leak and result in a change in appearance of the shadow.");
+            public readonly GUIContent evsmLightLeakBias = new GUIContent("Light Leak Bias", "Increasing this value light leaking, but it eats up a bit of the softness of the shadow.");
+            public readonly GUIContent evsmVarianceBias = new GUIContent("Variance Bias", "Variance Bias for EVSM. This is to contrast numerical accuracy issues. ");
+            public readonly GUIContent evsmAdditionalBlurPasses = new GUIContent("Blur passes", "Increasing this will increase the softness of the shadow, but it will severely impact performance.");
 
             // Very high shadow settings
             public readonly GUIContent lightAngle = new GUIContent("Light Angle");

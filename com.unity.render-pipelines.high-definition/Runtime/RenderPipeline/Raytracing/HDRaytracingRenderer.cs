@@ -20,9 +20,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // The kernel that allows us to override the color buffer
         Material m_RaytracingFlagMaterial = null;
 
-        // Light cluster structure
-        public HDRaytracingLightCluster m_LightCluster = null;
-
         // String values
         const string m_RayGenShaderName = "RayGenRenderer";
         const string m_MissShaderName = "MissShaderRenderer";
@@ -54,10 +51,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             m_RaytracingFlagTarget = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R8_SNorm, enableRandomWrite: true, useMipMap: false, name: "RaytracingFlagTexture");
 
-            // Allocate the light cluster
-            m_LightCluster = new HDRaytracingLightCluster();
-            m_LightCluster.Initialize(asset, raytracingManager);
-
             m_RaytracingFlagStateBlock = new RenderStateBlock
             {
                 depthState = new DepthState(false, CompareFunction.LessEqual),
@@ -67,9 +60,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public void Release()
         {
-            m_LightCluster.ReleaseResources();
-            m_LightCluster = null;
-
             RTHandles.Release(m_RaytracingFlagTarget);
 
             if (m_RaytracingFlagMaterial != null)
@@ -127,29 +117,27 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             // First thing to check is: Do we have a valid ray-tracing environment?
             HDRaytracingEnvironment rtEnvironement = m_RaytracingManager.CurrentEnvironment();
-            BlueNoise blueNoise = m_RaytracingManager.GetBlueNoiseManager();
             RaytracingShader forwardShader = m_PipelineAsset.renderPipelineResources.shaders.forwardRaytracing;
             Shader raytracingMask = m_PipelineAsset.renderPipelineResources.shaders.raytracingFlagMask;
 
-            // Try to grab the acceleration structure and the list of HD lights for the target camera
-            RaytracingAccelerationStructure accelerationStructure = m_RaytracingManager.RequestAccelerationStructure(hdCamera);
-            List<HDAdditionalLightData> lightData = m_RaytracingManager.RequestHDLightList(hdCamera);
-
-            bool missingResources = rtEnvironement == null || blueNoise == null || forwardShader == null || raytracingMask == null || accelerationStructure == null || lightData == null 
-                                    || m_PipelineResources.textures.owenScrambledTex == null || m_PipelineResources.textures.scramblingTex == null;
+            // Check the validity of the state before computing the effect
+            bool invalidState = rtEnvironement == null || !rtEnvironement.raytracedObjects
+                || forwardShader == null || raytracingMask == null
+                || m_PipelineResources.textures.owenScrambledTex == null || m_PipelineResources.textures.scramblingTex == null;
 
             // If any resource or game-object is missing We stop right away
-            if (missingResources || !rtEnvironement.raytracedObjects)
+            if (invalidState)
                 return;
+
+            // Grab the acceleration structure and the list of HD lights for the target camera
+            RaytracingAccelerationStructure accelerationStructure = m_RaytracingManager.RequestAccelerationStructure(rtEnvironement.raytracedLayerMask);
+            HDRaytracingLightCluster lightCluster = m_RaytracingManager.RequestLightCluster(rtEnvironement.raytracedLayerMask);
 
             if (m_RaytracingFlagMaterial == null)
                 m_RaytracingFlagMaterial = CoreUtils.CreateEngineMaterial(raytracingMask);
 
             // Before going into raytracing, we need to flag which pixels needs to be raytracing
             EvaluateRaytracingMask(cull, hdCamera, cmd, renderContext);
-
-            // Evaluate the light cluster
-            m_LightCluster.EvaluateLightClusters(cmd, hdCamera, lightData);
 
             // Define the shader pass to use for the reflection pass
             cmd.SetRaytracingShaderPass(forwardShader, "ForwardDXR");
@@ -175,16 +163,16 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             float pixelSpreadAngle = Mathf.Atan(2.0f * Mathf.Tan(hdCamera.camera.fieldOfView * Mathf.PI / 360.0f) / Mathf.Min(hdCamera.actualWidth, hdCamera.actualHeight));
             cmd.SetRaytracingFloatParam(forwardShader, HDShaderIDs._PixelSpreadAngle, pixelSpreadAngle);
 
-            if(lightData.Count != 0)
+            // Set the light cluster data if available
             {
                 // LightLoop data
-                cmd.SetGlobalBuffer(HDShaderIDs._RaytracingLightCluster, m_LightCluster.GetCluster());
-                cmd.SetGlobalBuffer(HDShaderIDs._LightDatasRT, m_LightCluster.GetLightDatas());
-                cmd.SetGlobalVector(HDShaderIDs._MinClusterPos, m_LightCluster.GetMinClusterPos());
-                cmd.SetGlobalVector(HDShaderIDs._MaxClusterPos, m_LightCluster.GetMaxClusterPos());
+                cmd.SetGlobalBuffer(HDShaderIDs._RaytracingLightCluster, lightCluster.GetCluster());
+                cmd.SetGlobalBuffer(HDShaderIDs._LightDatasRT, lightCluster.GetLightDatas());
+                cmd.SetGlobalVector(HDShaderIDs._MinClusterPos, lightCluster.GetMinClusterPos());
+                cmd.SetGlobalVector(HDShaderIDs._MaxClusterPos, lightCluster.GetMaxClusterPos());
                 cmd.SetGlobalInt(HDShaderIDs._LightPerCellCount, rtEnvironement.maxNumLightsPercell);
-                cmd.SetGlobalInt(HDShaderIDs._PunctualLightCountRT, m_LightCluster.GetPunctualLightCount());
-                cmd.SetGlobalInt(HDShaderIDs._AreaLightCountRT, m_LightCluster.GetAreaLightCount());
+                cmd.SetGlobalInt(HDShaderIDs._PunctualLightCountRT, lightCluster.GetPunctualLightCount());
+                cmd.SetGlobalInt(HDShaderIDs._AreaLightCountRT, lightCluster.GetAreaLightCount());
             }
 
             // Set the data for the ray miss

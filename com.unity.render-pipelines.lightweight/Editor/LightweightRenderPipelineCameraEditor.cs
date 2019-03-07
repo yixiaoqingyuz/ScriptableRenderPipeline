@@ -25,23 +25,23 @@ namespace UnityEditor.Rendering.LWRP
         internal class Styles
         {
             // Groups
-            public static GUIContent commonCameraSettingsText = EditorGUIUtility.TrTextContent("Projection");
-            public static GUIContent environmentSettingsText = EditorGUIUtility.TrTextContent("Environment");
-            public static GUIContent outputSettingsText = EditorGUIUtility.TrTextContent("Output");
-            public static GUIContent renderingSettingsText = EditorGUIUtility.TrTextContent("Rendering");
-            public static GUIContent stackSettingsText = EditorGUIUtility.TrTextContent("Stack");
+            public static GUIContent commonCameraSettingsText = EditorGUIUtility.TrTextContent("Projection", "These settings control how the camera views the world.");
+            public static GUIContent environmentSettingsText = EditorGUIUtility.TrTextContent("Environment", "These settings control what the camera background looks like.");
+            public static GUIContent outputSettingsText = EditorGUIUtility.TrTextContent("Output", "These settings control how the camera output is formatted.");
+            public static GUIContent renderingSettingsText = EditorGUIUtility.TrTextContent("Rendering", "These settings coltrol for the specific rendering features for this camera.");
+            public static GUIContent stackSettingsText = EditorGUIUtility.TrTextContent("Stack", "The list of overlay cameras assigned to this camera. ");
 
             public static GUIContent backgroundType = EditorGUIUtility.TrTextContent("Background Type", "Controls how to initialize the Camera's background.\n\nSkybox initializes camera with Skybox, defaulting to a background color if no skybox is found.\n\nSolid Color initializes background with the background color.\n\nUninitialized has undefined values for the camera background. Use this only if you are rendering all pixels in the Camera's view.");
             public static GUIContent cameraType = EditorGUIUtility.TrTextContent("Render Mode", "Controls which type of camera this is.");
-            public static GUIContent renderingShadows = EditorGUIUtility.TrTextContent("Render Shadows", "Enable this to make this camera render shadows.");
+            public static GUIContent renderingShadows = EditorGUIUtility.TrTextContent("Render Shadows", "Makes this camera render shadows.");
             public static GUIContent requireDepthTexture = EditorGUIUtility.TrTextContent("Depth Texture", "On makes this camera create a _CameraDepthTexture, which is a copy of the rendered depth values.\nOff makes the camera not create a depth texture.\nUse Pipeline Settings applies settings from the Render Pipeline Asset.");
-            public static GUIContent requireOpaqueTexture = EditorGUIUtility.TrTextContent("Opaque Texture", "On makes this camera create a _CameraOpaqueTexture, which is a copy of the rendered view.\nOff makes the camera does not create an opaque texture.\nUse Pipeline Settings applies settings from the Render Pipeline Asset.");
+            public static GUIContent requireOpaqueTexture = EditorGUIUtility.TrTextContent("Opaque Texture", "On makes this camera create a _CameraOpaqueTexture, which is a copy of the rendered view.\nOff makes the camera not create an opaque texture.\nUse Pipeline Settings applies settings from the Render Pipeline Asset.");
             public static GUIContent allowMSAA = EditorGUIUtility.TrTextContent("MSAA", "Use Multi Sample Anti-Aliasing to reduce aliasing.");
             public static GUIContent allowHDR = EditorGUIUtility.TrTextContent("HDR", "High Dynamic Range gives you a wider range of light intensities, so your lighting looks more realistic. With it, you can still see details and experience less saturation even with bright light.", (Texture) null);
             public static GUIContent priority = EditorGUIUtility.TrTextContent("Priority", "A camera with a higher priority is drawn on top of a camera with a lower priority [ -100, 100 ].");
 
             public static GUIContent rendererType = EditorGUIUtility.TrTextContent("Renderer Type", "Controls which renderer this camera uses.");
-            public static GUIContent rendererData = EditorGUIUtility.TrTextContent("Renderer Data", "Required by a custom Renderer. If none is assigned this camera uses the one assigned in the Pipeline Settings.");
+            public static GUIContent rendererData = EditorGUIUtility.TrTextContent("Renderer Data", "Required by a custom renderer. If none is assigned, this camera uses the one assigned in the Pipeline Settings.");
 
             public readonly GUIContent[] renderingPathOptions = { EditorGUIUtility.TrTextContent("Forward") };
             public readonly string hdrDisabledWarning = "HDR rendering is disabled in the Lightweight Render Pipeline asset.";

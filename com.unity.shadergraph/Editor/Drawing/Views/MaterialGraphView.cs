@@ -32,7 +32,18 @@ namespace UnityEditor.ShaderGraph.Drawing
             get 
             { 
                 SubGraphOutputNode subGraphOutput = (SubGraphOutputNode)Activator.CreateInstance(typeof(SubGraphOutputNode));
+
                 return selection.OfType<Node>().Where(v => (v.title != subGraphOutput.name)).Any() || selection.OfType<Group>().Any() || selection.OfType<BlackboardField>().Any(); 
+            }
+        }
+
+        protected override bool canCutSelection
+        {
+            get
+            {
+                SubGraphOutputNode subGraphOutput = (SubGraphOutputNode)Activator.CreateInstance(typeof(SubGraphOutputNode));
+
+                return selection.OfType<Node>().Where(v => (v.title != subGraphOutput.name)).Any() || selection.OfType<Group>().Any() || selection.OfType<BlackboardField>().Any();
             }
         }
 

@@ -1,0 +1,5 @@
+{
+    "displayName":"Shader Graph Samples",
+    "description": "Adds Shader Graph samples to your project, showing typical uses for the Hair, Fabric, and Decal master nodes for Shader Graph.",
+    "createSeparatePackage": false
+}

@@ -275,6 +275,46 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!28 &113989597
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 23_ParameterBinders_PositionMap
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  serializedVersion: 2
+  m_Width: 10
+  m_Height: 1
+  m_CompleteImageSize: 160
+  m_TextureFormat: 20
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 0
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 0
+  image data: 160
+  _typelessdata: 6666c6bf000000003d0ab73f0000803f7b14eebf0000e03f000000000000803fb4c80e405839b4bf000000000000803f8fc23540ae473140000000000000803f77be1fc0be9f02c0000000000000803fd57809bfcba115c0000000000000803fc1ca71c0621038c0000000000000803f6210d83f560e4dc0000000000000803f48e19a3f1f856b40000000000000803fa4706dc033337340000000000000803f
+  m_StreamData:
+    offset: 0
+    size: 0
+    path: 
 --- !u!1 &136537496
 GameObject:
   m_ObjectHideFlags: 0
@@ -379,46 +419,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 140386254}
   m_CullTransparentMesh: 0
---- !u!28 &176552153
-Texture2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  serializedVersion: 2
-  m_Width: 7
-  m_Height: 1
-  m_CompleteImageSize: 56
-  m_TextureFormat: 17
-  m_MipCount: 1
-  m_IsReadable: 1
-  m_StreamingMipmaps: 0
-  m_StreamingMipmapsPriority: 0
-  m_AlphaIsTransparency: 0
-  m_ImageCount: 1
-  m_TextureDimension: 2
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
-  m_LightmapFormat: 0
-  m_ColorSpace: 0
-  image data: 56
-  _typelessdata: 84bd7b303baa003c78c331403baa003c0639fe413baa003c583becb93baa003c773d2ec03baa003cae3f93be3baa003c5b3b6ebbc347003c
-  m_StreamData:
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &178800317
 GameObject:
   m_ObjectHideFlags: 0
@@ -710,6 +710,46 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 325059109}
   m_CullTransparentMesh: 0
+--- !u!28 &402388347
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  serializedVersion: 2
+  m_Width: 7
+  m_Height: 1
+  m_CompleteImageSize: 14
+  m_TextureFormat: 15
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 0
+  image data: 14
+  _typelessdata: 662e662e662e662e662e662e662e
+  m_StreamData:
+    offset: 0
+    size: 0
+    path: 
 --- !u!115 &408635438
 MonoScript:
   m_ObjectHideFlags: 0
@@ -1129,6 +1169,7 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.Dropdown+DropdownEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
+  m_AlphaFadeSpeed: 0.15
 --- !u!114 &750347518
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1784,46 +1825,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1059031384}
   m_CullTransparentMesh: 0
---- !u!28 &1108956336
-Texture2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  serializedVersion: 2
-  m_Width: 7
-  m_Height: 1
-  m_CompleteImageSize: 56
-  m_TextureFormat: 17
-  m_MipCount: 1
-  m_IsReadable: 1
-  m_StreamingMipmaps: 0
-  m_StreamingMipmapsPriority: 0
-  m_AlphaIsTransparency: 0
-  m_ImageCount: 1
-  m_TextureDimension: 2
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
-  m_LightmapFormat: 0
-  m_ColorSpace: 0
-  image data: 56
-  _typelessdata: 60405eb63baa003c84bd7b303baa003c84bd7b303baa003c60405eb63baa003c583becb93baa003c583becb93baa003cae3f93be3baa003c
-  m_StreamData:
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &1133309027
 GameObject:
   m_ObjectHideFlags: 0
@@ -1864,6 +1865,7 @@ MonoBehaviour:
   volumeAnchorOverride: {fileID: 0}
   antialiasing: 0
   dithering: 0
+  stopNaNs: 0
   physicalParameters:
     m_Iso: 200
     m_ShutterSpeed: 0.005
@@ -1879,16 +1881,16 @@ MonoBehaviour:
   probeLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  renderingPathCustomFrameSettings:
+  m_RenderingPathCustomFrameSettings:
     bitDatas:
-      data1: 69275665694493
-      data2: 4539628424389459968
+      data1: 12885098496
+      data2: 0
   renderingPathCustomFrameSettingsOverrideMask:
     mask:
       data1: 0
       data2: 0
   defaultFrameSettings: 0
-  m_Version: 0
+  m_Version: 5
   m_ObsoleteRenderingPath: 0
   m_ObsoleteFrameSettings:
     overrides: 0
@@ -2446,46 +2448,6 @@ MonoScript:
   m_ExecutionOrder: 0
   m_ClassName: VFXAudioSpectrumBinder
   m_Namespace: UnityEngine.Experimental.VFX.Utility
---- !u!28 &1414439151
-Texture2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: AudioSpectrum64
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  serializedVersion: 2
-  m_Width: 64
-  m_Height: 1
-  m_CompleteImageSize: 256
-  m_TextureFormat: 18
-  m_MipCount: 1
-  m_IsReadable: 1
-  m_StreamingMipmaps: 0
-  m_StreamingMipmapsPriority: 0
-  m_AlphaIsTransparency: 0
-  m_ImageCount: 1
-  m_TextureDimension: 2
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
-  m_LightmapFormat: 0
-  m_ColorSpace: 0
-  image data: 256
-  _typelessdata: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-  m_StreamData:
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &1448428318
 GameObject:
   m_ObjectHideFlags: 0
@@ -2579,7 +2541,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cdafc37f32b176349b1684c4455b98e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_ExecuteInEditor: 1
+  m_ExecuteInEditor: 0
   m_Bindings:
   - {fileID: 1455842171}
   - {fileID: 1455842170}
@@ -2662,77 +2624,77 @@ VisualEffect:
       m_Array:
       - m_Value: 1
         m_Name: Item4 Sphere_radius
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: 10
         m_Name: Item4 LightRadius
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: 23.873241
         m_Name: Item4 LightBrightness
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: 0.703
         m_Name: UIFloat
-        m_Overridden: 1
+        m_Overridden: 0
     m_Vector2f:
       m_Array: []
     m_Vector3f:
       m_Array:
       - m_Value: {x: 3, y: 3, z: 0}
         m_Name: Item1 Position
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: {x: 321.75665, y: 24.938692, z: 336.56842}
         m_Name: Item2 Transform_angles
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: {x: 0.59, y: 3, z: 0}
         m_Name: Item2 Transform_position
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: {x: 1.8328693, y: 1.1765, z: 1.1765}
         m_Name: Item2 Transform_scale
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: {x: -16.8, y: 0, z: 0}
         m_Name: Bounds_center
         m_Overridden: 1
       - m_Value: {x: 0.01, y: 0.08, z: 0}
         m_Name: Item4 Sphere_center
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: {x: 3.6, y: 1.67, z: 0.08}
         m_Name: Item4 LightPosition_position
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: {x: -3.66, y: 0.339, z: 0}
         m_Name: Item5_Source_position
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: {x: -0.96004486, y: -0.2798462, z: 0}
         m_Name: Item5_Normal_direction
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: {x: -0.9500451, y: -0.19984627, z: 0}
         m_Name: Item5_TargetPosition_position
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: {x: 0.01, y: 0.08, z: 0}
         m_Name: Item4 LightPreviousPosition
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: {x: 0, y: 0, z: 0}
         m_Name: Item4_Velocity
-        m_Overridden: 1
+        m_Overridden: 0
     m_Vector4f:
       m_Array:
       - m_Value: {x: 1, y: 0.36811948, z: 0, w: 1}
         m_Name: Item4 LightColor
-        m_Overridden: 1
+        m_Overridden: 0
     m_Uint:
       m_Array:
       - m_Value: 64
         m_Name: AudioSpectrumSamples
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: 7
         m_Name: BoneCount
-        m_Overridden: 1
+        m_Overridden: 0
     m_Int:
       m_Array:
       - m_Value: 2
         m_Name: UIDropDown
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: 10
         m_Name: MultiPosCount
-        m_Overridden: 1
+        m_Overridden: 0
     m_Matrix4x4f:
       m_Array: []
     m_AnimationCurve:
@@ -2741,32 +2703,32 @@ VisualEffect:
       m_Array: []
     m_NamedObject:
       m_Array:
-      - m_Value: {fileID: 1414439151}
+      - m_Value: {fileID: 1696182409}
         m_Name: AudioSpectrum
-        m_Overridden: 1
-      - m_Value: {fileID: 1108956336}
+        m_Overridden: 0
+      - m_Value: {fileID: 2008685013}
         m_Name: Tree_PositionMap
-        m_Overridden: 1
-      - m_Value: {fileID: 2104454618}
+        m_Overridden: 0
+      - m_Value: {fileID: 402388347}
         m_Name: Tree_RadiusMap
-        m_Overridden: 1
-      - m_Value: {fileID: 176552153}
+        m_Overridden: 0
+      - m_Value: {fileID: 1457572141}
         m_Name: Tree_TargetPositionMap
-        m_Overridden: 1
-      - m_Value: {fileID: 1745969561}
+        m_Overridden: 0
+      - m_Value: {fileID: 113989597}
         m_Name: MultiPosMap
-        m_Overridden: 1
+        m_Overridden: 0
     m_Bool:
       m_Array:
       - m_Value: 0
         m_Name: Item1 ToggleColor
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: 1
         m_Name: Item5_IsHit
-        m_Overridden: 1
+        m_Overridden: 0
       - m_Value: 0
         m_Name: UIBool
-        m_Overridden: 1
+        m_Overridden: 0
 --- !u!4 &1455842157
 Transform:
   m_ObjectHideFlags: 0
@@ -3067,6 +3029,46 @@ MonoBehaviour:
   - {fileID: 1520984581}
   - {fileID: 1619992806}
   EveryFrame: 0
+--- !u!28 &1457572141
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  serializedVersion: 2
+  m_Width: 7
+  m_Height: 1
+  m_CompleteImageSize: 56
+  m_TextureFormat: 17
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 0
+  image data: 56
+  _typelessdata: 84bd7b303baa003c78c331403baa003c0639fe413baa003c583becb93baa003c773d2ec03baa003cae3f93be3baa003c5b3b6ebbc347003c
+  m_StreamData:
+    offset: 0
+    size: 0
+    path: 
 --- !u!1 &1520984581
 GameObject:
   m_ObjectHideFlags: 0
@@ -3223,6 +3225,46 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!28 &1696182409
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: AudioSpectrum64
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  serializedVersion: 2
+  m_Width: 64
+  m_Height: 1
+  m_CompleteImageSize: 256
+  m_TextureFormat: 18
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 0
+  image data: 256
+  _typelessdata: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+  m_StreamData:
+    offset: 0
+    size: 0
+    path: 
 --- !u!1 &1702638729
 GameObject:
   m_ObjectHideFlags: 0
@@ -3498,46 +3540,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1731343382}
   m_CullTransparentMesh: 0
---- !u!28 &1745969561
-Texture2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 23_ParameterBinders_PositionMap
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  serializedVersion: 2
-  m_Width: 10
-  m_Height: 1
-  m_CompleteImageSize: 160
-  m_TextureFormat: 20
-  m_MipCount: 1
-  m_IsReadable: 1
-  m_StreamingMipmaps: 0
-  m_StreamingMipmapsPriority: 0
-  m_AlphaIsTransparency: 0
-  m_ImageCount: 1
-  m_TextureDimension: 2
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 0
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
-  m_LightmapFormat: 0
-  m_ColorSpace: 0
-  image data: 160
-  _typelessdata: 6666c6bf000000003d0ab73f0000803f7b14eebf0000e03f000000000000803fb4c80e405839b4bf000000000000803f8fc23540ae473140000000000000803f77be1fc0be9f02c0000000000000803fd57809bfcba115c0000000000000803fc1ca71c0621038c0000000000000803f6210d83f560e4dc0000000000000803f48e19a3f1f856b40000000000000803fa4706dc033337340000000000000803f
-  m_StreamData:
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &1764344724
 GameObject:
   m_ObjectHideFlags: 0
@@ -3776,8 +3778,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 3
-  m_Version: 3
+  version: 4
+  m_Version: 4
   directionalIntensity: 3.1415927
   punctualIntensity: 600
   areaIntensity: 200
@@ -3794,7 +3796,7 @@ MonoBehaviour:
   affectSpecular: 1
   nonLightmappedOnly: 0
   lightTypeExtent: 0
-  spotLightShape: 0
+  m_SpotLightShape: 0
   shapeWidth: 0.5
   shapeHeight: 0.5
   aspectRatio: 1
@@ -3808,6 +3810,11 @@ MonoBehaviour:
   displayLightIntensity: 300
   displayAreaLightEmissiveMesh: 0
   areaLightCookie: {fileID: 0}
+  areaLightShadowCone: 120
+  evsmExponent: 15
+  evsmLightLeakBias: 0
+  evsmVarianceBias: 0.00001
+  evsmBlurPasses: 0
   lightLayers: 1
   shadowNearPlane: 0.1
   shadowSoftness: 0.5
@@ -3987,6 +3994,46 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!28 &2008685013
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  serializedVersion: 2
+  m_Width: 7
+  m_Height: 1
+  m_CompleteImageSize: 56
+  m_TextureFormat: 17
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 0
+    m_WrapV: 0
+    m_WrapW: 0
+  m_LightmapFormat: 0
+  m_ColorSpace: 0
+  image data: 56
+  _typelessdata: 60405eb63baa003c84bd7b303baa003c84bd7b303baa003c60405eb63baa003c583becb93baa003c583becb93baa003cae3f93be3baa003c
+  m_StreamData:
+    offset: 0
+    size: 0
+    path: 
 --- !u!1 &2091214680
 GameObject:
   m_ObjectHideFlags: 0
@@ -4017,46 +4064,6 @@ Transform:
   m_Father: {fileID: 70232085}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!28 &2104454618
-Texture2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_ForcedFallbackFormat: 4
-  m_DownscaleFallback: 0
-  serializedVersion: 2
-  m_Width: 7
-  m_Height: 1
-  m_CompleteImageSize: 14
-  m_TextureFormat: 15
-  m_MipCount: 1
-  m_IsReadable: 1
-  m_StreamingMipmaps: 0
-  m_StreamingMipmapsPriority: 0
-  m_AlphaIsTransparency: 0
-  m_ImageCount: 1
-  m_TextureDimension: 2
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
-  m_LightmapFormat: 0
-  m_ColorSpace: 0
-  image data: 14
-  _typelessdata: 662e662e662e662e662e662e662e
-  m_StreamData:
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &2137579971
 GameObject:
   m_ObjectHideFlags: 0

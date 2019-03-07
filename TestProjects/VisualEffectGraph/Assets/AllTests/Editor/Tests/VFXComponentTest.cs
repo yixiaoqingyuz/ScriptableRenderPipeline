@@ -218,7 +218,8 @@ namespace UnityEditor.VFX.Test
             Assert.IsTrue(VisualEffectUtility.GetSpawnerState(vfxComponent, 0).totalTime < 1.0f);
         }
 
-        [UnityTest]
+		// TODO: This test is deactivated because logging in tests fail on Katana
+        /*[UnityTest]
         public IEnumerator CreateComponent_And_Graph_Modify_It_To_Generate_Expected_Exception()
         {
             EditorApplication.ExecuteMenuItem("Window/General/Game");
@@ -249,7 +250,7 @@ namespace UnityEditor.VFX.Test
             graph.RecompileIfNeeded();
 
             Assert.Throws(typeof(IndexOutOfRangeException), () => VisualEffectUtility.GetSpawnerState(vfxComponent, 0));
-        }
+        }*/
 
         [UnityTest]
         public IEnumerator CreateComponent_And_VerifyRendererState()

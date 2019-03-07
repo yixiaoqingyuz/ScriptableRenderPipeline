@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Addressing mode for Sequential blocks
 - Invert transform available on GPU
+- Add automatic depth buffer reference for main camera (for position and collision blocks)
 
 ### Fixed
 - Undo Redo while changing space
@@ -16,6 +17,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Missing asset reimport when exception has been thrown during graph compilation
 
 ## [6.4.0-preview] - 2019-02-21 
+
+- Visual Effect Inspector Cosmetic Improvements
 
 ## [6.3.0-preview] - 2019-02-18
 

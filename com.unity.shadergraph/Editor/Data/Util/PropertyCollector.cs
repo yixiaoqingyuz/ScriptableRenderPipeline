@@ -46,19 +46,20 @@ namespace UnityEditor.ShaderGraph
 
         public void GetPropertiesDeclaration(ShaderStringBuilder builder, GenerationMode mode)
         {
-            var batchAll = mode == GenerationMode.Preview;
-            builder.AppendLine("CBUFFER_START(UnityPerMaterial)");
-            foreach (var prop in m_Properties.Where(n => batchAll || (n.generatePropertyBlock && n.isBatchable)))
+            var canBatch = mode != GenerationMode.Preview;
+            if (canBatch)
             {
-                builder.AppendLine(prop.GetPropertyDeclarationString());
-            }
-            builder.AppendLine("CBUFFER_END");
-            builder.AppendNewLine();
+                builder.AppendLine("CBUFFER_START(UnityPerMaterial)");
+                foreach (var prop in m_Properties.Where(n => n.generatePropertyBlock && n.isBatchable))
+                {
+                    builder.AppendLine(prop.GetPropertyDeclarationString());
+                }
 
-            if (batchAll)
-                return;
-            
-            foreach (var prop in m_Properties.Where(n => !n.isBatchable || !n.generatePropertyBlock))
+                builder.AppendLine("CBUFFER_END");
+                builder.AppendNewLine();
+            }
+
+            foreach (var prop in m_Properties.Where(n => !canBatch || (!n.isBatchable || !n.generatePropertyBlock)))
             {
                 builder.AppendLine(prop.GetPropertyDeclarationString());
             }

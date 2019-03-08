@@ -206,7 +206,7 @@ namespace UnityEditor.ShaderGraph.Drawing
                 bool VCSEnabled = (VersionControl.Provider.enabled && VersionControl.Provider.isActive);
                 CheckoutIfValid(path, VCSEnabled);
 
-                UpdateShaderGraphOnDisk(path);
+                    UpdateShaderGraphOnDisk(path);
 
                 graphObject.isDirty = false;
                 var windows = Resources.FindObjectsOfTypeAll<MaterialGraphEditWindow>();

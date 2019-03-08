@@ -73,16 +73,23 @@ namespace UnityEditor.ShaderGraph
         {
             if (m_SubGraph == null)
             {
+                m_SubGraphData = null;
+                
                 if (string.IsNullOrEmpty(m_SerializedSubGraph))
                 {
                     return;
                 }
                 
-                var helper = new SubGraphHelper();
-                EditorJsonUtility.FromJsonOverwrite(m_SerializedSubGraph, helper);
-                m_SubGraph = helper.subGraph;
-                name = subGraphAsset.name;
-                var index = SubGraphDatabase.instance.subGraphGuids.BinarySearch(subGraphGuid);
+                var graphGuid = subGraphGuid;
+                var assetPath = AssetDatabase.GUIDToAssetPath(graphGuid);
+                m_SubGraph = AssetDatabase.LoadAssetAtPath<SubGraphAsset>(assetPath);
+                if (m_SubGraph == null)
+                {
+                    return;
+                }
+                
+                name = m_SubGraph.name;
+                var index = SubGraphDatabase.instance.subGraphGuids.BinarySearch(graphGuid);
                 m_SubGraphData = index < 0 ? null : SubGraphDatabase.instance.subGraphs[index];
             }
         }
@@ -148,12 +155,20 @@ namespace UnityEditor.ShaderGraph
 
         public void GenerateNodeCode(ShaderGenerator visitor, GraphContext graphContext, GenerationMode generationMode)
         {
-            if (subGraphData == null || hasError)
-                return;
-            
             var sb = new ShaderStringBuilder();
+            if (subGraphData == null || hasError)
+            {
+                var outputSlots = new List<MaterialSlot>();
+                GetOutputSlots(outputSlots);
+                foreach (var slot in outputSlots)
+                {
+                    visitor.AddShaderChunk($"{NodeUtils.ConvertConcreteSlotValueTypeToString(precision, slot.concreteValueType)} {GetVariableNameForSlot(slot.id)} = {slot.GetDefaultValue(GenerationMode.ForReals)};");
+                }
+                
+                return;
+            }
 
-            var inputVariableName = GetVariableNameForNode();
+            var inputVariableName = $"_{GetVariableNameForNode()}";
             
             GraphUtil.GenerateSurfaceInputTransferCode(sb, subGraphData.requirements, subGraphData.inputStructName, inputVariableName);
             
@@ -201,7 +216,6 @@ namespace UnityEditor.ShaderGraph
             var validNames = new List<int>();
             if (subGraphData == null)
             {
-                RemoveSlotsNameNotMatching(validNames, true);
                 return;
             }
 
@@ -309,15 +323,18 @@ namespace UnityEditor.ShaderGraph
             RemoveSlotsNameNotMatching(validNames, true);
         }
 
-        private void ValidateShaderStage()
+        void ValidateShaderStage()
         {
-            List<MaterialSlot> slots = new List<MaterialSlot>();
-            GetInputSlots(slots);
-            GetOutputSlots(slots);
+            if (subGraphData != null)
+            {
+                List<MaterialSlot> slots = new List<MaterialSlot>();
+                GetInputSlots(slots);
+                GetOutputSlots(slots);
 
-            var outputStage = subGraphData.effectiveShaderStage;
-            foreach (MaterialSlot slot in slots)
-                slot.stageCapability = outputStage;
+                var outputStage = subGraphData.effectiveShaderStage;
+                foreach (MaterialSlot slot in slots)
+                    slot.stageCapability = outputStage;
+            }
         }
 
         public override void ValidateNode()
@@ -327,9 +344,9 @@ namespace UnityEditor.ShaderGraph
             if (subGraphData == null)
             {
                 hasError = true;
-                owner.AddValidationError(tempId, "Sub Graph failed to load");
+                owner.AddValidationError(tempId, "Sub Graph asset could not be found");
             }
-            else if (subGraphData.isRecursive || owner.isSubGraph && subGraphData.descendents.Contains(owner.assetGuid))
+            else if (subGraphData.isRecursive || owner.isSubGraph && (subGraphData.descendents.Contains(owner.assetGuid) || subGraphData.assetGuid == owner.assetGuid))
             {
                 hasError = true;
                 owner.AddValidationError(tempId, "Recursive Sub Graphs are not allowed");
@@ -337,7 +354,7 @@ namespace UnityEditor.ShaderGraph
             else if (!subGraphData.isValid)
             {
                 hasError = true;
-                owner.AddValidationError(tempId, "Sub Graph failed to import");
+                owner.AddValidationError(tempId, "Sub Graph asset failed to import");
             }
 
             ValidateShaderStage();

@@ -228,7 +228,7 @@ namespace UnityEditor.ShaderGraph
             var assetPath = AssetDatabase.GUIDToAssetPath(subGraphData.assetGuid);
             subGraphData.hlslName = NodeUtils.GetHLSLSafeName(Path.GetFileNameWithoutExtension(assetPath));
             subGraphData.inputStructName = $"Bindings_{subGraphData.hlslName}_{subGraphData.assetGuid}";
-            subGraphData.functionName = $"{subGraphData.hlslName}_{subGraphData.assetGuid}";
+            subGraphData.functionName = $"SG_{subGraphData.hlslName}_{subGraphData.assetGuid}";
             subGraphData.path = graph.path;
 
             var outputNode = (SubGraphOutputNode)graph.outputNode;

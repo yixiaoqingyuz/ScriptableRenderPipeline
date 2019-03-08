@@ -742,7 +742,7 @@ namespace UnityEditor.ShaderGraph
             while (stack.Count > 0)
             {
                 var node = stack.Pop();
-                if (!permanentMarks.Contains(node.tempId.index))
+                if (permanentMarks.Contains(node.tempId.index))
                 {
                     continue;
                 }

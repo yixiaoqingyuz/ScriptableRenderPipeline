@@ -210,7 +210,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                         // Texture dimensions
                         int texWidth = outputTexture.rt.width ;
-                        int texHeight = outputTexture.rt.width;
+                        int texHeight = outputTexture.rt.height;
 
                         // Evaluate the dispatch parameters
                         int areaTileSize = 8;

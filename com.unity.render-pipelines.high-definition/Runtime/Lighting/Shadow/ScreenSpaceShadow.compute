@@ -12,13 +12,13 @@
 
 #pragma only_renderers d3d11 ps4 xboxone vulkan metal switch
 
-//#pragma enable_d3d11_debug_symbols
+#pragma enable_d3d11_debug_symbols
 
 #ifdef ENABLE_MSAA
     TEXTURE2D_X(_CameraDepthValues);
 #endif
 
-RW_TEXTURE2D_X(float, _DeferredShadowTextureUAV);
+RW_TEXTURE2D_X(int, _DeferredShadowTextureUAV);
 
 CBUFFER_START(DeferredShadowParameters)
 float4  _DirectionalLightDirection;
@@ -53,7 +53,7 @@ float SampleDepth(float2 UV, bool HalfRes)
 }
 
 
-float ScreenSpaceShadowRayCast(float3 positionWS, float3 rayDirWS, float rayLength, uint2 positionSS)
+bool ScreenSpaceShadowRayCast(float3 positionWS, float3 rayDirWS, float rayLength, uint2 positionSS, out float fade)
 {
 
     // Dither pattern is shifted by 0.5 because we want to jitter the ray starting position backward and forward (so we need values between -0.5 and 0.5)
@@ -137,23 +137,36 @@ float ScreenSpaceShadowRayCast(float3 positionWS, float3 rayDirWS, float rayLeng
     // Off screen masking
     // We remove the occlusion if the ray is occluded and only if direction steps out of the screen
     float2 vignette = max(6.0f * abs(rayStartCS.xy + rayDirCS.xy * t) - 5.0f, 0.0f);
-    occluded *= saturate(1.0f - dot(vignette, vignette));
+    fade = saturate(1.0f - dot(vignette, vignette));
 
     return occluded;
 }
 
-float ComputeContactShadow(PositionInputs posInput, float3 direction)
+bool ComputeContactShadow(PositionInputs posInput, float3 direction, out float fade)
 {
-    float contactShadow = 1.0;
+    bool occluded = false;
     
     if (_ContactShadowLength > 0.0f)
     {
         //Here LightDirection is not the light direction but the light position
-        float4 result = ScreenSpaceShadowRayCast(posInput.positionWS, direction, _ContactShadowLength * max(0.5, posInput.linearDepth * _ContactShadowDistanceScaleFactor), posInput.positionSS);
-        contactShadow = 1.0 - result.x * saturate((_ContactShadowFadeEnd - posInput.linearDepth) * _ContactShadowFadeOneOverRange);
+        occluded = ScreenSpaceShadowRayCast(posInput.positionWS, direction, _ContactShadowLength * max(0.5, posInput.linearDepth * _ContactShadowDistanceScaleFactor), posInput.positionSS, fade);
+        fade = 1.0 - occluded * saturate((_ContactShadowFadeEnd - posInput.linearDepth) * _ContactShadowFadeOneOverRange);
     }
 
-    return lerp(1.0, contactShadow, _ContactShadowOpacity);
+    return occluded;
+}
+
+// TODO: big tile list management
+uint FetchIndex(uint lightStart, uint lightOffset)
+{
+    return lightStart + lightOffset;
+}
+
+LightData FetchLight(uint start, uint i)
+{
+    uint j = FetchIndex(start, i);
+
+    return _LightDatas[j];
 }
 
 [numthreads(DEFERRED_SHADOW_TILE_SIZE, DEFERRED_SHADOW_TILE_SIZE, 1)]
@@ -171,14 +184,62 @@ void DEFERRED_CONTACT_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uin
 #endif
 
     if (depth == UNITY_RAW_FAR_CLIP_VALUE)
+    {
+        _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = 0;
         return;
+    }
 
     PositionInputs posInput = GetPositionInput_Stereo(pixelCoord.xy, _ScreenSize.zw, depth, UNITY_MATRIX_I_VP, UNITY_MATRIX_V, tileCoord, unity_StereoEyeIndex);
 
+    uint lightCount, lightStart;
+#ifdef USE_BIG_TILE_LIGHTLIST
+    lightCount = g_vBigTileLightList[MAX_NR_BIG_TILE_LIGHTS_PLUS_ONE * tileIndex];
+    lightStart = MAX_NR_BIG_TILE_LIGHTS_PLUS_ONE * tileIndex + 1;
+#else
+    lightCount = _PunctualLightCount;
+    lightStart = 0;
+#endif // USE_BIG_TILE_LIGHTLIST
+
+    // store the 24 bit contact shadow mask mask (1: pixel is in contact shadow, 0: pixel is not shadowed)
+    uint    contactShadowMask;
+    
+    float globalFade = 0;
+    // iterate over all point/spot lights
+    uint lightOffset = 0;
+    for (; lightOffset < lightCount; lightOffset++)
+    {
+        uint lightIndex = FetchIndex(lightStart, lightOffset);
+        LightData light = _LightDatas[lightIndex];
+        
+        if (light.contactShadowMask == -1)
+            continue;
+
+        // Compute light ray direction:
+        float3 direction = light.positionRWS.xyz - posInput.positionWS;
+
+        
+        float contactShadowFade;
+        bool contactShadow = ComputeContactShadow(posInput, direction, contactShadowFade);
+        globalFade = max(contactShadowFade, globalFade);
+
+        // TODO simplify with light loop and load (0 must mean no contact shadow)
+        // We store the inverse of the contact shadow:
+        contactShadow = !contactShadow;
+
+        // light.contactShadowMask contains one bit at the position of the contact shadow index that will
+        // be tested in the lightloop, so it insert 1 at the index of the contact shadow if there is a contact shadow
+        // we take full bits at one multiplied by contact shadow and filter the bit at the contact shadow index.
+        contactShadowMask |= (~0 * contactShadow) & light.contactShadowMask;
+
+        // Box projector is the last kind of punctual light
+        if (light.lightType != GPULIGHTTYPE_PROJECTOR_BOX) { break; }
+    }
+
     //Direction got from either the directional light direction or the difference of punctual light position and the pixel position
-    float3 direction = normalize(_DirectionalLightDirection.xyz * _DirectionalLightDirection.w + (_PunctualLightPosition.xyz - posInput.positionWS) * _PunctualLightPosition.w);
+    // float3 direction = normalize(_DirectionalLightDirection.xyz * _DirectionalLightDirection.w + (_PunctualLightPosition.xyz - posInput.positionWS) * _PunctualLightPosition.w);
 
-    float contactShadow = ComputeContactShadow(posInput, direction);
+    // In the first 8 bits of the target we store the max fade of the contact shadows as a byte
+    uint fadeAsByte = (uint(saturate(globalFade) * 255) << 24);
 
-    _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = 1.0f - contactShadow;
+    _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = fadeAsByte | contactShadowMask;
 }

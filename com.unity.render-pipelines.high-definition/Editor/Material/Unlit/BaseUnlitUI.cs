@@ -517,7 +517,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 
             // Alpha tested materials always have a prepass where we perform the clip.
             // Then during Gbuffer pass we don't perform the clip test, so we need to use depth equal in this case.
-            Debug.Log(alphaTestEnable);
             if (alphaTestEnable)
             {
                 material.SetInt(kZTestGBuffer, (int)UnityEngine.Rendering.CompareFunction.Equal);

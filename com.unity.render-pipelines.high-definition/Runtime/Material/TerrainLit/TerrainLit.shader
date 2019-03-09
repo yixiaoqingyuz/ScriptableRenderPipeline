@@ -29,7 +29,7 @@
         [HideInInspector] _ZWrite ("__zw", Float) = 1.0
         [HideInInspector] _CullMode("__cullmode", Float) = 2.0
         [HideInInspector] _ZTestDepthEqualForOpaque("_ZTestDepthEqualForOpaque", Int) = 4 // Less equal
-        [HideInInspector] _ZTestGBuffer("_ZTestGBuffer", Int) = 4 
+        [HideInInspector] _ZTestGBuffer("_ZTestGBuffer", Int) = 4
 
         [ToggleUI] _EnableInstancedPerPixelNormal("Instanced per pixel normal", Float) = 1.0
 

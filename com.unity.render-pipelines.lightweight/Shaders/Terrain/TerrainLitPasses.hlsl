@@ -1,4 +1,4 @@
-#ifndef LIGHTWEIGHT_TERRAIN_LIT_PASSES_INCLUDED
+﻿#ifndef LIGHTWEIGHT_TERRAIN_LIT_PASSES_INCLUDED
 #define LIGHTWEIGHT_TERRAIN_LIT_PASSES_INCLUDED
 
 #include "Packages/com.unity.render-pipelines.lightweight/ShaderLibrary/Lighting.hlsl"
@@ -30,15 +30,15 @@ void ClipSurfaceMask(float2 uv)
 }
 #endif
 
-struct VertexInput
+struct Attributes
 {
-    float4 vertex : POSITION;
-    float3 normal : NORMAL;
+    float4 positionOS : POSITION;
+    float3 normalOS : NORMAL;
     float2 texcoord : TEXCOORD0;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
-struct VertexOutput
+struct Varyings
 {
     float4 uvMainAndLM              : TEXCOORD0; // xy: control, zw: lightmap
 #ifndef TERRAIN_SPLAT_BASEPASS
@@ -53,6 +53,7 @@ struct VertexOutput
 #else
     half3 normal                    : TEXCOORD3;
     half3 viewDir                   : TEXCOORD4;
+    half3 vertexSH                  : TEXCOORD5; // SH
 #endif
 
     half4 fogFactorAndVertexLight   : TEXCOORD6; // x: fogFactor, yzw: vertex light
@@ -61,15 +62,17 @@ struct VertexOutput
     float4 clipPos                  : SV_POSITION;
 };
 
-void InitializeInputData(VertexOutput IN, half3 normalTS, out InputData input)
+void InitializeInputData(Varyings IN, half3 normalTS, out InputData input)
 {
     input = (InputData)0;
 
     input.positionWS = IN.positionWS;
+    half3 SH = half3(0, 0, 0);
 
 #if defined(_NORMALMAP) && !defined(ENABLE_TERRAIN_PERPIXEL_NORMAL)
     half3 viewDirWS = half3(IN.normal.w, IN.tangent.w, IN.bitangent.w);
     input.normalWS = TransformTangentToWorld(normalTS, half3x3(IN.tangent.xyz, IN.bitangent.xyz, IN.normal.xyz));
+    SH = SampleSH(input.normalWS.xyz);
 #elif defined(ENABLE_TERRAIN_PERPIXEL_NORMAL)
     half3 viewDirWS = IN.viewDir;
     float2 sampleCoords = (IN.uvMainAndLM.xy / _TerrainHeightmapRecipSize.zw + 0.5f) * _TerrainHeightmapRecipSize.xy;
@@ -79,6 +82,7 @@ void InitializeInputData(VertexOutput IN, half3 normalTS, out InputData input)
 #else
     half3 viewDirWS = IN.viewDir;
     input.normalWS = IN.normal;
+    SH = IN.vertexSH;
 #endif
 
 #if SHADER_HINT_NICE_QUALITY
@@ -96,14 +100,12 @@ void InitializeInputData(VertexOutput IN, half3 normalTS, out InputData input)
     input.fogCoord = IN.fogFactorAndVertexLight.x;
     input.vertexLighting = IN.fogFactorAndVertexLight.yzw;
 
-#ifdef LIGHTMAP_ON
-    input.bakedGI = SampleLightmap(IN.uvMainAndLM.zw, input.normalWS);
-#endif
+    input.bakedGI = SAMPLE_GI(IN.uvMainAndLM.zw, SH, input.normalWS);
 }
 
 #ifndef TERRAIN_SPLAT_BASEPASS
 
-void SplatmapMix(VertexOutput IN, half4 defaultAlpha, out half4 splatControl, out half weight, out half4 mixedDiffuse, inout half3 mixedNormal)
+void SplatmapMix(Varyings IN, half4 defaultAlpha, out half4 splatControl, out half weight, out half4 mixedDiffuse, inout half3 mixedNormal)
 {
     splatControl = SAMPLE_TEXTURE2D(_Control, sampler_Control, IN.uvMainAndLM.xy);
     weight = dot(splatControl, 1.0h);
@@ -146,17 +148,17 @@ void SplatmapFinalColor(inout half4 color, half fogCoord)
     #endif
 }
 
-void TerrainInstancing(inout float4 vertex, inout float3 normal, inout float2 uv)
+void TerrainInstancing(inout float4 positionOS, inout float3 normal, inout float2 uv)
 {
 #ifdef UNITY_INSTANCING_ENABLED
-    float2 patchVertex = vertex.xy;
+    float2 patchVertex = positionOS.xy;
     float4 instanceData = UNITY_ACCESS_INSTANCED_PROP(Terrain, _TerrainPatchInstanceData);
 
     float2 sampleCoords = (patchVertex.xy + instanceData.xy) * instanceData.z; // (xy + float2(xBase,yBase)) * skipScale
     float height = UnpackHeightmap(_TerrainHeightmapTexture.Load(int3(sampleCoords, 0)));
 
-    vertex.xz = sampleCoords * _TerrainHeightmapScale.xz;
-    vertex.y = height * _TerrainHeightmapScale.y;
+    positionOS.xz = sampleCoords * _TerrainHeightmapScale.xz;
+    positionOS.y = height * _TerrainHeightmapScale.y;
 
     #ifdef ENABLE_TERRAIN_PERPIXEL_NORMAL
         normal = float3(0, 1, 0);
@@ -167,10 +169,10 @@ void TerrainInstancing(inout float4 vertex, inout float3 normal, inout float2 uv
 #endif
 }
 
-void TerrainInstancing(inout float4 vertex, inout float3 normal)
+void TerrainInstancing(inout float4 positionOS, inout float3 normal)
 {
     float2 uv = { 0, 0 };
-    TerrainInstancing(vertex, normal, uv);
+    TerrainInstancing(positionOS, normal, uv);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -178,14 +180,14 @@ void TerrainInstancing(inout float4 vertex, inout float3 normal)
 ///////////////////////////////////////////////////////////////////////////////
 
 // Used in Standard Terrain shader
-VertexOutput SplatmapVert(VertexInput v)
+Varyings SplatmapVert(Attributes v)
 {
-    VertexOutput o = (VertexOutput)0;
+    Varyings o = (Varyings)0;
 
     UNITY_SETUP_INSTANCE_ID(v);
-    TerrainInstancing(v.vertex, v.normal, v.texcoord);
+    TerrainInstancing(v.positionOS, v.normalOS, v.texcoord);
 
-    VertexPositionInputs vertexInput = GetVertexPositionInputs(v.vertex.xyz);
+    VertexPositionInputs Attributes = GetVertexPositionInputs(v.positionOS.xyz);
 
     o.uvMainAndLM.xy = v.texcoord;
     o.uvMainAndLM.zw = v.texcoord * unity_LightmapST.xy + unity_LightmapST.zw;
@@ -196,36 +198,37 @@ VertexOutput SplatmapVert(VertexInput v)
     o.uvSplat23.zw = TRANSFORM_TEX(v.texcoord, _Splat3);
 #endif
 
-    half3 viewDirWS = GetCameraPositionWS() - vertexInput.positionWS;
+    half3 viewDirWS = GetCameraPositionWS() - Attributes.positionWS;
 #if !SHADER_HINT_NICE_QUALITY
     viewDirWS = SafeNormalize(viewDirWS);
 #endif
 
 #if defined(_NORMALMAP) && !defined(ENABLE_TERRAIN_PERPIXEL_NORMAL)
-    float4 vertexTangent = float4(cross(float3(0, 0, 1), v.normal), 1.0);
-    VertexNormalInputs normalInput = GetVertexNormalInputs(v.normal, vertexTangent);
+    float4 vertexTangent = float4(cross(float3(0, 0, 1), v.normalOS), 1.0);
+    VertexNormalInputs normalInput = GetVertexNormalInputs(v.normalOS, vertexTangent);
 
     o.normal = half4(normalInput.normalWS, viewDirWS.x);
     o.tangent = half4(normalInput.tangentWS, viewDirWS.y);
     o.bitangent = half4(normalInput.bitangentWS, viewDirWS.z);
 #else
-    o.normal = TransformObjectToWorldNormal(v.normal);
+    o.normal = TransformObjectToWorldNormal(v.normalOS);
     o.viewDir = viewDirWS;
+    o.vertexSH = SampleSH(o.normal);
 #endif
-    o.fogFactorAndVertexLight.x = ComputeFogFactor(vertexInput.positionCS.z);
-    o.fogFactorAndVertexLight.yzw = VertexLighting(vertexInput.positionWS, o.normal.xyz);
-    o.positionWS = vertexInput.positionWS;
-    o.clipPos = vertexInput.positionCS;
+    o.fogFactorAndVertexLight.x = ComputeFogFactor(Attributes.positionCS.z);
+    o.fogFactorAndVertexLight.yzw = VertexLighting(Attributes.positionWS, o.normal.xyz);
+    o.positionWS = Attributes.positionWS;
+    o.clipPos = Attributes.positionCS;
 
 #ifdef _MAIN_LIGHT_SHADOWS
-    o.shadowCoord = GetShadowCoord(vertexInput);
+    o.shadowCoord = GetShadowCoord(Attributes);
 #endif
 
     return o;
 }
 
 // Used in Standard Terrain shader
-half4 SplatmapFragment(VertexOutput IN) : SV_TARGET
+half4 SplatmapFragment(Varyings IN) : SV_TARGET
 {
 #ifdef TERRAIN_SURFACE_MASK_ENABLED
 	ClipSurfaceMask(IN.uvMainAndLM.xy);
@@ -264,17 +267,17 @@ half4 SplatmapFragment(VertexOutput IN) : SV_TARGET
 // x: global clip space bias, y: normal world space bias
 float3 _LightDirection;
 
-struct VertexInputLean
+struct AttributesLean
 {
     float4 position     : POSITION;
-    float3 normal       : NORMAL;
+    float3 normalOS       : NORMAL;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 #ifdef TERRAIN_SURFACE_MASK_ENABLED
 	float2 texcoord     : TEXCOORD0;
 #endif
 };
 
-struct VertexOutputLean
+struct VaryingsLean
 {
     float4 clipPos      : SV_POSITION;
 #ifdef TERRAIN_SURFACE_MASK_ENABLED		
@@ -282,14 +285,14 @@ struct VertexOutputLean
 #endif
 };
 
-VertexOutputLean ShadowPassVertex(VertexInputLean v)
+VaryingsLean ShadowPassVertex(AttributesLean v)
 {
-    VertexOutputLean o = (VertexOutputLean)0;
+    VaryingsLean o = (VaryingsLean)0;
     UNITY_SETUP_INSTANCE_ID(v);
-    TerrainInstancing(v.position, v.normal);
+    TerrainInstancing(v.position, v.normalOS);
 
     float3 positionWS = TransformObjectToWorld(v.position.xyz);
-    float3 normalWS = TransformObjectToWorldNormal(v.normal);
+    float3 normalWS = TransformObjectToWorldNormal(v.normalOS);
 
     float4 clipPos = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
 
@@ -308,7 +311,7 @@ VertexOutputLean ShadowPassVertex(VertexInputLean v)
 	return o;
 }
 
-half4 ShadowPassFragment(VertexOutputLean IN) : SV_TARGET
+half4 ShadowPassFragment(VaryingsLean IN) : SV_TARGET
 {
 #ifdef TERRAIN_SURFACE_MASK_ENABLED
 	ClipSurfaceMask(IN.texcoord);
@@ -318,11 +321,11 @@ half4 ShadowPassFragment(VertexOutputLean IN) : SV_TARGET
 
 // Depth pass
 
-VertexOutputLean DepthOnlyVertex(VertexInputLean v)
+VaryingsLean DepthOnlyVertex(AttributesLean v)
 {
-    VertexOutputLean o = (VertexOutputLean)0;
+    VaryingsLean o = (VaryingsLean)0;
     UNITY_SETUP_INSTANCE_ID(v);
-    TerrainInstancing(v.position, v.normal);
+    TerrainInstancing(v.position, v.normalOS);
     o.clipPos = TransformObjectToHClip(v.position.xyz);
 #ifdef TERRAIN_SURFACE_MASK_ENABLED		
 	o.texcoord = v.texcoord;
@@ -330,7 +333,7 @@ VertexOutputLean DepthOnlyVertex(VertexInputLean v)
 	return o;
 }
 
-half4 DepthOnlyFragment(VertexOutputLean IN) : SV_TARGET
+half4 DepthOnlyFragment(VaryingsLean IN) : SV_TARGET
 {
 #ifdef TERRAIN_SURFACE_MASK_ENABLED
 	ClipSurfaceMask(IN.texcoord);

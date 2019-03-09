@@ -181,6 +181,7 @@ void EvaluateLight_Directional(LightLoopContext lightLoopContext, PositionInputs
     if ((light.shadowIndex >= 0) && (light.shadowDimmer > 0))
     {
         shadow = lightLoopContext.shadowValue;
+        shadow = min(shadow, lightLoopContext.vxShadowValue); //seongdae;vxsm
 
     #ifdef SHADOWS_SHADOWMASK
         // TODO: Optimize this code! Currently it is a bit like brute force to get the last transistion and fade to shadow mask, but there is
@@ -213,8 +214,6 @@ void EvaluateLight_Directional(LightLoopContext lightLoopContext, PositionInputs
 #ifndef _SURFACE_TYPE_TRANSPARENT
     shadow = min(shadow, GetContactShadow(lightLoopContext, light.contactShadowIndex));
 #endif
-
-    shadow = min(shadow, GetVxShadow(lightLoopContext)); //seongdae;vxsm
 
 #ifdef DEBUG_DISPLAY
     if (_DebugShadowMapMode == SHADOWMAPDEBUGMODE_SINGLE_SHADOW && light.shadowIndex == _DebugSingleShadowIndex)

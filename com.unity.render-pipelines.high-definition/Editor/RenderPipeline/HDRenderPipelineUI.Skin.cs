@@ -110,11 +110,13 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         {
             //k_SupportLitShaderModeContent is special case handled separately
             //k_SupportShadowMaskContent is special case handled separately
+            { k_SupportVxShadowsContent            , memoryDrawback }, //seongdae;vxsm
             { k_SupportSSRContent                  , memoryDrawback },
             { k_SupportSSAOContent                 , memoryDrawback },
             { k_SupportedSSSContent                , memoryDrawback },
             { k_SupportVolumetricContent           , memoryDrawback },
             //k_SupportLightLayerContent is special case handled separately
+            { k_SupportLightLayerContent           , memoryDrawback }, //seongdae;vxsm
             { k_MSAASampleCountContent             , memoryDrawback },
             { k_SupportDecalContent                , memoryDrawback },
             { k_SupportMotionVectorContent         , memoryDrawback },

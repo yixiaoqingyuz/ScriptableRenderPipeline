@@ -1023,7 +1023,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 var val = Mathf.Max(0.0001f, (cosConeInnerHalfAngle - cosConeOuterHalfAngle));
                 lightData.angleScale = 1.0f / val;
                 lightData.angleOffset = -cosConeOuterHalfAngle * lightData.angleScale;
-
             }
 
             // Fallback to the first non shadow casting directional light.
@@ -2665,7 +2664,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             bool hasSunLight = m_CurrentSunLight != null && sunShadowData != null;
             bool hasSunVxShadow = dirVxShadowMap != null && dirVxShadowMap.IsValid();
-            bool needsVxShadows = (hasSunLight && hasSunVxShadow && sunShadowData.vxShadows) || m_DominantLightIndex != -1;
+            bool needsVxShadows = (hasSunLight && hasSunVxShadow) || m_DominantLightIndex != -1;
             if (!m_EnableVxShadow || !needsVxShadows)
             {
                 cmd.SetGlobalTexture(HDShaderIDs._DeferredVxShadowTexture, Texture2D.blackTexture);
@@ -2739,7 +2738,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             bool hasSunLight = m_CurrentSunLight != null && sunShadowData != null;
             bool hasSunVxShadow = dirVxShadowMap != null && dirVxShadowMap.IsValid();
-            bool needsVxShadows = (hasSunLight && hasSunVxShadow && sunShadowData.vxShadows) || m_DominantLightIndex != -1;
+            bool needsVxShadows = (hasSunLight && hasSunVxShadow) || m_DominantLightIndex != -1;
             if (!m_EnableVxShadow || !needsVxShadows)
             {
                 return;

@@ -77,6 +77,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             public static readonly GUIContent ColorTemperature = EditorGUIUtility.TrTextContent("Color Temperature");
             public static readonly GUIContent Shadows = EditorGUIUtility.TrTextContent("Shadows");
             public static readonly GUIContent ContactShadows = EditorGUIUtility.TrTextContent("Contact Shadows");
+            public static readonly GUIContent VxShadows = EditorGUIUtility.TrTextContent("Vx Shadows"); //seongdae;vxsm
             public static readonly GUIContent ShadowResolution = EditorGUIUtility.TrTextContent("Shadows Resolution");
             public static readonly GUIContent ShapeWidth = EditorGUIUtility.TrTextContent("Shape Width");
             public static readonly GUIContent VolumeProfile = EditorGUIUtility.TrTextContent("Volume Profile");

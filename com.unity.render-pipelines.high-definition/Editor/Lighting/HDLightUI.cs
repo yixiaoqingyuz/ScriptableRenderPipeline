@@ -164,7 +164,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 #else
                             ,
 #endif
-                            CED.FoldoutGroup(s_Styles.vxShadowSubHeader, Expandable.VxShadow, k_ExpandedState, FoldoutOption.SubFoldout | FoldoutOption.Indent | FoldoutOption.NoSpaceAtEnd, DrawVxShadowsContent), //seongdae;vxsm
                             CED.Conditional((serialized, owner) => serialized.settings.isBakedOrMixed || serialized.settings.isCompletelyBaked,
                                 CED.space,
                                 CED.FoldoutGroup(s_Styles.bakedShadowsSubHeader, Expandable.BakedShadow, k_ExpandedState, FoldoutOption.SubFoldout | FoldoutOption.Indent | FoldoutOption.NoSpaceAtEnd, DrawBakedShadowsContent))
@@ -663,13 +662,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         {
             EditorGUILayout.PropertyField(serialized.serializedShadowData.contactShadows, s_Styles.contactShadows);
         }
-
-        //seongdae;vxsm
-        static void DrawVxShadowsContent(SerializedHDLight serialized, Editor owner)
-        {
-            EditorGUILayout.PropertyField(serialized.serializedShadowData.vxShadows, s_Styles.vxShadows);
-        }
-        //seongdae;vxsm
 
         static void DrawBakedShadowsContent(SerializedHDLight serialized, Editor owner)
         {

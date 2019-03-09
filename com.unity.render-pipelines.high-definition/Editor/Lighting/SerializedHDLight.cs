@@ -148,7 +148,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                     fadeDistance = o.Find(x => x.shadowFadeDistance),
                     resolution = o.Find(x => x.shadowResolution),
                     contactShadows = o.Find(x => x.contactShadows),
-                    vxShadows = o.Find(x => x.vxShadows), //seongdae;vxsm
 
                     viewBiasMin = o.Find(x => x.viewBiasMin),
                     viewBiasMax = o.Find(x => x.viewBiasMax),

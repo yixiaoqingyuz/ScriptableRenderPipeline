@@ -33,7 +33,8 @@
     TEXTURE2D_ARRAY(_Env2DTextures);
 
     // XRTODO: Need to stereo-ize access
-    TEXTURE2D_X(_DeferredShadowTexture);
+    TEXTURE2D(_DeferredContactShadowTexture); //seongdae;vxsm
+    TEXTURE2D(_DeferredVxShadowTexture); //seongdae;vxsm
 
     // Area shadow paper texture
 #if SHADEROPTIONS_RAYTRACING

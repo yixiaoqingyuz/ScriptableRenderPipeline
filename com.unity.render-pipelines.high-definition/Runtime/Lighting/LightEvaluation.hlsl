@@ -117,6 +117,29 @@ float EvaluateRuntimeSunShadow(LightLoopContext lightLoopContext, PositionInputs
     }
 }
 
+//seongdae;vxsm
+float EvaluateRuntimeSunVxShadow(PositionInputs posInput, DirectionalLightData light)
+{
+#ifdef SUPPORT_VX_SHADOWING
+    if ((light.lightDimmer > 0) && (light.shadowDimmer > 0))
+    {
+        float3 positionWS = posInput.positionWS + _WorldSpaceCameraPos;
+
+        uint begin = 0;
+        float attenuation = PointSampleVxShadowing(begin, positionWS);
+
+        return attenuation;
+    }
+    else
+    {
+        return 1;
+    }
+#else
+    return 1;
+#endif
+}
+//seongdae;vxsm
+
 // None of the outputs are premultiplied.
 void EvaluateLight_Directional(LightLoopContext lightLoopContext, PositionInputs posInput,
                                DirectionalLightData light, BuiltinData builtinData,
@@ -158,6 +181,7 @@ void EvaluateLight_Directional(LightLoopContext lightLoopContext, PositionInputs
     if ((light.shadowIndex >= 0) && (light.shadowDimmer > 0))
     {
         shadow = lightLoopContext.shadowValue;
+        shadow = min(shadow, lightLoopContext.vxShadowValue); //seongdae;vxsm
 
     #ifdef SHADOWS_SHADOWMASK
         // TODO: Optimize this code! Currently it is a bit like brute force to get the last transistion and fade to shadow mask, but there is

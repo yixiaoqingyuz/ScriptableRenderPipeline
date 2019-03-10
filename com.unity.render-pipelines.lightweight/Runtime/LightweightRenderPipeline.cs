@@ -8,7 +8,7 @@ using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.Experimental.GlobalIllumination;
 using UnityEngine.Experimental.Rendering.LWRP;
 using Lightmapping = UnityEngine.Experimental.GlobalIllumination.Lightmapping;
-using UnityEngine.Experimental.VoxelizedShadowMaps;
+using UnityEngine.Experimental.VoxelizedShadowMaps; //seongdae;vxsm
 
 namespace UnityEngine.Rendering.LWRP
 {

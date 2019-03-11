@@ -3,6 +3,7 @@
 ** https://eheitzresearch.wordpress.com/705-2/
 */
 
+#pragma kernel AreaShadowCopyTAAHistory
 #pragma kernel AreaShadowApplyTAA
 #pragma kernel AreaShadowEstimateNoise
 #pragma kernel AreaShadowDenoiseFirstPass   AREA_SHADOW_DENOISE=AreaShadowDenoiseFirstPass
@@ -10,27 +11,29 @@
 
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
+#include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/Builtin/BuiltinData.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/NormalBuffer.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/Raytracing/Shaders/RaytracingSampling.hlsl"
 
 // Tile size of this compute
-#define AREA_BILLATERAL_TILE_SIZE 8
+#define TILE_SIZE 8
 
 // Input/intermediate integration texture (containing Sn, Un, U, E)
-Texture2D<float4>       _DenoiseInputTexture;
-RWTexture2D<float4>     _DenoiseOutputTextureRW;
+Texture2D<float4>        _DenoiseInputTexture;
+RWTexture2D<float4>      _DenoiseOutputTextureRW;
+//RWTexture2D<float4>      _DebugTextureRW; // FIXME DEBUG
 
 // ScreenSpace buffers
-Texture2D<float>        _DepthTexture;
+Texture2D<float>         _DepthTexture;
 
 // Filter parameters
-int                     _DenoiseRadius;
+int                      _DenoiseRadius;
 
 // Output texture data
-int                     _RaytracingShadowSlot;
-RWTexture2DArray<float> _AreaShadowTextureRW;
+int                      _RaytracingShadowSlot;
+RWTexture2DArray<float>  _AreaShadowTextureRW;
 
-// FIXME TAA
+// TAA history buffers
 RWTexture2DArray<float2> _AreaShadowHistoryRW;
 
 // Bilateral filter parameters
@@ -43,7 +46,7 @@ RWTexture2DArray<float2> _AreaShadowHistoryRW;
 // the noise estimation. It would require an other pass to check if we can lower it.
 #define MAX_ESTIMATION_RADIUS 10
 
-// Couple helper functions
+// Helper functions
 float sqr(float value)
 {
     return value * value;
@@ -52,23 +55,124 @@ float gaussian(float radius, float sigma)
 {
     return exp(-sqr(radius / sigma));
 }
-
-// FIXME TAA
-[numthreads(AREA_BILLATERAL_TILE_SIZE, AREA_BILLATERAL_TILE_SIZE, 1)]
-void AreaShadowApplyTAA(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
+uint2 GetPixelCoordinates(uint2 groupThreadId, uint2 groupId)
 {
-    // Fetch the current pixel coordinate
-    uint2 centerCoord = groupId * AREA_BILLATERAL_TILE_SIZE + groupThreadId;
-    centerCoord.x = centerCoord.x + (unity_StereoEyeIndex * _ScreenSize.x);
+    uint2 pixCoord = groupId * TILE_SIZE + groupThreadId;
+    pixCoord.x += unity_StereoEyeIndex * _ScreenSize.x;
 
-    //_DenoiseOutputTextureRW[centerCoord] = _DenoiseInputTexture[centerCoord];
-
-    static const float PERSISTENCE = 0.8;
-    const float2 filteredValue = PERSISTENCE * _AreaShadowHistoryRW[uint3(centerCoord, _RaytracingShadowSlot)] + (1.0 - PERSISTENCE) * _DenoiseInputTexture[centerCoord].xy;
-    _AreaShadowHistoryRW[uint3(centerCoord, _RaytracingShadowSlot)] = filteredValue;
-    _DenoiseOutputTextureRW[centerCoord] = float4(filteredValue, _DenoiseInputTexture[centerCoord].zw);
+    return pixCoord;
 }
 
+// ----------------------------------------------------------------------------
+// Temporal anti-aliasing kernel, for raytraced input values (Sn, Un)
+// ----------------------------------------------------------------------------
+
+SAMPLER(sampler_LinearClamp);
+
+float4 Fetch(TEXTURE2D_X(tex), float2 uv, float2 offset = 0.0)
+{
+    return SAMPLE_TEXTURE2D_X_LOD(tex, sampler_LinearClamp, uv + offset * _ScreenSize.zw, 0);
+}
+
+#if UNITY_REVERSED_Z
+    #define COMPARE_DEPTH(a, b) step(b, a)
+#else
+    #define COMPARE_DEPTH(a, b) step(a, b)
+#endif
+
+// float2 ClipToAABB(float2 color, float2 minimum, float2 maximum)
+// {
+//     // note: only clips towards aabb center (but fast!)
+//     float2 center  = 0.5 * (maximum + minimum);
+//     float2 extents = 0.5 * (maximum - minimum);
+
+//     // This is actually `distance`, however the keyword is reserved
+//     float2 offset = color - center;
+
+//     float2 ts = abs(extents) / max(abs(offset), 1e-4);
+//     float t = saturate(min(ts.x, ts.y));
+//     return center + offset * t;
+// }
+
+float2 GetClosestFragment(PositionInputs posInputs)
+{
+    float center = LoadCameraDepth(posInputs.positionSS);
+    float nw = LoadCameraDepth(posInputs.positionSS + int2(-1, -1));
+    float ne = LoadCameraDepth(posInputs.positionSS + int2( 1, -1));
+    float sw = LoadCameraDepth(posInputs.positionSS + int2(-1,  1));
+    float se = LoadCameraDepth(posInputs.positionSS + int2( 1,  1));
+
+    float4 neighborhood = float4(nw, ne, sw, se);
+
+    float3 closest = float3(0.0, 0.0, center);
+    closest = lerp(closest, float3(-1.0, -1.0, neighborhood.x), COMPARE_DEPTH(neighborhood.x, closest.z));
+    closest = lerp(closest, float3( 1.0, -1.0, neighborhood.y), COMPARE_DEPTH(neighborhood.y, closest.z));
+    closest = lerp(closest, float3(-1.0,  1.0, neighborhood.z), COMPARE_DEPTH(neighborhood.z, closest.z));
+    closest = lerp(closest, float3( 1.0,  1.0, neighborhood.w), COMPARE_DEPTH(neighborhood.w, closest.z));
+
+    return posInputs.positionSS + closest.xy;
+}
+
+[numthreads(TILE_SIZE, TILE_SIZE, 1)]
+void AreaShadowCopyTAAHistory(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
+{
+    const uint2 coordSS = GetPixelCoordinates(groupThreadId, groupId);
+
+    _DenoiseOutputTextureRW[coordSS] = float4(_DenoiseInputTexture[coordSS].xy, _AreaShadowHistoryRW[uint3(coordSS, _RaytracingShadowSlot)]);
+}
+
+[numthreads(TILE_SIZE, TILE_SIZE, 1)]
+void AreaShadowApplyTAA(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
+{
+    const uint2 coordSS = GetPixelCoordinates(groupThreadId, groupId);
+
+    PositionInputs posInput = GetPositionInput_Stereo(coordSS, _ScreenSize.zw, uint2(TILE_SIZE, TILE_SIZE), unity_StereoEyeIndex);
+
+    // Fetch velocity information
+    float2 velocity = 0.0;
+    const float2 closest = GetClosestFragment(posInput);
+    DecodeVelocity(LOAD_TEXTURE2D_X(_CameraMotionVectorsTexture, closest), velocity);
+    const float velocityLength = length(velocity);
+
+    // Get the UV value (in screen space) corresponding to the current pixel,
+    // and fetch the corresponding data in the history buffer
+    const float2 uv = posInput.positionNDC;
+    const float4 center = Fetch(_DenoiseInputTexture, uv);
+
+    // Also fetch neighborhood representatives, to estimate variation
+    static const float RADIUS = 0.75;
+    const float4 topLeft = Fetch(_DenoiseInputTexture, uv, -RADIUS);
+    const float4 bottomRight = Fetch(_DenoiseInputTexture, uv, RADIUS);
+    const float4 corners = 4.0 * (topLeft + bottomRight) - 2.0 * center;
+    const float4 average = (corners + center) / 7.0;
+
+    // Check how much the local average value has changed over time
+    const float2 diffTimeVec = abs(average.xy - average.zw);
+    const float diffTime = max(diffTimeVec.x, diffTimeVec.y);
+
+    // Build an alpha expressing how much things are changing temporally
+    // (taking velocities + local variation into account)
+    const float alpha = 1.0 - saturate(velocityLength * 100.0 + diffTime);
+
+    // Also take spatial variation into account, in the current frame
+    const float2 diffSpaceVec = abs(average.xy - center.xy);
+    const float diffSpace = max(diffSpaceVec.x, diffSpaceVec.y) * alpha * 4.0;
+
+    // Based on the velocity, try and find the matching texel in the history buffer,
+    // and clamp the value based on the current spatial variation, to reduce ghosting
+    float2 history = Fetch(_DenoiseInputTexture, uv - velocity).zw;
+    history = clamp(history, center.xy - diffSpace, center.xy + diffSpace);
+
+    // Last but not least, use the previously computed alpha to drive persistence
+    // of our history value (over the current frame one)
+    float2 result = lerp(center.xy, history, alpha * 0.9);
+
+    // FIXME DEBUG
+    //_DebugTextureRW[coordSS] = float4(diff, alpha * 0.1, 0.0, 1.0);
+
+    _AreaShadowHistoryRW[uint3(coordSS, _RaytracingShadowSlot)] = result;
+    _DenoiseOutputTextureRW[coordSS] = float4(result, _DenoiseOutputTextureRW[coordSS].zw);
+}
 
 // ----------------------------------------------------------------------------
 // Noise Estimation Kernel
@@ -112,15 +216,13 @@ float EstimateNoise(uint2 coordSS, float2 axis)
 }
 
 // Estimate noise to drive denoising kernel radius
-[numthreads(AREA_BILLATERAL_TILE_SIZE, AREA_BILLATERAL_TILE_SIZE, 1)]
+[numthreads(TILE_SIZE, TILE_SIZE, 1)]
 void AreaShadowEstimateNoise(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
 {
-    // Fetch the current pixel coordinate
-    uint2 centerCoord = groupId * AREA_BILLATERAL_TILE_SIZE + groupThreadId;
-    centerCoord.x = centerCoord.x + (unity_StereoEyeIndex * _ScreenSize.x);
+    const uint2 coordSS = GetPixelCoordinates(groupThreadId, groupId);
 
     // Quasi-random angular offset, to break pattern
-    float angle = ScramblingValue(centerCoord.x, centerCoord.y).x * (PI / 256);
+    float angle = ScramblingValue(coordSS.x, coordSS.y).x * (PI / 256);
 
     float maxNoise = 0.0;
     float2 axis;
@@ -129,10 +231,10 @@ void AreaShadowEstimateNoise(uint2 groupThreadId : SV_GroupThreadID, uint2 group
     for (float t = 0; t < N; ++t, angle += PI/N)
     {
         sincos(angle, axis.y, axis.x);
-        maxNoise = max(EstimateNoise(centerCoord, axis), maxNoise);
+        maxNoise = max(EstimateNoise(coordSS, axis), maxNoise);
     }
 
-    _DenoiseOutputTextureRW[centerCoord] = float4(_DenoiseInputTexture[centerCoord].xyz, maxNoise);
+    _DenoiseOutputTextureRW[coordSS] = float4(_DenoiseInputTexture[coordSS].xyz, maxNoise);
 }
 
 // ----------------------------------------------------------------------------
@@ -243,12 +345,10 @@ float FilterNoiseEstimate(uint2 coordSS)
 }
 
 // Separated bilateral filter (two passes, each with 2*Radius taps)
-[numthreads(AREA_BILLATERAL_TILE_SIZE, AREA_BILLATERAL_TILE_SIZE, 1)]
+[numthreads(TILE_SIZE, TILE_SIZE, 1)]
 void AREA_SHADOW_DENOISE(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
 {
-    // Fetch the current pixel coordinate
-    uint2 centerCoord = groupId * AREA_BILLATERAL_TILE_SIZE + groupThreadId;
-    centerCoord.x = centerCoord.x + (unity_StereoEyeIndex * _ScreenSize.x);
+    const uint2 centerCoord = GetPixelCoordinates(groupThreadId, groupId);
 
     float2 SU = 0.0;
     float wSum = 0.0;

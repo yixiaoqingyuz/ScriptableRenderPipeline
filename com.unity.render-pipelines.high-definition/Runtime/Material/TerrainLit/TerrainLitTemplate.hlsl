@@ -42,7 +42,7 @@
     #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/Lit/Lit.hlsl"
 #endif
 
-#if SHADERPASS != SHADERPASS_DEPTH_ONLY || defined(WRITE_NORMAL_BUFFER) || defined(TERRAIN_SURFACE_MASK_ENABLED)
+#if SHADERPASS != SHADERPASS_DEPTH_ONLY || defined(WRITE_NORMAL_BUFFER)
     #define ATTRIBUTES_NEED_NORMAL
     #define ATTRIBUTES_NEED_TEXCOORD0
     #define ATTRIBUTES_NEED_TANGENT // will be filled by ApplyMeshModification()
@@ -55,6 +55,11 @@
     #define VARYINGS_NEED_POSITION_WS
     #define VARYINGS_NEED_TANGENT_TO_WORLD
     #define VARYINGS_NEED_TEXCOORD0
+#endif
+
+#if defined(TERRAIN_SURFACE_MASK_ENABLED)
+	#define ATTRIBUTES_NEED_TEXCOORD0
+	#define VARYINGS_NEED_TEXCOORD0
 #endif
 
 #if defined(UNITY_INSTANCING_ENABLED) && defined(_TERRAIN_INSTANCED_PERPIXEL_NORMAL)

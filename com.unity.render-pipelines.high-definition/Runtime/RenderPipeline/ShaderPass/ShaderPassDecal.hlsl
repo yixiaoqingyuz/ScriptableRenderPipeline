@@ -36,6 +36,7 @@ void Frag(  PackedVaryingsToPS packedInput,
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(packedInput);
     FragInputs input = UnpackVaryingsMeshToFragInputs(packedInput.vmesh);
     DecalSurfaceData surfaceData;
+    bool isClipped = false;
 
 #if (SHADERPASS == SHADERPASS_DBUFFER_PROJECTOR) || (SHADERPASS == SHADERPASS_FORWARD_EMISSIVE_PROJECTOR)
 	float depth = LoadCameraDepth(input.positionSS.xy);
@@ -44,8 +45,6 @@ void Frag(  PackedVaryingsToPS packedInput,
     float3 positionDS = TransformWorldToObject(posInput.positionWS);
     positionDS = positionDS * float3(1.0, -1.0, 1.0) + float3(0.5, 0.5f, 0.5);
     ZERO_INITIALIZE(DecalSurfaceData, surfaceData);
-
-    bool isClipped = false;
 
     if ((all(positionDS.xyz > 0.0f) && all(1.0f - positionDS.xyz > 0.0f)))
     {
@@ -94,7 +93,8 @@ void Frag(  PackedVaryingsToPS packedInput,
         uint minTileCoord1d = WaveActiveMin(tileCoord1d);
 
         // Make sure we still have tiles to process.
-        if (minTileCoord1d == -1) break;
+        if (minTileCoord1d == -1)
+            break;
 
         // Mask lanes corresponding to the min tile.
         // Mask clipped lanes.
@@ -102,8 +102,6 @@ void Frag(  PackedVaryingsToPS packedInput,
         {
             // Process one tile.
             mask = WaveActiveBitOr(surfaceData.HTileMask);
-
-            //if (WaveIsFirstLane())
 
             uint laneID = WaveGetLaneIndex();
 

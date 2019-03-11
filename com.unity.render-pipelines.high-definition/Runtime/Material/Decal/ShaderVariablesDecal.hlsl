@@ -9,12 +9,7 @@ StructuredBuffer<DecalData> _DecalDatas;
 TEXTURE2D(_DecalAtlas2D);
 SAMPLER(_trilinear_clamp_sampler_DecalAtlas2D);
 
-#if defined(PLATFORM_NEEDS_UNORM_UAV_SPECIFIER)
-RW_TEXTURE2D_X(uint, _DecalHTile); // DXGI_FORMAT_R8_UINT is not supported by Unity
-#else
-RW_TEXTURE2D_X(uint, _DecalHTile); // DXGI_FORMAT_R8_UINT is not supported by Unity
-#endif
-//TEXTURE2D_X(_DecalHTileTexture);
+RW_TEXTURE2D_X(uint, _DecalHTile); 
 Texture2D<uint> _DecalHTileTexture;
 
 UNITY_INSTANCING_BUFFER_START(Decal)

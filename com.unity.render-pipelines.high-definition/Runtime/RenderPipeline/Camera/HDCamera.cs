@@ -35,6 +35,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public bool colorPyramidHistoryIsValid = false;
         public bool volumetricHistoryIsValid   = false; // Contains garbage otherwise
+        public int  colorPyramidHistoryMipCount = 0;
         public VolumetricLightingSystem.VBufferParameters[] vBufferParams; // Double-buffered
 
         public Matrix4x4[]  viewMatrixStereo;
@@ -201,7 +202,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public HDPhysicalCamera physicalParameters => m_AdditionalCameraData?.physicalParameters;
 
         public bool invertFaceCulling
-            => m_AdditionalCameraData != null ? m_AdditionalCameraData.invertFaceCulling : false;
+            => m_AdditionalCameraData != null && m_AdditionalCameraData.invertFaceCulling;
 
         public LayerMask probeLayerMask
             => m_AdditionalCameraData != null
@@ -811,7 +812,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             frameIndex &= 1;
 
             return rtHandleSystem.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16G16B16A16_SFloat,
-                                        enableRandomWrite: true, useMipMap: true, autoGenerateMips: false,
+                                        enableRandomWrite: true, useMipMap: true, autoGenerateMips: false, xrInstancing: true,
                                         name: string.Format("CameraColorBufferMipChain{0}", frameIndex));
         }
 

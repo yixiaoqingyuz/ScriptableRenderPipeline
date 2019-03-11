@@ -609,11 +609,11 @@ namespace UnityEditor.VFX
             }
 
             Profiler.BeginSample("VFXEditor.CompileAsset");
+            float nbSteps = 12.0f;
+            string assetPath = AssetDatabase.GetAssetPath(visualEffectResource);
+            string progressBarTitle = "Compiling " + assetPath;
             try
             {
-                float nbSteps = 12.0f;
-                string assetPath = AssetDatabase.GetAssetPath(visualEffectResource);
-                string progressBarTitle = "Compiling " + assetPath;
 
                 EditorUtility.DisplayProgressBar(progressBarTitle, "Collecting dependencies", 0 / nbSteps);
                 var models = new HashSet<ScriptableObject>();
@@ -740,11 +740,6 @@ namespace UnityEditor.VFX
                 {
                     k_FnVFXResource_SetCompileInitialVariants(m_Graph.visualEffectResource, forceShaderValidation);
                 }
-
-                EditorUtility.DisplayProgressBar(progressBarTitle, "Importing VFX", 11 / nbSteps);
-                Profiler.BeginSample("VFXEditor.CompileAsset:ImportAsset");
-                AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate); //This should compile the shaders on the C++ size
-                Profiler.EndSample();
             }
             catch (Exception e)
             {
@@ -759,6 +754,11 @@ namespace UnityEditor.VFX
             }
             finally
             {
+                EditorUtility.DisplayProgressBar(progressBarTitle, "Importing VFX", 11 / nbSteps);
+                Profiler.BeginSample("VFXEditor.CompileAsset:ImportAsset");
+                AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate); //This should compile the shaders on the C++ size
+                Profiler.EndSample();
+
                 Profiler.EndSample();
                 EditorUtility.ClearProgressBar();
             }

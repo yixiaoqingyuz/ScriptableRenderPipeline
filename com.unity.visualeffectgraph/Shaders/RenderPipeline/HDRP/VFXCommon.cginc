@@ -85,7 +85,7 @@ float4x4 VFXGetViewToWorldMatrix()
 
 float VFXSampleDepth(float4 posSS)
 {
-    return LOAD_TEXTURE2D(_CameraDepthTexture, posSS.xy).r;
+    return LoadCameraDepth(posSS.xy);
 }
 
 float VFXLinearEyeDepth(float depth)
@@ -93,9 +93,12 @@ float VFXLinearEyeDepth(float depth)
     return LinearEyeDepth(depth,_ZBufferParams);
 }
 
-float4 VFXApplyShadowBias(float4 posCS)
+void VFXApplyShadowBias(inout float4 posCS, inout float3 posWS, float3 normalWS)
 {
-    return posCS;
+}
+
+void VFXApplyShadowBias(inout float4 posCS, inout float3 posWS)
+{
 }
 
 float4 VFXApplyFog(float4 color,float4 posCS,float3 posWS)

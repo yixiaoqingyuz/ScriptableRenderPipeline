@@ -80,10 +80,6 @@
     #pragma instancing_options assumeuniformscaling nomatrices nolightprobe nolightmap
 
 	#pragma multi_compile_local __ TERRAIN_SURFACE_MASK_ENABLED
-	
-	#ifdef TERRAIN_SURFACE_MASK_ENABLED
-	#define _ALPHATEST_ON
-	#endif
 
     // All our shaders use same name for entry point
     #pragma vertex Vert
@@ -137,11 +133,6 @@
             #pragma multi_compile DECALS_OFF DECALS_3RT DECALS_4RT
             #pragma multi_compile _ LIGHT_LAYERS
 
-			#ifdef _ALPHATEST_ON
-				// When we have alpha test, we will force a depth prepass so we always bypass the clip instruction in the GBuffer
-				#define SHADERPASS_GBUFFER_BYPASS_ALPHA_TEST
-			#endif
-			
             #define SHADERPASS SHADERPASS_GBUFFER
             #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLitTemplate.hlsl"
             #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/TerrainLit/TerrainLit_Splatmap.hlsl"

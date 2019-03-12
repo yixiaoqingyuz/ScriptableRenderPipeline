@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - You can now add Matrix, Sampler State and Gradient properties to the Blackboard.
 - Added Custom Function node. Use this node to define a custom HLSL function either via string directly in the graph, or via a path to an HLSL file.
+- You can now group nodes by pressing ctrl + g.
+- Right click menu of groups changed with "Delete Group and Contents" got added and "Ungroup All Nodes" was removed.
 
 ### Changed
 - Removed Blackboard fields, which had no effect on Sub Graph input ports, from the Sub Graph Blackboard.
@@ -16,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Subgraph Output node now supports all port types.
 - Subgraph Output node now supports reordering ports.
 - When you convert nodes to a Sub Graph, Shader Graph generates properties and output ports in the Sub Graph, and now by default, names those resulting properties and output ports based on their types.
+- Deleting a group, now deletes the group ui and doesn't delete the nodes inside.
 
 ### Fixed
 - You can now undo edits to Vector port default input fields.

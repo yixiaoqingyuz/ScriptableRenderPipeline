@@ -353,6 +353,21 @@ namespace UnityEditor.ShaderGraph.Drawing
                     case ConcreteSlotValueType.Boolean:
                         prop = new BooleanShaderProperty();
                         break;
+                    case ConcreteSlotValueType.Matrix2:
+                        prop = new Matrix2ShaderProperty();
+                        break;
+                    case ConcreteSlotValueType.Matrix3:
+                        prop = new Matrix3ShaderProperty();
+                        break;
+                    case ConcreteSlotValueType.Matrix4:
+                        prop = new Matrix4ShaderProperty();
+                        break;
+                    case ConcreteSlotValueType.SamplerState:
+                        prop = new SamplerStateShaderProperty();
+                        break;
+                    case ConcreteSlotValueType.Gradient:
+                        prop = new GradientShaderProperty();
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -362,7 +377,8 @@ namespace UnityEditor.ShaderGraph.Drawing
                     var materialGraph = (GraphData)graphObject.graph;
                     var fromPropertyNode = fromNode as PropertyNode;
                     var fromProperty = fromPropertyNode != null ? materialGraph.properties.FirstOrDefault(p => p.guid == fromPropertyNode.propertyGuid) : null;
-                    prop.displayName = fromProperty != null ? fromProperty.displayName : fromNode.name;
+                    prop.displayName = fromProperty != null ? fromProperty.displayName : fromSlot.concreteValueType.ToString();
+
                     subGraph.AddShaderProperty(prop);
                     var propNode = new PropertyNode();
                     {
@@ -392,7 +408,10 @@ namespace UnityEditor.ShaderGraph.Drawing
             foreach (var group in uniqueOutgoingEdges)
             {
                 var outputNode = subGraph.outputNode as SubGraphOutputNode;
-                var slotId = outputNode.AddSlot();
+
+                AbstractMaterialNode node = graphView.graph.GetNodeFromGuid(group.edges[0].outputSlot.nodeGuid);
+                MaterialSlot slot = node.FindSlot<MaterialSlot>(group.edges[0].outputSlot.slotId);
+                var slotId = outputNode.AddSlot(slot.concreteValueType);
 
                 var inputSlotRef = new SlotReference(outputNode.guid, slotId);
 

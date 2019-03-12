@@ -573,10 +573,16 @@ namespace UnityEditor.ShaderGraph
 
         public void CollectShaderProperties(PropertyCollector collector, GenerationMode generationMode)
         {
-            if (!isSubGraph || generationMode == GenerationMode.Preview)
+            foreach (var prop in properties)
             {
-                foreach (var prop in properties)
-                    collector.AddShaderProperty(prop);
+                if(generationMode == GenerationMode.Preview && prop.propertyType == PropertyType.Gradient)
+                {
+                    GradientShaderProperty gradientProperty = prop as GradientShaderProperty;
+                    GradientUtils.GetGradientPropertiesForPreview(collector, gradientProperty.referenceName, gradientProperty.value);
+                    continue;
+                }
+
+                collector.AddShaderProperty(prop);
             }
         }
 
@@ -749,7 +755,7 @@ namespace UnityEditor.ShaderGraph
                 
                 if (temporaryMarks.Contains(node.tempId.index))
                 {
-                    node.ValidateNode();
+                node.ValidateNode();
                     permanentMarks.Add(node.tempId.index);
                 }
                 else

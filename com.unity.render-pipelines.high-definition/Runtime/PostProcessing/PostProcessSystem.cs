@@ -19,12 +19,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             NeighborhoodBlending = 2
         }
 
-        private enum PostProcessStencilBits
-        {
-            // DistortionVectors bit is not needed anymore at this stage.
-            SMAABit = HDRenderPipeline.StencilBitMask.DistortionVectors
-        }
-
         const GraphicsFormat k_ColorFormat         = GraphicsFormat.B10G11R11_UFloatPack32;
         const GraphicsFormat k_CoCFormat           = GraphicsFormat.R16_SFloat;
         const GraphicsFormat k_ExposureFormat      = GraphicsFormat.R32G32_SFloat;
@@ -2068,9 +2062,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             m_SMAAMaterial.SetTexture(HDShaderIDs._SMAAAreaTex, m_Resources.textures.SMAAAreaTex);
             m_SMAAMaterial.SetTexture(HDShaderIDs._SMAASearchTex, m_Resources.textures.SMAASearchTex);
-            m_SMAAMaterial.SetInt(HDShaderIDs._StencilRef, (int)PostProcessStencilBits.SMAABit);
-            m_SMAAMaterial.SetInt(HDShaderIDs._StencilMask, (int)PostProcessStencilBits.SMAABit);
-
+            m_SMAAMaterial.SetInt(HDShaderIDs._StencilRef, (int)HDRenderPipeline.StencilBitMask.SMAA);
+            m_SMAAMaterial.SetInt(HDShaderIDs._StencilMask, (int)HDRenderPipeline.StencilBitMask.SMAA);
 
             switch(camera.SMAAQuality)
             {

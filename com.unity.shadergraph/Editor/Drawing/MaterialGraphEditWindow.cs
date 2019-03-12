@@ -400,7 +400,7 @@ namespace UnityEditor.ShaderGraph.Drawing
             }
 
             var uniqueOutgoingEdges = externalInputSlots.GroupBy(
-                    edge => edge.inputSlot,
+                    edge => edge.outputSlot,
                     edge => edge,
                     (key, edges) => new { slot = key, edges = edges.ToList() });
 

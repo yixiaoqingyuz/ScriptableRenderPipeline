@@ -53,7 +53,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         case SpotLightShape.Pyramid: return (mode & DebugLightFilterMode.DirectSpotPyramid) != 0;
                         default: throw new ArgumentOutOfRangeException(nameof(spotLightShape));
                     }
-                    break;
                 }
                 case GPULightType.Tube: return (mode & DebugLightFilterMode.DirectTube) != 0;
                 case GPULightType.Point: return (mode & DebugLightFilterMode.DirectPunctual) != 0;

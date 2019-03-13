@@ -76,9 +76,11 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
     LightLoopContext context;
 
     context.shadowContext    = InitShadowContext();
-    context.contactShadow    = InitContactShadow(posInput);
     context.shadowValue      = 1;
     context.sampleReflection = 0;
+    
+    // Initialize the contactShadow and contactShadowFade fields
+    InitContactShadow(posInput, context);
 
     // First of all we compute the shadow value of the directional light to reduce the VGPR pressure
     if (featureFlags & LIGHTFEATUREFLAGS_DIRECTIONAL)

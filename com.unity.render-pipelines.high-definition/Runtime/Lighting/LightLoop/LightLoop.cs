@@ -948,11 +948,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 lightData.shadowDimmer           = additionalShadowData.shadowDimmer;
                 lightData.volumetricShadowDimmer = additionalShadowData.volumetricShadowDimmer;
+                lightData.contactShadowMask      = GetContactShadowMask(additionalShadowData.contactShadows);
             }
             else
             {
                 lightData.shadowDimmer           = 1.0f;
                 lightData.volumetricShadowDimmer = 1.0f;
+                lightData.contactShadowMask      = -1;
             }
 
             // fix up shadow information
@@ -993,8 +995,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 lightData.angleOffset = -cosConeOuterHalfAngle * lightData.angleScale;
 
             }
-
-            lightData.contactShadowMask = GetContactShadowMask(additionalShadowData.contactShadows);
 
             // Fallback to the first non shadow casting directional light.
             m_CurrentSunLight = m_CurrentSunLight == null ? lightComponent : m_CurrentSunLight;
@@ -1199,12 +1199,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 float shadowDistanceFade         = HDUtils.ComputeLinearDistanceFade(distanceToCamera, Mathf.Min(shadowSettings.maxShadowDistance, additionalShadowData.shadowFadeDistance));
                 lightData.shadowDimmer           = shadowDistanceFade * additionalShadowData.shadowDimmer;
                 lightData.volumetricShadowDimmer = shadowDistanceFade * additionalShadowData.volumetricShadowDimmer;
+                lightData.contactShadowMask      = GetContactShadowMask(additionalShadowData.contactShadows);
             }
             else
             {
-                lightData.shadowDimmer = 1.0f;
+                lightData.shadowDimmer           = 1.0f;
                 lightData.volumetricShadowDimmer = 1.0f;
-            }
+                lightData.contactShadowMask      = -1;
+             }
 
 #if ENABLE_RAYTRACING
             if(gpuLightType == GPULightType.Rectangle && lightComponent.shadows != LightShadows.None && areaShadowIndex < maxAreaLightShadows && additionalLightData.useRayTracedShadows)
@@ -1239,8 +1241,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 lightData.shadowMaskSelector.x = -1.0f;
                 lightData.nonLightMappedOnly = 0;
             }
-
-            lightData.contactShadowMask = GetContactShadowMask(additionalShadowData.contactShadows);
 
             m_lightList.lights.Add(lightData);
 

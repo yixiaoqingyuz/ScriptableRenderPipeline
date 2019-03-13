@@ -10,8 +10,9 @@ struct LightLoopContext
 
     HDShadowContext shadowContext;
     
-    float contactShadow; // Currently we support only one contact shadow per view
-    float shadowValue; // Stores the value of the cascade shadow map
+    uint contactShadow;         // a bit mask of 24 bits that tell if the pixel is in a contact shadow or not
+    float contactShadowFade;    // combined fade factor of all contact shadows 
+    float shadowValue;          // Stores the value of the cascade shadow map
 };
 
 //-----------------------------------------------------------------------------
@@ -300,23 +301,36 @@ EnvLightData FetchEnvLight(uint index)
     return _EnvLightDatas[index];
 }
 
+// In the first 8 bits of the target we store the max fade of the contact shadows as a byte
+void UnpackContactShadowData(uint contactShadowData, out float fade, out uint mask)
+{
+    fade = float(contactShadowData >> 24) / 255.0;
+    mask = contactShadowData & 0xFFFFFF; // store only the first 24 bits which represent 
+}
+
+uint PackContactShadowData(float fade, uint mask)
+{
+    uint fadeAsByte = (uint(saturate(fade) * 255) << 24);
+
+    return fadeAsByte | mask;
+}
+
 // We always fetch the screen space shadow texture to reduce the number of shader variant, overhead is negligible,
 // it is a 1x1 white texture if deferred directional shadow and/or contact shadow are disabled
 // We perform a single featch a the beginning of the lightloop
-float InitContactShadow(PositionInputs posInput)
+void InitContactShadow(PositionInputs posInput, inout LightLoopContext context)
 {
     // For now we only support one contact shadow
     // Contactshadow is store in Red Channel of _DeferredShadowTexture
     // Note: When we ImageLoad outside of texture size, the value returned by Load is 0 (Note: On Metal maybe it clamp to value of texture which is also fine)
     // We use this property to have a neutral value for contact shadows that doesn't consume a sampler and work also with compute shader (i.e use ImageLoad)
     // We store inverse contact shadow so neutral is white. So either we sample inside or outside the texture it return 1 in case of neutral
-    uint contactShadow = LOAD_TEXTURE2D_X(_DeferredShadowTexture, posInput.positionSS).x;
-
-    // 0 means inside contact shadow and 1 outside
-    return contactShadow & 1;
+    uint packedContactShadow = LOAD_TEXTURE2D_X(_DeferredShadowTexture, posInput.positionSS).x;
+    UnpackContactShadowData(packedContactShadow, context.contactShadowFade, context.contactShadow);
 }
 
 float GetContactShadow(LightLoopContext lightLoopContext, int contactShadowMask)
 {
-    return contactShadowMask >= 0 ? lightLoopContext.contactShadow : 1.0;
+    bool occluded = (lightLoopContext.contactShadow & contactShadowMask) != 0;
+    return (contactShadowMask >= 0 && occluded) ? 1.0 - lightLoopContext.contactShadowFade : 1.0;
 }

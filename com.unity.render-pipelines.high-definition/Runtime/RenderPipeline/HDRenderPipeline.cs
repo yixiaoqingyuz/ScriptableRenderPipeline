@@ -419,7 +419,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             if (Debug.isDebugBuild)
             {
                 m_DebugColorPickerBuffer = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16G16B16A16_SFloat, useDynamicScale: true, name: "DebugColorPicker");
-                m_DebugFullScreenTempBuffer = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16G16B16A16_SFloat, useDynamicScale: true, name: "DebugFullScreen");
+                m_DebugFullScreenTempBuffer = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R32_UInt, useDynamicScale: true, name: "DebugFullScreen");
                 m_IntermediateAfterPostProcessBuffer = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16G16B16A16_SFloat, useDynamicScale: true, xrInstancing: true, name: "AfterPostProcess"); // Needs to be FP16 because output target might be HDR
             }
 
@@ -1624,24 +1624,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     }
                 }
 #endif
-                if (!hdCamera.frameSettings.ContactShadowsRunAsync())
-                {
-                    bool areaShadowsRendered = false;
-#if ENABLE_RAYTRACING
-                    areaShadowsRendered = m_RaytracingShadows.RenderAreaShadows(hdCamera, cmd, renderContext, m_FrameCount);
-                    // Let's render the screen space area light shadows
-                    PushFullScreenDebugTexture(hdCamera, cmd, m_RaytracingShadows.GetShadowedIntegrationTexture(), FullScreenDebugMode.RaytracedAreaShadow);
-#endif
-                    cmd.SetGlobalInt(HDShaderIDs._RaytracedAreaShadow, areaShadowsRendered ? 1 : 0);
-
-                    HDUtils.CheckRTCreated(m_ScreenSpaceShadowsBuffer);
-
-                    int firstMipOffsetY = m_SharedRTManager.GetDepthBufferMipChainInfo().mipLevelOffsets[1].y;
-                    m_LightLoop.RenderScreenSpaceShadows(hdCamera, m_ScreenSpaceShadowsBuffer, hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA) ? m_SharedRTManager.GetDepthValuesTexture() : m_SharedRTManager.GetDepthTexture(), firstMipOffsetY, cmd);
-                    m_LightLoop.SetScreenSpaceShadowsTexture(hdCamera, m_ScreenSpaceShadowsBuffer, cmd);
-
-                    PushFullScreenDebugTexture(hdCamera, cmd, m_ScreenSpaceShadowsBuffer, FullScreenDebugMode.ContactShadows);
-                }
 
                 StopStereoRendering(cmd, renderContext, camera);
 
@@ -1690,20 +1672,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     haveAsyncTaskWithShadows = true;
                 }
 
-                if (hdCamera.frameSettings.ContactShadowsRunAsync())
-                {
-                    contactShadowsTask.Start(cmd, renderContext, Callback, !haveAsyncTaskWithShadows);
-
-                    haveAsyncTaskWithShadows = true;
-
-                    void Callback(CommandBuffer asyncCmd)
-                    {
-                        var firstMipOffsetY = m_SharedRTManager.GetDepthBufferMipChainInfo().mipLevelOffsets[1].y;
-                        m_LightLoop.RenderScreenSpaceShadows(hdCamera, m_ScreenSpaceShadowsBuffer, hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA) ? m_SharedRTManager.GetDepthValuesTexture() : m_SharedRTManager.GetDepthTexture(), firstMipOffsetY, asyncCmd);
-                    }
-                }
-
-
                 using (new ProfilingSample(cmd, "Render shadows", CustomSamplerId.RenderShadows.GetSampler()))
                 {
                     // This call overwrites camera properties passed to the shader system.
@@ -1724,13 +1692,56 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 {
                     buildLightListTask.EndWithPostWork(cmd, Callback);
 
-                    void Callback() => m_LightLoop.PushGlobalParams(hdCamera, cmd);
+                    void Callback()
+                    {
+                        m_LightLoop.PushGlobalParams(hdCamera, cmd);
+
+                        // Run the contact shadow as they now need the light list
+                        RenderScreenSpaceShadows();
+                    }
                 }
                 else
                 {
                     using (new ProfilingSample(cmd, "Build Light list", CustomSamplerId.BuildLightList.GetSampler()))
                     {
                         m_LightLoop.BuildGPULightLists(hdCamera, cmd, m_SharedRTManager.GetDepthStencilBuffer(hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA)), m_SharedRTManager.GetStencilBufferCopy(), m_SkyManager.IsLightingSkyValid());
+                    }
+                    
+                    RenderScreenSpaceShadows();
+                }
+                
+                // Contact shadows needs the light loop so we do them after the build light list
+                void RenderScreenSpaceShadows()
+                {
+                    if (hdCamera.frameSettings.ContactShadowsRunAsync())
+                    {
+                        contactShadowsTask.Start(cmd, renderContext, ContactShadowStartCallback, !haveAsyncTaskWithShadows);
+
+                        haveAsyncTaskWithShadows = true;
+
+                        void ContactShadowStartCallback(CommandBuffer asyncCmd)
+                        {
+                            var firstMipOffsetY = m_SharedRTManager.GetDepthBufferMipChainInfo().mipLevelOffsets[1].y;
+                            m_LightLoop.RenderScreenSpaceShadows(hdCamera, m_ScreenSpaceShadowsBuffer, hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA) ? m_SharedRTManager.GetDepthValuesTexture() : m_SharedRTManager.GetDepthTexture(), firstMipOffsetY, asyncCmd);
+                        }
+                    }
+                    else
+                    {
+                        bool areaShadowsRendered = false;
+#if ENABLE_RAYTRACING
+                        areaShadowsRendered = m_RaytracingShadows.RenderAreaShadows(hdCamera, cmd, renderContext, m_FrameCount);
+                        // Let's render the screen space area light shadows
+                        PushFullScreenDebugTexture(hdCamera, cmd, m_RaytracingShadows.GetShadowedIntegrationTexture(), FullScreenDebugMode.RaytracedAreaShadow);
+#endif
+                        cmd.SetGlobalInt(HDShaderIDs._RaytracedAreaShadow, areaShadowsRendered ? 1 : 0);
+
+                        HDUtils.CheckRTCreated(m_ScreenSpaceShadowsBuffer);
+
+                        int firstMipOffsetY = m_SharedRTManager.GetDepthBufferMipChainInfo().mipLevelOffsets[1].y;
+                        m_LightLoop.RenderScreenSpaceShadows(hdCamera, m_ScreenSpaceShadowsBuffer, hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA) ? m_SharedRTManager.GetDepthValuesTexture() : m_SharedRTManager.GetDepthTexture(), firstMipOffsetY, cmd);
+                        m_LightLoop.SetScreenSpaceShadowsTexture(hdCamera, m_ScreenSpaceShadowsBuffer, cmd);
+
+                        PushFullScreenDebugTexture(hdCamera, cmd, m_ScreenSpaceShadowsBuffer, FullScreenDebugMode.ContactShadows);
                     }
                 }
 
@@ -3172,6 +3183,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     HDUtils.PackedMipChainInfo info = m_SharedRTManager.GetDepthBufferMipChainInfo();
                     m_DebugFullScreenPropertyBlock.SetInt(HDShaderIDs._DebugDepthPyramidMip, (int)(m_CurrentDebugDisplaySettings.data.fullscreenDebugMip * info.mipLevelCount));
                     m_DebugFullScreenPropertyBlock.SetBuffer(HDShaderIDs._DebugDepthPyramidOffsets, info.GetOffsetBufferData(m_DepthPyramidMipLevelOffsetsBuffer));
+                    m_DebugFullScreenPropertyBlock.SetInt(HDShaderIDs._DebugContactShadowLightIndex, (int)(m_CurrentDebugDisplaySettings.data.fullScreenContactShadowLightIndex));
 
                     cmd.SetGlobalVector(HDShaderIDs._ScreenToTargetScale, hdCamera.doubleBufferedViewportScale);
                     HDUtils.DrawFullScreen(cmd, hdCamera, m_DebugFullScreen, m_IntermediateAfterPostProcessBuffer, m_DebugFullScreenPropertyBlock, 0);

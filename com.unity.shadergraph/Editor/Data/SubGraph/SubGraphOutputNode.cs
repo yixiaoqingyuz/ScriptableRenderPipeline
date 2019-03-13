@@ -54,23 +54,10 @@ namespace UnityEditor.ShaderGraph
             return index;
         }
 
-        static ConcreteSlotValueType[] s_AllowedValueTypes =
-        {
-            ConcreteSlotValueType.Matrix4,
-            ConcreteSlotValueType.Matrix3,
-            ConcreteSlotValueType.Matrix2,
-            ConcreteSlotValueType.Gradient,
-            ConcreteSlotValueType.Vector4,
-            ConcreteSlotValueType.Vector3,
-            ConcreteSlotValueType.Vector2,
-            ConcreteSlotValueType.Vector1,
-            ConcreteSlotValueType.Boolean
-        };
-
         public VisualElement CreateSettingsElement()
         {
             PropertySheet ps = new PropertySheet();
-            ps.Add(new ReorderableSlotListView(this, SlotType.Input, s_AllowedValueTypes));
+            ps.Add(new ReorderableSlotListView(this, SlotType.Input));
             return ps;
         }
     }

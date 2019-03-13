@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -16,8 +15,6 @@ namespace UnityEditor.ShaderGraph.Drawing
         private IMGUIContainer m_Container;
         private GUIStyle m_LabelStyle;
         private int m_SelectedIndex = -1;
-        int[] m_ValueTypeIndices;
-        string[] m_ValueTypeNames;
         private string label => string.Format("{0}s", m_SlotType.ToString());
         public int labelWidth => 80;
 
@@ -34,10 +31,8 @@ namespace UnityEditor.ShaderGraph.Drawing
             }
         }
 
-        internal ReorderableSlotListView(AbstractMaterialNode node, SlotType slotType, ConcreteSlotValueType[] allowedValueTypes = null)
+        internal ReorderableSlotListView(AbstractMaterialNode node, SlotType slotType)
         {
-            m_ValueTypeIndices = allowedValueTypes == null ? Enum.GetValues(typeof(ConcreteSlotValueType)).Cast<int>().ToArray() : allowedValueTypes.Cast<int>().ToArray();
-            m_ValueTypeNames = m_ValueTypeIndices.Select(x => ((ConcreteSlotValueType)x).ToString()).ToArray();
             styleSheets.Add(Resources.Load<StyleSheet>("Styles/ReorderableSlotListView"));
             m_Node = node;
             m_SlotType = slotType;
@@ -97,8 +92,7 @@ namespace UnityEditor.ShaderGraph.Drawing
                 
                 var displayName = EditorGUI.DelayedTextField( new Rect(rect.x, rect.y, labelWidth, EditorGUIUtility.singleLineHeight), oldSlot.RawDisplayName(), labelStyle); 
                 var shaderOutputName = NodeUtils.GetHLSLSafeName(displayName);
-                
-                var concreteValueType = (ConcreteSlotValueType)EditorGUI.IntPopup( new Rect(rect.x + labelWidth, rect.y, rect.width - labelWidth, EditorGUIUtility.singleLineHeight), (int)oldSlot.concreteValueType, m_ValueTypeNames, m_ValueTypeIndices);
+                var concreteValueType = (ConcreteSlotValueType)EditorGUI.EnumPopup( new Rect(rect.x + labelWidth, rect.y, rect.width - labelWidth, EditorGUIUtility.singleLineHeight), oldSlot.concreteValueType);
 
                 if(displayName != oldSlot.RawDisplayName())
                     displayName = NodeUtils.GetDuplicateSafeNameForSlot(m_Node, oldSlot.id, displayName);

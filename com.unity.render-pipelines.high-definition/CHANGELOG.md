@@ -13,10 +13,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added depth offset input in shader graph master nodes
 - Added a Parallax Occlusion Mapping node
 - Added SMAA support
-<<<<<<< HEAD
-- Added an option in preferences to toggle the light emission normalization
-=======
->>>>>>> master
 
 ### Fixed
 - Fixed HDRI sky intensity lux mode
@@ -31,16 +27,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed multi-edition inspector's blend distances for HDReflectionProbe, PlanarReflectionProbe and DensityVolume
 - Fixed metric distance that changed along size in DensityVolume
 - Fixed DensityVolume shape handles that have not same behaviour in advance and normal edition mode
-<<<<<<< HEAD
-- Fixed normal map blending in TerrainLit by only blending the derivatives### Changed
-=======
 - Fixed normal map blending in TerrainLit by only blending the derivatives
 - Fixed Xbox One rendering just a grey screen instead of the scene
 - Fixed probe handles for multiselection
 - Fixed baked cubemap import settings for convolution
 - Fixed regression causing crash when attempting to open HDRenderPipelineWizard without an HDRenderPipelineAsset setted
 - Fixed FullScreenDebug modes: SSAO, SSR, Contact shadow, Prerefraction Color Pyramid, Final Color Pyramid
->>>>>>> master
 
 ### Changed
 - DensityVolume scripting API will no longuer allow to change between advance and normal edition mode
@@ -48,12 +40,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - TerrainLit shaders and includes are reorganized and made simpler.
 - TerrainLit shader GUI now allows custom properties to be displayed in the Terrain fold-out section.
 - Optimize distortion pass with stencil
-<<<<<<< HEAD
-=======
 - Disable SceneSelectionPass in shader graph preview
 - Control punctual light and area light shadow atlas separately
 - Move SMAA anti-aliasing option to after Temporal Anti Aliasing one, to avoid problem with previously serialized project settings
->>>>>>> master
+- Renamed velocity to motion vectors
 
 ## [6.5.0-preview] - 2019-03-07
 

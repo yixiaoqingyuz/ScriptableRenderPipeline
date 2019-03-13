@@ -8,13 +8,14 @@ namespace UnityEditor.VFX
     class VFXMotionVector : VFXContext
     {
         public VFXMotionVector() : base(VFXContextType.kUpdate, VFXDataType.kParticle, VFXDataType.kParticle) { }
-        public override string name { get { return "MotionVector"; } }
+        public override string name => "MotionVector";
 
+        private VFXContext m_encapsulatedOutput;
+        public VFXContext encapsulatedOutput => m_encapsulatedOutput;
         public void SetEncapsulatedOutput(VFXContext context)
         {
             m_encapsulatedOutput = context;
         }
-        private VFXContext m_encapsulatedOutput;
 
         public override string codeGeneratorTemplate
         {

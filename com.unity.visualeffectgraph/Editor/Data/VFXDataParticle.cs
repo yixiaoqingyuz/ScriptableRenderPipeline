@@ -390,13 +390,13 @@ namespace UnityEditor.VFX
                 m_Contexts.Add(cameraSort);
             }
 
-            if (true) //TODOPAUL
+            //Motion vector jobs
+            for (int outputIndex = index; outputIndex < m_Owners.Count; ++outputIndex)
             {
-                for (int outputIndex = index; outputIndex < m_Owners.Count; ++outputIndex)
+                var currentOutputContext = m_Owners[outputIndex];
+                var abstractParticleOutput = currentOutputContext as IVFXSubRenderer;
+                if (abstractParticleOutput != null && abstractParticleOutput.hasMotionVector)
                 {
-                    var currentOutputContext = m_Owners[index];
-                    var blockChilren = currentOutputContext.children;
-
                     var motionVector = VFXContext.CreateImplicitContext<VFXMotionVector>(this);
                     motionVector.SetEncapsulatedOutput(currentOutputContext);
                     implicitContext.Add(motionVector);
@@ -541,11 +541,12 @@ namespace UnityEditor.VFX
                 systemBufferMappings.Add(new VFXMapping("sortBufferB", sortBufferBIndex));
             }
 
-            int elementToVFXBuffer = -1;
-            if (true) //TODOPAUL
+            var elementToVFXBufferMotionVector = new Dictionary<VFXContext, int>();
+            foreach (VFXMotionVector motionVectorContext in m_Contexts.OfType<VFXMotionVector>())
             {
-                elementToVFXBuffer = outTemporaryBufferDescs.Count;
+                int currentElementToVFXBufferMotionVector = outTemporaryBufferDescs.Count;
                 outTemporaryBufferDescs.Add(new VFXTemporaryGPUBufferDesc() { frameCount = 2u, desc = new VFXGPUBufferDesc { type = ComputeBufferType.Raw, size = capacity * 64, stride = 4 } });
+                elementToVFXBufferMotionVector.Add(motionVectorContext.encapsulatedOutput, currentElementToVFXBufferMotionVector);
             }
 
             var taskDescs = new List<VFXEditorTaskDesc>();
@@ -566,11 +567,13 @@ namespace UnityEditor.VFX
 
                 if (context is VFXMotionVector)
                 {
-                    temporaryBufferMappings.Add(new VFXMappingTemporary() { pastFrameIndex = 0u, perCameraBuffer = true, mapping = new VFXMapping("elementToVFXBuffer", elementToVFXBuffer) });
+                    var currentIndex = elementToVFXBufferMotionVector[(context as VFXMotionVector).encapsulatedOutput];
+                    temporaryBufferMappings.Add(new VFXMappingTemporary() { pastFrameIndex = 0u, perCameraBuffer = true, mapping = new VFXMapping("elementToVFXBuffer", currentIndex) });
                 }
                 else if (context.contextType == VFXContextType.kOutput && (context is IVFXSubRenderer) && (context as IVFXSubRenderer).hasMotionVector)
                 {
-                    temporaryBufferMappings.Add(new VFXMappingTemporary() { pastFrameIndex = 1u, perCameraBuffer = true, mapping = new VFXMapping("elementToVFXBufferPrevious", elementToVFXBuffer) });
+                    var currentIndex = elementToVFXBufferMotionVector[context];
+                    temporaryBufferMappings.Add(new VFXMappingTemporary() { pastFrameIndex = 1u, perCameraBuffer = true, mapping = new VFXMapping("elementToVFXBufferPrevious", currentIndex) });
                 }
 
                 if (attributeBufferIndex != -1)

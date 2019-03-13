@@ -114,8 +114,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             None,
             FastApproximateAntialiasing,
+            SubpixelMorphologicalAntiAliasing,
             TemporalAntialiasing
         }
+
+        public enum SMAAQualityLevel
+        {
+            Low,
+            Medium,
+            High
+        }
+
 
         public ClearColorMode clearColorMode = ClearColorMode.Sky;
         [ColorUsage(true, true)]
@@ -129,6 +138,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public Transform volumeAnchorOverride;
 
         public AntialiasingMode antialiasing = AntialiasingMode.None;
+        public SMAAQualityLevel SMAAQuality = SMAAQualityLevel.High;
         public bool dithering = false;
         public bool stopNaNs = false;
 

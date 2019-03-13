@@ -679,10 +679,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public static readonly int _TileToScatterMax               = Shader.PropertyToID("_TileToScatterMax");
         public static readonly int _TileToScatterMin               = Shader.PropertyToID("_TileToScatterMin");
         public static readonly int _TileTargetSize                 = Shader.PropertyToID("_TileTargetSize");
-        public static readonly int _MotionBlurSampleCount          = Shader.PropertyToID("_SampleCount");
         public static readonly int _MotionBlurParams               = Shader.PropertyToID("_MotionBlurParams0");
         public static readonly int _MotionBlurParams1              = Shader.PropertyToID("_MotionBlurParams1");
+        public static readonly int _MotionBlurParams2              = Shader.PropertyToID("_MotionBlurParams2");
         public static readonly int _PrevVPMatrixNoTranslation      = Shader.PropertyToID("_PrevVPMatrixNoTranslation");
 
+        public static readonly int _SMAAAreaTex                    = Shader.PropertyToID("_AreaTex");
+        public static readonly int _SMAASearchTex                  = Shader.PropertyToID("_SearchTex");
+        public static readonly int _SMAABlendTex                   = Shader.PropertyToID("_BlendTex");
+        public static readonly int _SMAARTMetrics                  = Shader.PropertyToID("_SMAARTMetrics");
     }
 }

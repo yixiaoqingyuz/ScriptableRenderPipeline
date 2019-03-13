@@ -201,6 +201,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // game view / scene view / preview in the editor, it's handled automatically
         public AntialiasingMode antialiasing { get; private set; } = AntialiasingMode.None;
 
+        public HDAdditionalCameraData.SMAAQualityLevel SMAAQuality { get; private set; } = HDAdditionalCameraData.SMAAQualityLevel.Medium;
+
+
         public bool dithering => m_AdditionalCameraData != null && m_AdditionalCameraData.dithering;
 
         public bool stopNaNs => m_AdditionalCameraData != null && m_AdditionalCameraData.stopNaNs;
@@ -291,7 +294,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
 #endif
                 else if (m_AdditionalCameraData != null)
+                {
                     antialiasing = m_AdditionalCameraData.antialiasing;
+                    if(antialiasing == AntialiasingMode.SubpixelMorphologicalAntiAliasing)
+                    {
+                        SMAAQuality = m_AdditionalCameraData.SMAAQuality;
+                    }
+                }
                 else
                     antialiasing = AntialiasingMode.None;
             }
@@ -823,8 +832,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         static RTHandleSystem.RTHandle HistoryBufferAllocatorFunction(string viewName, int frameIndex, RTHandleSystem rtHandleSystem)
         {
             frameIndex &= 1;
-
-            return rtHandleSystem.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16G16B16A16_SFloat,
+            var hdPipeline = (HDRenderPipeline)RenderPipelineManager.currentPipeline;
+            
+            return rtHandleSystem.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: (GraphicsFormat)hdPipeline.currentPlatformRenderPipelineSettings.colorBufferFormat,
                                         enableRandomWrite: true, useMipMap: true, autoGenerateMips: false, xrInstancing: true,
                                         name: string.Format("CameraColorBufferMipChain{0}", frameIndex));
         }

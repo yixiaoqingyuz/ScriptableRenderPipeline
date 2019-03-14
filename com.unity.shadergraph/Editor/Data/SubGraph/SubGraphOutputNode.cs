@@ -64,22 +64,20 @@ namespace UnityEditor.ShaderGraph
             base.ValidateNode();
         }
 
+        protected override void OnSlotsChanged()
+        {
+            base.OnSlotsChanged();
+            ValidateNode();
+        }
+
         public int AddSlot(ConcreteSlotValueType concreteValueType)
         {
             var index = this.GetInputSlots<ISlot>().Count() + 1;
             string name = string.Format("Out_{0}", NodeUtils.GetDuplicateSafeNameForSlot(this, index, concreteValueType.ToString()));
             AddSlot(MaterialSlot.CreateMaterialSlot(concreteValueType.ToSlotValueType(), index, name, NodeUtils.GetHLSLSafeName(name), SlotType.Input, Vector4.zero));
-            OnSlotsChanged();
             return index;
         }
         
-        void OnSlotsChanged()
-        {
-            Dirty(ModificationScope.Topological);
-            owner.ClearErrorsForNode(this);
-            ValidateNode();
-        }
-
         public void RemapOutputs(ShaderGenerator visitor, GenerationMode generationMode)
         {
             foreach (var slot in graphOutputs)

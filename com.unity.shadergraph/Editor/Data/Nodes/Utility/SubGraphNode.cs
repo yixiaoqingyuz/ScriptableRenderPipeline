@@ -374,17 +374,26 @@ namespace UnityEditor.ShaderGraph
             if (subGraphData == null)
             {
                 hasError = true;
-                owner.AddValidationError(tempId, "Sub Graph asset could not be found");
+                var assetGuid = subGraphGuid;
+                var assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
+                if (string.IsNullOrEmpty(assetPath))
+                {
+                    owner.AddValidationError(tempId, $"Could not find Sub Graph asset with GUID {assetGuid}.");
+                }
+                else
+                {
+                    owner.AddValidationError(tempId, $"Could not load Sub Graph asset at \"{assetPath}\" with GUID {assetGuid}.");
+                }
             }
             else if (subGraphData.isRecursive || owner.isSubGraph && (subGraphData.descendents.Contains(owner.assetGuid) || subGraphData.assetGuid == owner.assetGuid))
-                {
+            {
                 hasError = true;
-                owner.AddValidationError(tempId, "Recursive Sub Graphs are not allowed");
-                }
+                owner.AddValidationError(tempId, $"Detected a recursion in Sub Graph asset at \"{AssetDatabase.GUIDToAssetPath(subGraphGuid)}\" with GUID {subGraphGuid}.");
+            }
             else if (!subGraphData.isValid)
             {
                 hasError = true;
-                owner.AddValidationError(tempId, "Sub Graph asset failed to import");
+                owner.AddValidationError(tempId, $"Invalid Sub Graph asset at \"{AssetDatabase.GUIDToAssetPath(subGraphGuid)}\" with GUID {subGraphGuid}.");
             }
 
             ValidateShaderStage();

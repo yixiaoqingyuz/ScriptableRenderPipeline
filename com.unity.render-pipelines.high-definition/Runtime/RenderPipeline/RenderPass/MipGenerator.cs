@@ -9,6 +9,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         const int kKernelTex2D = 0;
         const int kKernelTex2DArray = 1;
         RTHandle[] m_TempColorTargets;
+        RTHandle m_TempDownsamplePyramid = null;
 
         ComputeShader m_DepthPyramidCS;
         ComputeShader m_ColorPyramidCS;
@@ -48,6 +49,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 RTHandles.Release(m_TempColorTargets[i]);
                 m_TempColorTargets[i] = null;
+            }
+
+            if(m_TempDownsamplePyramid != null)
+            {
+                RTHandles.Release(m_TempDownsamplePyramid);
             }
         }
 
@@ -146,7 +152,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             #if UNITY_SWITCH
             bool preferFragment = true;
             #else
-            bool preferFragment = true;
+            bool preferFragment = SystemInfo.deviceType != DeviceType.Console;  // TODO: Check whether the colour buffer format supports UAV typed loads.
             #endif
 
             int srcMipLevel  = 0;
@@ -156,16 +162,30 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             if (preferFragment)
             {
-                Debug.Assert(!TextureXR.useTexArray, "Fragment version of mip generator is not compatible with texture array!");
-
                 int tempTargetWidth = srcMipWidth >> 1;
                 int tempTargetHeight = srcMipHeight >> 1;
+
+                if(m_TempDownsamplePyramid == null)
+                {
+                    m_TempDownsamplePyramid = RTHandles.Alloc(
+                    Vector2.one * 0.5f,
+                    filterMode: FilterMode.Bilinear,
+                    colorFormat: destination.graphicsFormat,
+                    enableRandomWrite: true,
+                    useMipMap: true,
+                    enableMSAA: false,
+                    xrInstancing: true,
+                    useDynamicScale: true,
+                    autoGenerateMips: false,
+                    name: "Temporary Downsampled Pyramid"
+                    );
+                }
 
                 // Copies src mip0 to dst mip0
                 m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, source);
                 m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(1f, 1f, 0f,0f));
                 m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, 0f);
-                cmd.SetRenderTarget(destination, 0);
+                cmd.SetRenderTarget(destination, 0, CubemapFace.Unknown, -1);
                 cmd.DrawProcedural(Matrix4x4.identity, HDUtils.GetBlitMaterial(source.dimension), 0, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
 
                 // Note: smaller mips are excluded as we don't need them and the gaussian compute works
@@ -178,19 +198,19 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     int dstMipHeight = Mathf.Max(1, srcMipHeight >> 1);
 
                     // Downsample.
-                    // Note: this code is not valid on D3D11 because destination is used both as an input and target
+                    int tmpDownsamplingTargetDestMip = srcMipLevel;
                     m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, destination);
                     m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(1f, 1f, 0f,0f));
-                    m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, srcMipLevel);
-                    cmd.SetRenderTarget(destination, srcMipLevel + 1);
+                    m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, tmpDownsamplingTargetDestMip);
+                    cmd.SetRenderTarget(m_TempDownsamplePyramid, srcMipLevel, CubemapFace.Unknown, -1);
                     cmd.DrawProcedural(Matrix4x4.identity, HDUtils.GetBlitMaterial(source.dimension), 1, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
 
                     // Blur horizontal.
-                    m_PropertyBlock.SetTexture(HDShaderIDs._Source, destination);
+                    m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempDownsamplePyramid);
                     m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(1f, 1f, 0f, 0f));
                     m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(1f, 1f, 1f / dstMipWidth, 0f));
-                    m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, srcMipLevel + 1);
-                    cmd.SetRenderTarget(m_TempColorTargets[kernelIndex], 0);
+                    m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, tmpDownsamplingTargetDestMip);
+                    cmd.SetRenderTarget(m_TempColorTargets[kernelIndex], 0, CubemapFace.Unknown, -1);
                     cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
                     cmd.DrawProcedural(Matrix4x4.identity, m_ColorPyramidPSMat, 0, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
 
@@ -199,7 +219,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4((float)dstMipWidth / tempTargetWidth, (float)dstMipHeight / tempTargetHeight, 0f, 0f));
                     m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4((dstMipWidth - 0.5f) /  tempTargetWidth, (dstMipHeight - 0.5f) /  tempTargetHeight, 0f, 1f / tempTargetHeight));
                     m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
-                    cmd.SetRenderTarget(destination, srcMipLevel + 1);
+                    cmd.SetRenderTarget(destination, srcMipLevel + 1, CubemapFace.Unknown, -1);
                     cmd.DrawProcedural(Matrix4x4.identity, m_ColorPyramidPSMat, 0, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
 
                     srcMipLevel++;

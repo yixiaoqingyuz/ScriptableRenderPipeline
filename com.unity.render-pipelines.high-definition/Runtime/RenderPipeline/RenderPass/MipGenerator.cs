@@ -146,7 +146,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             #if UNITY_SWITCH
             bool preferFragment = true;
             #else
-            bool preferFragment = false;
+            bool preferFragment = true;
             #endif
 
             int srcMipLevel  = 0;

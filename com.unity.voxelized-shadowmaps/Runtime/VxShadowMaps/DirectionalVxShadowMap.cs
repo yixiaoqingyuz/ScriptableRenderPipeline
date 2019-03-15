@@ -16,7 +16,6 @@ namespace UnityEngine.Experimental.VoxelizedShadowMaps
         public ShadowsBlendMode shadowsBlendMode = ShadowsBlendMode.OnlyVxShadowMaps;
 
 #if true//UNITY_EDITOR // when vxsm can be changed at runtime
-        [System.NonSerialized]
         public float size = 0.0f;
 #endif
 

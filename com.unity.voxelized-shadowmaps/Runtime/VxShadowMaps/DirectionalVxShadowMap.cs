@@ -15,7 +15,8 @@ namespace UnityEngine.Experimental.VoxelizedShadowMaps
         public int voxelUpBias = 1;
         public ShadowsBlendMode shadowsBlendMode = ShadowsBlendMode.OnlyVxShadowMaps;
 
-#if UNITY_EDITOR
+#if true//UNITY_EDITOR // when vxsm can be changed at runtime
+        [System.NonSerialized]
         public float size = 0.0f;
 #endif
 
@@ -78,7 +79,7 @@ namespace UnityEngine.Experimental.VoxelizedShadowMaps
         {
             bool needToReload = resource != null && computeBuffer == null;
 
-#if UNITY_EDITOR
+#if true//UNITY_EDITOR // when vxsm can be changed at runtime
             if (resource != null)
             {
                 float currSize = (float)(resource.Data.Length * 4);

@@ -10,6 +10,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         const int kKernelTex2DArray = 1;
         RTHandle[] m_TempColorTargets;
         RTHandle m_TempDownsamplePyramid = null;
+        int m_removeMe = 0;
 
         ComputeShader m_DepthPyramidCS;
         ComputeShader m_ColorPyramidCS;
@@ -121,7 +122,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // We can't do it in place as the color pyramid has to be read while writing to the color
         // buffer in some cases (e.g. refraction, distortion)
         // Returns the number of mips
-        public int RenderColorGaussianPyramid(CommandBuffer cmd, Vector2Int size, Texture source, RenderTexture destination)
+        public int RenderColorGaussianPyramid(CommandBuffer cmd, Vector2Int size, Texture source, RenderTexture destination, float viewportScaleX = 1.0f, float viewportScaleY = 1.0f)
         {
             // Select between Tex2D and Tex2DArray versions of the kernels
             int kernelIndex = (source.dimension == TextureDimension.Tex2DArray) ? kKernelTex2DArray : kKernelTex2D;
@@ -149,10 +150,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 );
             }
 
-            #if UNITY_SWITCH
+#if UNITY_SWITCH
             bool preferFragment = true;
-            #else
-            bool preferFragment = SystemInfo.deviceType != DeviceType.Console;  // TODO: Check whether the colour buffer format supports UAV typed loads.
+#else
+            bool preferFragment = m_removeMe != 1 && SystemInfo.deviceType != DeviceType.Console;  // TODO: Check whether the colour buffer format supports UAV typed loads.
             #endif
 
             int srcMipLevel  = 0;
@@ -197,38 +198,58 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     int dstMipWidth  = Mathf.Max(1, srcMipWidth  >> 1);
                     int dstMipHeight = Mathf.Max(1, srcMipHeight >> 1);
 
-                    // Downsample.
                     int tmpDownsamplingTargetDestMip = srcMipLevel;
-                    m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, destination);
-                    m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(1f, 1f, 0f,0f));
-                    m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, tmpDownsamplingTargetDestMip);
-                    cmd.SetRenderTarget(m_TempDownsamplePyramid, srcMipLevel, CubemapFace.Unknown, -1);
-                    cmd.DrawProcedural(Matrix4x4.identity, HDUtils.GetBlitMaterial(source.dimension), 1, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
+
+                    //float scaleX = size.x / (float)destination.descriptor.width;
+                    //float scaleY = size.y / (float)destination.descriptor.height;
+
+                    float scaleX = viewportScaleX;
+                    float scaleY = viewportScaleY;
+
+                    using (new ProfilingSample(cmd, "Downsample", CustomSamplerId.ColorPyramid.GetSampler()))
+                    {
+                        // Downsample.
+                        m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, destination);
+                        m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
+                        m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, srcMipLevel);
+                        cmd.SetRenderTarget(m_TempDownsamplePyramid, tmpDownsamplingTargetDestMip, CubemapFace.Unknown, -1);
+                        cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
+                        cmd.DrawProcedural(Matrix4x4.identity, HDUtils.GetBlitMaterial(source.dimension), 1, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
+                    }
 
                     // Blur horizontal.
-                    m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempDownsamplePyramid);
-                    m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(1f, 1f, 0f, 0f));
-                    m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(1f, 1f, 1f / dstMipWidth, 0f));
-                    m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, tmpDownsamplingTargetDestMip);
-                    cmd.SetRenderTarget(m_TempColorTargets[kernelIndex], 0, CubemapFace.Unknown, -1);
-                    cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
-                    cmd.DrawProcedural(Matrix4x4.identity, m_ColorPyramidPSMat, 0, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
+                    using (new ProfilingSample(cmd, "Blur horizontal", CustomSamplerId.ColorPyramid.GetSampler()))
+                    {
+                        m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempDownsamplePyramid);
+                        m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
+                        m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(scaleX, scaleY, scaleX / dstMipWidth, 0f));
+                        m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, tmpDownsamplingTargetDestMip);
+                        cmd.SetRenderTarget(m_TempColorTargets[kernelIndex], 0, CubemapFace.Unknown, -1);
+                        cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
+                        cmd.DrawProcedural(Matrix4x4.identity, m_ColorPyramidPSMat, 0, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
+                    }
 
                     // Blur vertical.
-                    m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempColorTargets[kernelIndex]);
-                    m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4((float)dstMipWidth / tempTargetWidth, (float)dstMipHeight / tempTargetHeight, 0f, 0f));
-                    m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4((dstMipWidth - 0.5f) /  tempTargetWidth, (dstMipHeight - 0.5f) /  tempTargetHeight, 0f, 1f / tempTargetHeight));
-                    m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
-                    cmd.SetRenderTarget(destination, srcMipLevel + 1, CubemapFace.Unknown, -1);
-                    cmd.DrawProcedural(Matrix4x4.identity, m_ColorPyramidPSMat, 0, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
+                    using (new ProfilingSample(cmd, "Blur vertical", CustomSamplerId.ColorPyramid.GetSampler()))
+                    {
+                        m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempColorTargets[kernelIndex]);
+                        m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(scaleX * (float)dstMipWidth / tempTargetWidth, scaleY * (float)dstMipHeight / tempTargetHeight, 0f, 0f));
+                        m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(scaleX * (dstMipWidth - 0.5f) / tempTargetWidth, scaleY * (dstMipHeight - 0.5f) / tempTargetHeight, 0f, scaleY / tempTargetHeight));
+                        m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
+                        cmd.SetRenderTarget(destination, srcMipLevel + 1, CubemapFace.Unknown, -1);
+                        cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
+                        cmd.DrawProcedural(Matrix4x4.identity, m_ColorPyramidPSMat, 0, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
+                    }
 
                     srcMipLevel++;
                     srcMipWidth  = srcMipWidth  >> 1;
                     srcMipHeight = srcMipHeight >> 1;
                 }
+                m_removeMe = 0;
             }
             else
             {
+                m_removeMe = 0;
                 var cs = m_ColorPyramidCS;
                 int downsampleKernel = m_ColorDownsampleKernel[kernelIndex];
                 int downsampleKernelMip0 = m_ColorDownsampleKernelCopyMip0[kernelIndex];

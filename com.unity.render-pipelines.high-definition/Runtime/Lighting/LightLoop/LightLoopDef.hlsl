@@ -332,5 +332,5 @@ void InitContactShadow(PositionInputs posInput, inout LightLoopContext context)
 float GetContactShadow(LightLoopContext lightLoopContext, int contactShadowMask)
 {
     bool occluded = (lightLoopContext.contactShadow & contactShadowMask) != 0;
-    return (contactShadowMask >= 0 && occluded) ? 1.0 - lightLoopContext.contactShadowFade : 1.0;
+    return (occluded) ? 1.0 - lightLoopContext.contactShadowFade : 1.0;
 }

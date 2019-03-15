@@ -535,7 +535,7 @@ float3 PreEvaluatePunctualLightTransmission(LightLoopContext lightLoopContext, P
         if (HasFlag(bsdfData.materialFeatures, MATERIALFEATUREFLAGS_TRANSMISSION_MODE_THIN_THICKNESS))
         {
             normalWS = -normalWS; // Flip normal for shadow bias
-            lightData.contactShadowMask = -1;  //  Disable shadow contact
+            lightData.contactShadowMask = 0;  //  Disable shadow contact
         }
         transmittance = lerp( bsdfData.transmittance, transmittance, lightData.shadowDimmer);
     }

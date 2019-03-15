@@ -69,7 +69,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public int     shadowIndex;             // -1 if unused (TODO: 16 bit)
 
         public Vector3 color;
-        public int     contactShadowMask;      // -1 if unused (TODO: 16 bit)
+        public int     contactShadowMask;      // 0 if unused (TODO: 16 bit)
 
         public float   shadowDimmer;
         public float   volumetricShadowDimmer;  // Replaces 'shadowDimmer'

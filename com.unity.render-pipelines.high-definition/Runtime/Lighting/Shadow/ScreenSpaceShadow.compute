@@ -204,7 +204,7 @@ void DEFERRED_CONTACT_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uin
         {
             DirectionalLightData light = _DirectionalLightDatas[_DirectionalShadowIndex];
             
-            if (light.contactShadowMask != -1)
+            if (light.contactShadowMask != 0)
             {
                 // We store the inverse of the contact shadow:
                 bool occluded = ComputeContactShadow(posInput, -light.forward, globalFade);
@@ -264,7 +264,7 @@ void DEFERRED_CONTACT_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uin
 
             LightData light = FetchLight(s_lightIdx); // Scalar load
             
-            if (light.contactShadowMask == -1)
+            if (light.contactShadowMask == 0)
                 continue;
 
             // Compute light ray direction:

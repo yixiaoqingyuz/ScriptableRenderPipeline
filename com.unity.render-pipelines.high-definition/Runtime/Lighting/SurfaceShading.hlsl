@@ -42,7 +42,7 @@ float3 PreEvaluateDirectionalLightTransmission(BSDFData bsdfData, inout Directio
             NdotL = -NdotL;
 
             // However, we don't want baked or contact shadows.
-            light.contactShadowMask   = -1;
+            light.contactShadowMask    = 0;
             light.shadowMaskSelector.x = -1;
 
             // We use the precomputed value (based on "baked" thickness).
@@ -161,7 +161,7 @@ float3 PreEvaluatePunctualLightTransmission(LightLoopContext lightLoopContext,
             NdotL = -NdotL;
 
             // However, we don't want baked or contact shadows.
-            light.contactShadowMask   = -1;
+            light.contactShadowMask    = 0;
             light.shadowMaskSelector.x = -1;
 
             transmittance = bsdfData.transmittance;

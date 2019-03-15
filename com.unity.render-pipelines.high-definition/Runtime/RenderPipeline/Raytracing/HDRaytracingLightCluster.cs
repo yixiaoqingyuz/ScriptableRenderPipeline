@@ -580,7 +580,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
 
                 // No contact shadows for us
-                lightData.contactShadowMask = -1;
+                lightData.contactShadowMask = 0;
 
                 // Set the data for this light
                 m_LightDataCPUArray[lightIdx]= lightData;

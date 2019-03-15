@@ -954,7 +954,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 lightData.shadowDimmer           = 1.0f;
                 lightData.volumetricShadowDimmer = 1.0f;
-                lightData.contactShadowMask      = -1;
+                lightData.contactShadowMask      = 0;
             }
 
             // fix up shadow information
@@ -1205,7 +1205,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 lightData.shadowDimmer           = 1.0f;
                 lightData.volumetricShadowDimmer = 1.0f;
-                lightData.contactShadowMask      = -1;
+                lightData.contactShadowMask      = 0;
              }
 
 #if ENABLE_RAYTRACING
@@ -2623,10 +2623,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public int GetContactShadowMask(bool contactShadowEnabled)
         {
             if (!contactShadowEnabled)
-                return -1;
+                return 0;
             
+            // We have 24 max contact shadow light per frame
             if (m_ContactShadowIndex >= LightDefinitions.s_LightListMaxPrunedEntries)
-                return -1;
+                return 0;
 
             return 1 << m_ContactShadowIndex++;
         }

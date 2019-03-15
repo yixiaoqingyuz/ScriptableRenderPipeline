@@ -13,7 +13,9 @@ RW_TEXTURE2D_X(uint, _DecalHTile);
 Texture2D<uint> _DecalHTileTexture;
 
 UNITY_INSTANCING_BUFFER_START(Decal)
-    UNITY_DEFINE_INSTANCED_PROP(float4x4, _NormalToWorld)
+UNITY_DEFINE_INSTANCED_PROP(float4x4, _NormalToWorld)
 UNITY_INSTANCING_BUFFER_END(Decal)
+
+int _DecalsHtileSupport;
 
 #endif

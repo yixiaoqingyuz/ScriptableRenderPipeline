@@ -82,10 +82,9 @@ void Frag(  PackedVaryingsToPS packedInput,
 #if (SHADERPASS == SHADERPASS_DBUFFER_PROJECTOR) || (SHADERPASS == SHADERPASS_DBUFFER_MESH)
     uint2 htileCoord = input.positionSS.xy / 8;
     uint mask = surfaceData.HTileMask;
-
+#if (DECALS_HTILE_SUPPORT)
 #ifdef SUPPORTS_WAVE_INTRINSICS
     uint tileCoord1d = (htileCoord.y << 16) | (htileCoord.x);
-
     // Loop over up to 4 tiles.
     for (int i = 0; ; i++)
     {
@@ -117,12 +116,11 @@ void Frag(  PackedVaryingsToPS packedInput,
             tileCoord1d = -1;
         }
     }
-#else
-    // 64 atomics.
+#else // SUPPORTS_WAVE_INTRINSICS
     InterlockedOr(_DecalHTile[COORD_TEXTURE2D_X(htileCoord)], mask);
-#endif
-
-#endif
+#endif // SUPPORTS_WAVE_INTRINSICS
+#endif // DECALS_HTILE_SUPPORT
+#endif // (SHADERPASS == SHADERPASS_DBUFFER_PROJECTOR) || (SHADERPASS == SHADERPASS_DBUFFER_MESH)
 
 #if (SHADERPASS == SHADERPASS_DBUFFER_PROJECTOR) || (SHADERPASS == SHADERPASS_DBUFFER_MESH)
     ENCODE_INTO_DBUFFER(surfaceData, outDBuffer);

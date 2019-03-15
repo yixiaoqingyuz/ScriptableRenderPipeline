@@ -33,9 +33,7 @@
     TEXTURE2D_ARRAY(_Env2DTextures);
 
     // XRTODO: Need to stereo-ize access
-    // TODO: change this to a XR macro
-    Texture2D<uint> _DeferredShadowTexture;
-    // TEXTURE2D_X(_DeferredShadowTexture);
+    TEXTURE2D_X_UINT(_DeferredShadowTexture);
 
 #if SHADEROPTIONS_RAYTRACING
     // Area shadow paper texture

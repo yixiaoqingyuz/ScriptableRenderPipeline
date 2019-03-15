@@ -535,7 +535,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                                 {
                                     data.fullScreenContactShadowLightIndex = value;
                                 },
-                                min = () => -1,
+                                min = () => -1, // -1 will display all contact shadow
                                 max = () => LightDefinitions.s_LightListMaxPrunedEntries - 1
                             },
                         }

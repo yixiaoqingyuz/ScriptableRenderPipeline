@@ -19,7 +19,7 @@ UNITY_INSTANCING_BUFFER_START(Terrain)
     UNITY_DEFINE_INSTANCED_PROP(float4, _TerrainPatchInstanceData)  // float4(xBase, yBase, skipScale, ~)
 UNITY_INSTANCING_BUFFER_END(Terrain)
 
-#ifdef TERRAIN_SURFACE_MASK_ENABLED
+#ifdef _ALPHATEST_ON
 TEXTURE2D(_TerrainSurfaceMaskTexture);
 SAMPLER(sampler_TerrainSurfaceMaskTexture);
 
@@ -230,7 +230,7 @@ Varyings SplatmapVert(Attributes v)
 // Used in Standard Terrain shader
 half4 SplatmapFragment(Varyings IN) : SV_TARGET
 {
-#ifdef TERRAIN_SURFACE_MASK_ENABLED
+#ifdef _ALPHATEST_ON
 	ClipSurfaceMask(IN.uvMainAndLM.xy);
 #endif	
 	
@@ -272,7 +272,7 @@ struct AttributesLean
     float4 position     : POSITION;
     float3 normalOS       : NORMAL;
     UNITY_VERTEX_INPUT_INSTANCE_ID
-#ifdef TERRAIN_SURFACE_MASK_ENABLED
+#ifdef _ALPHATEST_ON
 	float2 texcoord     : TEXCOORD0;
 #endif
 };
@@ -280,7 +280,7 @@ struct AttributesLean
 struct VaryingsLean
 {
     float4 clipPos      : SV_POSITION;
-#ifdef TERRAIN_SURFACE_MASK_ENABLED		
+#ifdef _ALPHATEST_ON		
     float2 texcoord     : TEXCOORD0;
 #endif
 };
@@ -304,7 +304,7 @@ VaryingsLean ShadowPassVertex(AttributesLean v)
 
     o.clipPos = clipPos;
 	
-#ifdef TERRAIN_SURFACE_MASK_ENABLED		
+#ifdef _ALPHATEST_ON		
 	o.texcoord = v.texcoord;
 #endif	
 	
@@ -313,7 +313,7 @@ VaryingsLean ShadowPassVertex(AttributesLean v)
 
 half4 ShadowPassFragment(VaryingsLean IN) : SV_TARGET
 {
-#ifdef TERRAIN_SURFACE_MASK_ENABLED
+#ifdef _ALPHATEST_ON
 	ClipSurfaceMask(IN.texcoord);
 #endif	
     return 0;
@@ -327,7 +327,7 @@ VaryingsLean DepthOnlyVertex(AttributesLean v)
     UNITY_SETUP_INSTANCE_ID(v);
     TerrainInstancing(v.position, v.normalOS);
     o.clipPos = TransformObjectToHClip(v.position.xyz);
-#ifdef TERRAIN_SURFACE_MASK_ENABLED		
+#ifdef _ALPHATEST_ON		
 	o.texcoord = v.texcoord;
 #endif	
 	return o;
@@ -335,7 +335,7 @@ VaryingsLean DepthOnlyVertex(AttributesLean v)
 
 half4 DepthOnlyFragment(VaryingsLean IN) : SV_TARGET
 {
-#ifdef TERRAIN_SURFACE_MASK_ENABLED
+#ifdef _ALPHATEST_ON
 	ClipSurfaceMask(IN.texcoord);
 #endif
     return 0;

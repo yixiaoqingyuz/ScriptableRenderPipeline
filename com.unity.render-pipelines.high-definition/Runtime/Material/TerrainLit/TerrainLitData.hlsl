@@ -51,7 +51,7 @@ float _DistortionBlurScale;
 float _DistortionBlurRemapMin;
 float _DistortionBlurRemapMax;
 
-#ifdef TERRAIN_SURFACE_MASK_ENABLED
+#ifdef _ALPHATEST_ON
 TEXTURE2D(_TerrainSurfaceMaskTexture);
 SAMPLER(sampler_TerrainSurfaceMaskTexture);
 
@@ -163,7 +163,7 @@ void GetSurfaceAndBuiltinData(inout FragInputs input, float3 V, inout PositionIn
     }
 #endif
 
-#ifdef TERRAIN_SURFACE_MASK_ENABLED
+#ifdef _ALPHATEST_ON
 	ClipSurfaceMask(input.texCoord0);
 #endif	
 

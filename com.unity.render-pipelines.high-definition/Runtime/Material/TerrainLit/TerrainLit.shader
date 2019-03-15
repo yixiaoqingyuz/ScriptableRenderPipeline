@@ -1,4 +1,4 @@
-﻿Shader "HDRP/TerrainLit"
+Shader "HDRP/TerrainLit"
 {
     Properties
     {
@@ -33,11 +33,6 @@
 
         [ToggleUI] _EnableInstancedPerPixelNormal("Instanced per pixel normal", Float) = 1.0
 
-		[HideInInspector] [ToggleUI] _AlphaCutoffEnable("Alpha Cutoff Enable", Float) = 1.0
-		[HideInInspector] _AlphaCutoff("Alpha Cutoff", Range(0.0, 1.0)) = 0.5 
-        [HideInInspector] _AlphaCutoffShadow("_AlphaCutoffShadow", Range(0.0, 1.0)) = 0.5
-        [HideInInspector] _AlphaCutoffPrepass("_AlphaCutoffPrepass", Range(0.0, 1.0)) = 0.5
-        [HideInInspector] _AlphaCutoffPostpass("_AlphaCutoffPostpass", Range(0.0, 1.0)) = 0.5
 		[HideInInspector] _TerrainSurfaceMaskTexture("Surface Mask Map (RGB)", 2D) = "white" {}
 		
         // Caution: C# code in BaseLitUI.cs call LightmapEmissionFlagsProperty() which assume that there is an existing "_EmissionColor"
@@ -79,7 +74,7 @@
     #pragma multi_compile_instancing
     #pragma instancing_options assumeuniformscaling nomatrices nolightprobe nolightmap
 
-	#pragma multi_compile_local __ TERRAIN_SURFACE_MASK_ENABLED
+	#pragma multi_compile_local __ _ALPHATEST_ON
 
     // All our shaders use same name for entry point
     #pragma vertex Vert

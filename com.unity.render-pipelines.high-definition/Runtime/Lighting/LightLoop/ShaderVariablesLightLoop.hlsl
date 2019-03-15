@@ -37,9 +37,12 @@
     Texture2D<uint> _DeferredShadowTexture;
     // TEXTURE2D_X(_DeferredShadowTexture);
 
-    // Area shadow paper texture
 #if SHADEROPTIONS_RAYTRACING
+    // Area shadow paper texture
     TEXTURE2D_ARRAY(_AreaShadowTexture);
+
+    // Indirect Diffuse Texture
+    TEXTURE2D(_IndirectDiffuseTexture);
 #endif
 
 #endif

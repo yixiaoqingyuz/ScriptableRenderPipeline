@@ -72,7 +72,7 @@ namespace UnityEditor.ShaderGraph
             get
             {
                 var assetReference = JsonUtility.FromJson<SubGraphAssetReference>(m_SerializedSubGraph);
-                return assetReference.subGraph.guid;
+                return assetReference?.subGraph?.guid;
             }
         }
 

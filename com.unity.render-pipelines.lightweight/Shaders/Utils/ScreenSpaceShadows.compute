@@ -695,7 +695,7 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
         // find next child node
         uint mask = ~(0xFFFFFFFF << cellShift);
         uint childrenbit = childmask & ((childmask & 0x0000AAAA) >> 1);
-        uint childIndex = countbits(childrenbit & mask);
+        uint childIndex = countBits(childrenbit & mask);
 
         // go down to the next node
         nodeIndex = _VxShadowMapBuffer[nodeIndex + 1 + childIndex];

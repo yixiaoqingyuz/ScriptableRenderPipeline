@@ -375,7 +375,7 @@ namespace UnityEditor.ShaderGraph
             {
                 hasError = true;
                 var assetGuid = subGraphGuid;
-                var assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
+                var assetPath = string.IsNullOrEmpty(subGraphGuid) ? null : AssetDatabase.GUIDToAssetPath(assetGuid);
                 if (string.IsNullOrEmpty(assetPath))
                 {
                     owner.AddValidationError(tempId, $"Could not find Sub Graph asset with GUID {assetGuid}.");

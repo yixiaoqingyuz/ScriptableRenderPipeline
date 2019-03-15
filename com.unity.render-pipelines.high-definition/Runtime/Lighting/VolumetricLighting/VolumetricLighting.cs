@@ -569,7 +569,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             using (new ProfilingSample(cmd, "Volume Voxelization"))
             {
                 int  numVisibleVolumes = m_VisibleVolumeBounds.Count;
-                bool tiledLighting     = lightLoop.HasBuiltLightList() && hdCamera.frameSettings.IsEnabled(FrameSettingsField.BigTilePrepass);
+                bool tiledLighting     = lightLoop.HasLightToCull() && hdCamera.frameSettings.IsEnabled(FrameSettingsField.BigTilePrepass);
                 bool highQuality       = preset == VolumetricLightingPreset.High;
 
                 int kernel = (tiledLighting ? 1 : 0) | (highQuality ? 2 : 0);

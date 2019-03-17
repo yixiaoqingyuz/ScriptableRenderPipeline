@@ -104,7 +104,8 @@ float EvaluateRuntimeSunShadow(LightLoopContext lightLoopContext, PositionInputs
                                DirectionalLightData light, float3 shadowBiasNormal)
 {
     // The relationship with NdotL is complicated and is therefore handled outside the function.
-    if ((light.lightDimmer > 0) && (light.shadowDimmer > 0))
+    //if ((light.lightDimmer > 0) && (light.shadowDimmer > 0)) //seongdae;vxsm;origin
+    if ((light.vxShadowsType != 1) && (light.lightDimmer > 0) && (light.shadowDimmer > 0)) //seongdae;vxsm
     {
         // Shadow dimmer is applied outside this function.
         return GetDirectionalShadowAttenuation(lightLoopContext.shadowContext, posInput.positionWS,

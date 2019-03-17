@@ -59,6 +59,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             public SerializedProperty fadeDistance;
             public SerializedProperty resolution;
             public SerializedProperty contactShadows;
+            public SerializedProperty vxShadows; //seongdae;vxsm
 
             // Bias control
             public SerializedProperty viewBiasMin;

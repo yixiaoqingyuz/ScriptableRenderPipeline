@@ -994,6 +994,22 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 m_CurrentShadowSortedSunLightIndex = sortedIndex;
             }
 
+            //seongdae;vxsm
+            var dirVxsm = lightComponent.gameObject.GetComponent<DirectionalVxShadowMap>();
+            if (dirVxsm != null && dirVxsm.IsValid())
+            {
+                switch (dirVxsm.shadowsBlendMode)
+                {
+                    case ShadowsBlendMode.OnlyVxShadowMaps:    lightData.vxShadowsType = 1; break;
+                    case ShadowsBlendMode.BlendDynamicShadows: lightData.vxShadowsType = 2; break;
+                }
+            }
+            else
+            {
+                lightData.vxShadowsType = 0;
+            }
+            //seongdae;vxsm
+
             // Value of max smoothness is from artists point of view, need to convert from perceptual smoothness to roughness
             lightData.minRoughness = Mathf.Max((1.0f - additionalLightData.maxSmoothness) * (1.0f - additionalLightData.maxSmoothness));
 

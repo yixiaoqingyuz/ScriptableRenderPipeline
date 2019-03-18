@@ -24,7 +24,7 @@
     TEXTURE2D_X(_CameraDepthValues);
 #endif
 
-RW_TEXTURE2D_X(int, _DeferredShadowTextureUAV);
+RW_TEXTURE2D_X(uint, _DeferredShadowTextureUAV);
 
 CBUFFER_START(DeferredShadowParameters)
 float4  _DirectionalLightDirection;
@@ -212,7 +212,7 @@ void DEFERRED_CONTACT_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uin
                 // light.contactShadowMask contains one bit at the position of the contact shadow index that will
                 // be tested in the lightloop, so it insert 1 at the index of the contact shadow if there is a contact shadow
                 // we take full bits at one multiplied by contact shadow and filter the bit at the contact shadow index.
-                contactShadowMask |= (~0 * occluded) & light.contactShadowMask;
+                contactShadowMask |= light.contactShadowMask * occluded;
             }
         }
     }

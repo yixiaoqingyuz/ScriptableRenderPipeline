@@ -4,11 +4,14 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [5.8.0] - 2019-XX-XX
+## [5.9.0] - 2019-XX-XX
+### Added
+- You can now use Sub Graphs in other Sub Graphs.
+
+## [5.8.0] - 2019-03-13
 ### Added
 - You can now add Matrix, Sampler State, and Gradient properties to the Blackboard.
 - Added Custom Function node. Use this node to define a custom HLSL function either via string directly in the graph, or via a path to an HLSL file.
-- You can now use Sub Graphs in other Sub Graphs.
 
 ### Changed
 - Removed Blackboard fields, which had no effect on Sub Graph input ports, from the Sub Graph Blackboard.
@@ -23,6 +26,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - You can now drag normal map type textures on to a Shader Graph to create Sample Texture 2D nodes with the correct type set.
 - Fixed the Multiply node so default input values are applied correctly.
 - Fixed an issue where IsFaceSign would not compile within SubGraph Nodes.
+- You can now undo edits to Vector port default input fields.
+- You can now undo edits to Gradient port default input fields.
+- Boolean port input fields now display correct values when you undo changes.
+- Vector type properties now behave as expected when you undo changes.
 
 ## [5.7.0] - 2019-03-07
 - Fixed master preview for HDRP master nodes when alpha clip is enabled.

@@ -5,8 +5,9 @@
 // XRTODO: update supported platforms based on Unity version (for required C++ fixes)
 
 // Must be in sync with C# with property useTexArray in TextureXR.cs
-#if defined(SHADER_API_D3D11)
-    #define UNITY_TEXTURE2D_X_ARRAY_SUPPORTED
+#if defined(SHADER_API_D3D11) && !defined(SHADER_API_XBOXONE)
+    // XRTODO: disabled until all SPI code is merged
+    //#define UNITY_TEXTURE2D_X_ARRAY_SUPPORTED
 #endif
 
 // Validate supported platforms

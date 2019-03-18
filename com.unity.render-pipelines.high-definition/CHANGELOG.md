@@ -4,10 +4,20 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [5.8.0-preview] - 2019-XX-XX
+## [5.9.0-preview] - 2019-XX-XX
+
+### Fixed
+- Fixed shader warning
+
+## [5.8.0-preview] - 2019-03-13
 
 ### Added
 - Added preliminary changes for XR deferred shading
+- Added support of 111110 color buffer
+- Added proper support for Recorder in HDRP
+- Added depth offset input in shader graph master nodes
+- Added a Parallax Occlusion Mapping node
+- Added SMAA support
 
 ### Fixed
 - Fixed instance identifier semantic string used by Shader Graph
@@ -16,10 +26,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed dynamic resolution for XR
 - Fixed null culling result occuring when changing scene that was causing crashes
 - Fixed normal map blending in TerrainLit by only blending the derivatives
+- Fixed multi-edition light handles and inspector shapes
+- Fixed light's LightLayer field when multi-editing
+- Fixed normal blend edition handles on DensityVolume
+- Fixed an issue with layered lit shader and height based blend where inactive layers would still have influence over the result
+- Fixed multi-selection handles color for DensityVolume
+- Fixed multi-edition inspector's blend distances for HDReflectionProbe, PlanarReflectionProbe and DensityVolume
+- Fixed metric distance that changed along size in DensityVolume
+- Fixed DensityVolume shape handles that have not same behaviour in advance and normal edition mode
+- Fixed normal map blending in TerrainLit by only blending the derivatives
+- Fixed Xbox One rendering just a grey screen instead of the scene
+- Fixed probe handles for multiselection
+- Fixed baked cubemap import settings for convolution
+- Fixed regression causing crash when attempting to open HDRenderPipelineWizard without an HDRenderPipelineAsset setted
+- Fixed FullScreenDebug modes: SSAO, SSR, Contact shadow, Prerefraction Color Pyramid, Final Color Pyramid
 
 ### Changed
+- DensityVolume scripting API will no longuer allow to change between advance and normal edition mode
+- Disabled depth of field, lens distortion and panini projection in the scene view
 - TerrainLit shaders and includes are reorganized and made simpler.
 - TerrainLit shader GUI now allows custom properties to be displayed in the Terrain fold-out section.
+- Optimize distortion pass with stencil
+- Disable SceneSelectionPass in shader graph preview
+- Control punctual light and area light shadow atlas separately
+- Move SMAA anti-aliasing option to after Temporal Anti Aliasing one, to avoid problem with previously serialized project settings
 
 ## [5.7.0-preview] - 2019-03-07
 

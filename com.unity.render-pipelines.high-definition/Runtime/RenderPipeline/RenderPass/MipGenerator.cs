@@ -11,7 +11,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         const int kKernelTex2DArray = 1;
         RTHandle[] m_TempColorTargets;
         RTHandle m_TempDownsamplePyramid = null;
-        int m_removeMe = 0;
 
         ComputeShader m_DepthPyramidCS;
         ComputeShader m_ColorPyramidCS;
@@ -154,7 +153,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 #if UNITY_SWITCH
             bool preferFragment = true;
 #else
-            bool preferFragment = false && m_removeMe != 1 && SystemInfo.deviceType != DeviceType.Console;  // TODO: Check whether the colour buffer format supports UAV typed loads.
+            bool preferFragment = SystemInfo.deviceType != DeviceType.Console;  // TODO: Check whether the colour buffer format supports UAV typed loads.
             #endif
 
             int srcMipLevel  = 0;
@@ -249,11 +248,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     srcMipWidth  = srcMipWidth  >> 1;
                     srcMipHeight = srcMipHeight >> 1;
                 }
-                m_removeMe = 0;
             }
             else
             {
-                m_removeMe = 0;
                 var cs = m_ColorPyramidCS;
                 int downsampleKernel = m_ColorDownsampleKernel[kernelIndex];
                 int downsampleKernelMip0 = m_ColorDownsampleKernelCopyMip0[kernelIndex];

@@ -14,6 +14,11 @@ struct ps_input
 	// z: alpha
 	nointerpolation float3 builtInInterpolants : TEXCOORD1;
 	#endif
+	
+	#if USE_MOTION_VECTORS_PASS
+	float4 cPosPrevious : TEXCOORD2;
+	float4 cPosNonJiterred : TEXCOORD3;
+	#endif
 };
 
 #define VFX_VARYING_PS_INPUTS ps_input
@@ -23,6 +28,11 @@ struct ps_input
 #define VFX_VARYING_FRAMEBLEND builtInInterpolants.y
 #define VFX_VARYING_UV uv
 
+#if USE_MOTION_VECTORS_PASS
+#define VFX_VARYING_VELOCITY_CPOS cPosNonJiterred
+#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS cPosPrevious
+#endif
+
 ${VFXInclude("Shaders/ParticleQuads/Pass.template")}
 	
 #pragma fragment frag
@@ -31,6 +41,12 @@ float4 frag(ps_input i) : SV_TARGET
 	float alpha = VFXGetFragmentColor(i).a;
 	alpha *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;
 	VFXClipFragmentColor(alpha,i);
-	return (float4)0;
+	
+	#if USE_MOTION_VECTORS_PASS
+		${VFXComputeOutputVelocity}
+		return encodedVelocity;
+	#else
+		return (float4)0;
+	#endif
 }
 

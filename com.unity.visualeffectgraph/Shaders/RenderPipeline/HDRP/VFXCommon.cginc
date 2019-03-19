@@ -1,6 +1,12 @@
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/ShaderPass/ShaderPass.cs.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/AtmosphericScattering/AtmosphericScattering.hlsl"
+#include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/Builtin/BuiltinData.hlsl"
+
+void VFXEncodeVelocity(float2 velocity, out float4 outBuffer)
+{
+	EncodeVelocity(velocity, outBuffer);
+}
 
 float4 VFXTransformPositionWorldToNonJitteredClip(float3 posWS)
 {

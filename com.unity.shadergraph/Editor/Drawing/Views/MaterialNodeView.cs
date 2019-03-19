@@ -528,11 +528,7 @@ namespace UnityEditor.ShaderGraph.Drawing
             foreach (var portInputView in m_PortInputContainer.Children().OfType<PortInputView>().ToList())
             {
                 var slot = portInputView.slot;
-                var display = expanded && !node.owner.GetEdges(node.GetSlotReference(slot.id)).Any() ? DisplayStyle.Flex : DisplayStyle.None;
-                if (display != portInputView.style.display)
-                {
-                    portInputView.style.display = display;
-                }
+                portInputView.style.display = expanded && !node.owner.GetEdges(node.GetSlotReference(slot.id)).Any() ? DisplayStyle.Flex : DisplayStyle.None;
             }
         }
 

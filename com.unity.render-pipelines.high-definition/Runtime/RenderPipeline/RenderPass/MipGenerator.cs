@@ -203,8 +203,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     float rtHandleScaleX = viewportScaleX;
                     float rtHandleScaleY = viewportScaleY;
                     // This set of scales is to account for differences between the temp rendertarget (that lives in the normal rt handle system) and the destination.
-                    float tmpRTScaleX = 0.5f; //m_TempDownsamplePyramid.rt.width * destination.texelSize.x;
-                    float tmpRTScaleY = 0.5f; //m_TempDownsamplePyramid.rt.height * destination.texelSize.y;
+                    float tmpRTScaleX = m_TempDownsamplePyramid.rt.width * destination.texelSize.x;
+                    float tmpRTScaleY = m_TempDownsamplePyramid.rt.height * destination.texelSize.y;
                     // This scale is to account for the fact that we store in top mip the whole mip chain for the tmp target.
                     float tmpRTMipScaleX = (float)dstMipWidth / tempTargetWidth;
                     float tmpRTMipScaleY = (float)dstMipHeight / tempTargetHeight;

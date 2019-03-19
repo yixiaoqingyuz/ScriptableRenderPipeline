@@ -467,6 +467,8 @@ VFXRenderer:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -496,8 +498,8 @@ VisualEffect:
   m_GameObject: {fileID: 1761825342}
   m_Enabled: 1
   m_Asset: {fileID: 8926484042661614526, guid: 9868e66f6b9642147acd01fb3104a823, type: 3}
-  m_StartSeed: 0
-  m_ResetSeedOnPlay: 1
+  m_StartSeed: 487632
+  m_ResetSeedOnPlay: 0
   m_PropertySheet:
     m_Float:
       m_Array:

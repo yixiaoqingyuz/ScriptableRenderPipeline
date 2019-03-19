@@ -241,7 +241,10 @@ namespace UnityEditor.VFX
 
                 {
                     if (hasMotionVector)
-                        yield return "USE_MOTION_VECTORS_PASS";
+                        if (isBlendModeOpaque)
+                            yield return "USE_MOTION_VECTORS_PASS";
+                        else
+                            yield return "WRITE_MOTION_VECTOR_IN_FORWARD";
                     if (hasShadowCasting)
                         yield return "USE_CAST_SHADOWS_PASS";
                 }

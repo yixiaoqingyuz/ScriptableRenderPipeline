@@ -11,19 +11,16 @@ namespace UnityEngine.Experimental.Rendering
         RenderGraph.RenderFunc              m_RenderFunc;
         List<RenderGraphResource>           m_ResourceReadList;
         List<RenderGraphMutableResource>    m_ResourceWriteList;
+        bool                                m_EnableAsyncCompute;
         bool                                m_Disposed;
 
-        internal RenderGraphBuilder(RenderGraph renderGraph, RenderGraphResourceRegistry resources, List<RenderGraphResource> resourceReadList, List<RenderGraphMutableResource> resourceWriteList)
+        #region Public Interface
+        public RenderGraphMutableResource CreateTexture( in RenderGraphResourceRegistry.TextureDesc desc)
         {
-            m_RenderFunc = null;
-            m_Disposed = false;
-            m_RenderGraph = renderGraph;
-            m_RenderGraphResources = resources;
-            m_ResourceReadList = resourceReadList;
-            m_ResourceWriteList = resourceWriteList;
+            return m_RenderGraphResources.CreateTexture(desc);
         }
 
-        public RenderGraphMutableResource WriteTexture(RenderGraphMutableResource input)
+        public RenderGraphMutableResource WriteTexture(in RenderGraphMutableResource input)
         {
             // TODO: Manage resource "version" for debugging purpose
             m_ResourceWriteList.Add(input);
@@ -41,12 +38,29 @@ namespace UnityEngine.Experimental.Rendering
             m_RenderFunc = renderFunc;
         }
 
+        public void EnableAsyncCompute(bool value)
+        {
+            m_EnableAsyncCompute = value;
+        }
+
         public void Dispose()
         {
             Dispose(true);
         }
+        #endregion
 
-        // Protected implementation of Dispose pattern.
+        #region Internal Interface
+        internal RenderGraphBuilder(RenderGraph renderGraph, RenderGraphResourceRegistry resources, List<RenderGraphResource> resourceReadList, List<RenderGraphMutableResource> resourceWriteList)
+        {
+            m_RenderFunc = null;
+            m_Disposed = false;
+            m_RenderGraph = renderGraph;
+            m_RenderGraphResources = resources;
+            m_ResourceReadList = resourceReadList;
+            m_ResourceWriteList = resourceWriteList;
+            m_EnableAsyncCompute = false;
+        }
+
         void Dispose(bool disposing)
         {
             if (m_Disposed)
@@ -54,10 +68,11 @@ namespace UnityEngine.Experimental.Rendering
 
             if (disposing)
             {
-                m_RenderGraph.FinalizeRenderPass(m_RenderFunc, m_ResourceReadList, m_ResourceWriteList);
+                m_RenderGraph.FinalizeRenderPassBuild(m_RenderFunc, m_ResourceReadList, m_ResourceWriteList, m_EnableAsyncCompute);
             }
 
             m_Disposed = true;
         }
+        #endregion
     }
 }

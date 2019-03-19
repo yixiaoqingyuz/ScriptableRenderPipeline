@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using UnityEditor.Rendering;
 using UnityEditor.ShaderGraph;
 using UnityEngine;
 
@@ -141,6 +142,19 @@ namespace UnityEditor.Graphing.Util
                 }
             }
             Debug.Log(output.ToString());
+        }
+
+        public static void Log(AbstractMaterialNode node, string path, ShaderMessage message, Object context)
+        {
+            var errString = $"{message.severity} in Graph at {path} at node {node.name}: {message.message}";
+            if (message.severity == ShaderCompilerMessageSeverity.Error)
+            {
+                Debug.LogError(errString, context);
+            }
+            else
+            {
+                Debug.LogWarning(errString, context);
+            }
         }
     }
 }

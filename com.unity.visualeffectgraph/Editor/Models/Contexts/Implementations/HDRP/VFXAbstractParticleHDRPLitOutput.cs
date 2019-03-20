@@ -385,6 +385,9 @@ namespace UnityEditor.VFX
                 writer.WriteLine("Blend One OneMinusSrcAlpha");
             else if (blendMode == BlendMode.AlphaPremultiplied)
                 writer.WriteLine("Blend One OneMinusSrcAlpha");
+
+            if (hasMotionVector && !isBlendModeOpaque)
+                writer.WriteLine("Blend 1 Off"); //Disable blending for velocity target
         }
 
         public override IEnumerable<KeyValuePair<string, VFXShaderWriter>> additionalReplacements

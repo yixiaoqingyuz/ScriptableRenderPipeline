@@ -242,7 +242,7 @@ MonoBehaviour:
     x: 91
     y: -190
     width: 5973
-    height: 1609
+    height: 1611
 --- !u!114 &114350483966674976
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -3243,11 +3243,11 @@ VisualEffectResource:
       encodedVelocity = 0.0f;\n\t\t\t\t\t\tVFXEncodeVelocity(velocity * 0.5f, encodedVelocity);\n\t\t\t\t\t\t\n\t\t\t\toutVelocity
       = encodedVelocity;\n\t\t#endif\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\t\n\t}\n}\n"
   - compute: 0
-    name: '[System 2]B Lit Mesh Output'
-    source: "Shader \"Hidden/VFX/System 2/(B) Lit Mesh Output\"\n{\n\tSubShader\n\t{\t\n\t\tCull
+    name: '[System 2]B Additive_Mesh_A'
+    source: "Shader \"Hidden/VFX/System 2/(B) Additive_Mesh_A\"\n{\n\tSubShader\n\t{\t\n\t\tCull
       Off\n\t\t\n\t\tTags { \"Queue\"=\"Transparent\" \"IgnoreProjector\"=\"True\"
       \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
-      One One\n\t\tZTest LEqual\n\t\tZWrite Off\n\t\tCull Back\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t#if
+      One One\n\t\tBlend 1 Off\n\t\tZTest LEqual\n\t\tZWrite Off\n\t\tCull Back\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t#if
       !defined(VFX_WORLD_SPACE) && !defined(VFX_LOCAL_SPACE)\n\t\t#define VFX_LOCAL_SPACE
       1\n\t\t#endif\n\t\t\n\t\t#define NB_THREADS_PER_GROUP 64\n\t\t#define VFX_USE_COLOR_CURRENT
       1\n\t\t#define VFX_USE_POSITION_CURRENT 1\n\t\t#define VFX_USE_ALPHA_CURRENT
@@ -3456,7 +3456,7 @@ VisualEffectResource:
     source: "Shader \"Hidden/VFX/System 2/(C) Lit Mesh Output\"\n{\n\tSubShader\n\t{\t\n\t\tCull
       Off\n\t\t\n\t\tTags { \"Queue\"=\"Transparent\" \"IgnoreProjector\"=\"True\"
       \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
-      One One\n\t\tZTest LEqual\n\t\tZWrite Off\n\t\tCull Back\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t#if
+      One One\n\t\tBlend 1 Off\n\t\tZTest LEqual\n\t\tZWrite Off\n\t\tCull Back\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t#if
       !defined(VFX_WORLD_SPACE) && !defined(VFX_LOCAL_SPACE)\n\t\t#define VFX_LOCAL_SPACE
       1\n\t\t#endif\n\t\t\n\t\t#define NB_THREADS_PER_GROUP 64\n\t\t#define VFX_USE_COLOR_CURRENT
       1\n\t\t#define VFX_USE_POSITION_CURRENT 1\n\t\t#define VFX_USE_ALPHA_CURRENT
@@ -3663,8 +3663,9 @@ VisualEffectResource:
   - compute: 1
     name: '[System 3]Initialize'
     source: "#pragma kernel CSMain\n#define NB_THREADS_PER_GROUP 64\n#define VFX_USE_POSITION_CURRENT
-      1\n#define VFX_USE_SIZE_CURRENT 1\n#define VFX_USE_COLOR_CURRENT 1\n#define
-      VFX_USE_PARTICLEID_CURRENT 1\n#define VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.visualeffectgraph/Shaders/RenderPipeline/HDRP/VFXDefines.hlsl\"\n\n\n\n#include
+      1\n#define VFX_USE_ALPHA_CURRENT 1\n#define VFX_USE_SIZE_CURRENT 1\n#define
+      VFX_USE_COLOR_CURRENT 1\n#define VFX_USE_PARTICLEID_CURRENT 1\n#define VFX_LOCAL_SPACE
+      1\n#include \"Packages/com.unity.visualeffectgraph/Shaders/RenderPipeline/HDRP/VFXDefines.hlsl\"\n\n\n\n#include
       \"Packages/com.unity.visualeffectgraph/Shaders/Common/VFXCommonCompute.cginc\"\n#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.cginc\"\n\n\n\nRWByteAddressBuffer
       attributeBuffer;\nByteAddressBuffer sourceAttributeBuffer;\n\nCBUFFER_START(initParams)\n#if
@@ -3694,20 +3695,22 @@ VisualEffectResource:
       += uint(asfloat(sourceAttributeBuffer.Load((sourceIndex * 0x1 + 0x0) << 2)));\n
       \           if (id < currentSumSpawnCount)\n            {\n                break;\n
       \           }\n        }\n        */\n        \n\n#endif\n        float3 position
-      = float3(0,0,0);\n        float size = (float)0.1;\n        float3 color = float3(1,1,1);\n
-      \       uint particleId = (uint)0;\n        \n\n#if VFX_USE_PARTICLEID_CURRENT\n
-      \        particleId = particleIndex;\n#endif\n#if VFX_USE_SEED_CURRENT\n        seed
-      = WangHash(particleIndex ^ systemSeed);\n#endif\n        \n        \n\n#if VFX_USE_ALIVE_CURRENT\n
-      \       if (alive)\n        {\n\t\t\tuint deadIndex = deadListIn.DecrementCounter();\n
-      \           uint index = deadListIn[deadIndex];\n            attributeBuffer.Store3((index
-      * 0x4 + 0x0) << 2,asuint(position));\n            attributeBuffer.Store((index
-      * 0x4 + 0x3) << 2,asuint(size));\n            attributeBuffer.Store3((index
-      * 0x4 + 0x200) << 2,asuint(color));\n            attributeBuffer.Store((index
-      * 0x1 + 0x400) << 2,asuint(particleId));\n            \n\n        }\n#else\n
-      \       uint index = particleIndex;\n        attributeBuffer.Store3((index *
-      0x4 + 0x0) << 2,asuint(position));\n        attributeBuffer.Store((index * 0x4
-      + 0x3) << 2,asuint(size));\n        attributeBuffer.Store3((index * 0x4 + 0x200)
-      << 2,asuint(color));\n        attributeBuffer.Store((index * 0x1 + 0x400) <<
+      = float3(0,0,0);\n        float alpha = (float)1;\n        float size = (float)0.1;\n
+      \       float3 color = float3(1,1,1);\n        uint particleId = (uint)0;\n
+      \       \n\n#if VFX_USE_PARTICLEID_CURRENT\n         particleId = particleIndex;\n#endif\n#if
+      VFX_USE_SEED_CURRENT\n        seed = WangHash(particleIndex ^ systemSeed);\n#endif\n
+      \       \n        \n\n#if VFX_USE_ALIVE_CURRENT\n        if (alive)\n        {\n\t\t\tuint
+      deadIndex = deadListIn.DecrementCounter();\n            uint index = deadListIn[deadIndex];\n
+      \           attributeBuffer.Store3((index * 0x4 + 0x0) << 2,asuint(position));\n
+      \           attributeBuffer.Store((index * 0x1 + 0x200) << 2,asuint(alpha));\n
+      \           attributeBuffer.Store((index * 0x4 + 0x3) << 2,asuint(size));\n
+      \           attributeBuffer.Store3((index * 0x4 + 0x280) << 2,asuint(color));\n
+      \           attributeBuffer.Store((index * 0x1 + 0x480) << 2,asuint(particleId));\n
+      \           \n\n        }\n#else\n        uint index = particleIndex;\n        attributeBuffer.Store3((index
+      * 0x4 + 0x0) << 2,asuint(position));\n        attributeBuffer.Store((index *
+      0x1 + 0x200) << 2,asuint(alpha));\n        attributeBuffer.Store((index * 0x4
+      + 0x3) << 2,asuint(size));\n        attributeBuffer.Store3((index * 0x4 + 0x280)
+      << 2,asuint(color));\n        attributeBuffer.Store((index * 0x1 + 0x480) <<
       2,asuint(particleId));\n        \n\n#endif\n    }\n}\n"
   - compute: 0
     name: '[System 3]A Quad Output'
@@ -3769,28 +3772,30 @@ VisualEffectResource:
       (index >= asuint(nbMax) - deadCount)\n\t\t\t\t\t\t\treturn o; // cull\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       VFX_HAS_INDIRECT_DRAW\n\t\t\t\t\t\tindex = indirectBuffer[index];\n\t\t\t\t\t\tfloat3
       position = asfloat(attributeBuffer.Load3((index * 0x4 + 0x0) << 2));\n\t\t\t\t\t\tfloat
-      alpha = (float)1;\n\t\t\t\t\t\tbool alive = (bool)true;\n\t\t\t\t\t\tfloat3
-      axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3 axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3
-      axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat angleX = (float)0;\n\t\t\t\t\t\tfloat
-      angleY = (float)0;\n\t\t\t\t\t\tfloat angleZ = (float)0;\n\t\t\t\t\t\tfloat
-      pivotX = (float)0;\n\t\t\t\t\t\tfloat pivotY = (float)0;\n\t\t\t\t\t\tfloat
-      pivotZ = (float)0;\n\t\t\t\t\t\tfloat size = asfloat(attributeBuffer.Load((index
-      * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat scaleX = (float)1;\n\t\t\t\t\t\tfloat
-      scaleY = (float)1;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\tfloat3
-      color = asfloat(attributeBuffer.Load3((index * 0x4 + 0x200) << 2));\n\t\t\t\t\t\tuint
-      particleId = (attributeBuffer.Load((index * 0x1 + 0x400) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
+      alpha = asfloat(attributeBuffer.Load((index * 0x1 + 0x200) << 2));\n\t\t\t\t\t\tbool
+      alive = (bool)true;\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
+      axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
+      angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
+      angleZ = (float)0;\n\t\t\t\t\t\tfloat pivotX = (float)0;\n\t\t\t\t\t\tfloat
+      pivotY = (float)0;\n\t\t\t\t\t\tfloat pivotZ = (float)0;\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = (float)1;\n\t\t\t\t\t\tfloat scaleY = (float)1;\n\t\t\t\t\t\tfloat
+      scaleZ = (float)1;\n\t\t\t\t\t\tfloat3 color = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x280) << 2));\n\t\t\t\t\t\tuint particleId = (attributeBuffer.Load((index
+      * 0x1 + 0x480) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
       alive = (bool)true;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tif (!alive)\n\t\t\t\t\t\t\treturn
       o;\n\t\t\t\t\t\t\t\n\t\t\t\t\t\tfloat3 position = asfloat(attributeBuffer.Load3((index
-      * 0x4 + 0x0) << 2));\n\t\t\t\t\t\tfloat alpha = (float)1;\n\t\t\t\t\t\tfloat3
-      axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3 axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3
-      axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat angleX = (float)0;\n\t\t\t\t\t\tfloat
-      angleY = (float)0;\n\t\t\t\t\t\tfloat angleZ = (float)0;\n\t\t\t\t\t\tfloat
-      pivotX = (float)0;\n\t\t\t\t\t\tfloat pivotY = (float)0;\n\t\t\t\t\t\tfloat
-      pivotZ = (float)0;\n\t\t\t\t\t\tfloat size = asfloat(attributeBuffer.Load((index
-      * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat scaleX = (float)1;\n\t\t\t\t\t\tfloat
-      scaleY = (float)1;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\tfloat3
-      color = asfloat(attributeBuffer.Load3((index * 0x4 + 0x200) << 2));\n\t\t\t\t\t\tuint
-      particleId = (attributeBuffer.Load((index * 0x1 + 0x400) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t
+      * 0x4 + 0x0) << 2));\n\t\t\t\t\t\tfloat alpha = asfloat(attributeBuffer.Load((index
+      * 0x1 + 0x200) << 2));\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
+      axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
+      angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
+      angleZ = (float)0;\n\t\t\t\t\t\tfloat pivotX = (float)0;\n\t\t\t\t\t\tfloat
+      pivotY = (float)0;\n\t\t\t\t\t\tfloat pivotZ = (float)0;\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = (float)1;\n\t\t\t\t\t\tfloat scaleY = (float)1;\n\t\t\t\t\t\tfloat
+      scaleZ = (float)1;\n\t\t\t\t\t\tfloat3 color = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x280) << 2));\n\t\t\t\t\t\tuint particleId = (attributeBuffer.Load((index
+      * 0x1 + 0x480) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t
       \   float tmp_v = (float)particleId;\n\t\t\t\t    float tmp_w = uniform_b +
       tmp_v;\n\t\t\t\t    float tmp_y = tmp_w / (float)80;\n\t\t\t\t    float tmp_z
       = frac(tmp_y);\n\t\t\t\t    float tmp_ba = tmp_z * (float)80;\n\t\t\t\t    uint
@@ -3933,28 +3938,30 @@ VisualEffectResource:
       (index >= asuint(nbMax) - deadCount)\n\t\t\t\t\t\t\treturn o; // cull\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       VFX_HAS_INDIRECT_DRAW\n\t\t\t\t\t\tindex = indirectBuffer[index];\n\t\t\t\t\t\tfloat3
       position = asfloat(attributeBuffer.Load3((index * 0x4 + 0x0) << 2));\n\t\t\t\t\t\tfloat
-      alpha = (float)1;\n\t\t\t\t\t\tbool alive = (bool)true;\n\t\t\t\t\t\tfloat3
-      axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3 axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3
-      axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat angleX = (float)0;\n\t\t\t\t\t\tfloat
-      angleY = (float)0;\n\t\t\t\t\t\tfloat angleZ = (float)0;\n\t\t\t\t\t\tfloat
-      pivotX = (float)0;\n\t\t\t\t\t\tfloat pivotY = (float)0;\n\t\t\t\t\t\tfloat
-      pivotZ = (float)0;\n\t\t\t\t\t\tfloat size = asfloat(attributeBuffer.Load((index
-      * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat scaleX = (float)1;\n\t\t\t\t\t\tfloat
-      scaleY = (float)1;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\tfloat3
-      color = asfloat(attributeBuffer.Load3((index * 0x4 + 0x200) << 2));\n\t\t\t\t\t\tuint
-      particleId = (attributeBuffer.Load((index * 0x1 + 0x400) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
+      alpha = asfloat(attributeBuffer.Load((index * 0x1 + 0x200) << 2));\n\t\t\t\t\t\tbool
+      alive = (bool)true;\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
+      axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
+      angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
+      angleZ = (float)0;\n\t\t\t\t\t\tfloat pivotX = (float)0;\n\t\t\t\t\t\tfloat
+      pivotY = (float)0;\n\t\t\t\t\t\tfloat pivotZ = (float)0;\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = (float)1;\n\t\t\t\t\t\tfloat scaleY = (float)1;\n\t\t\t\t\t\tfloat
+      scaleZ = (float)1;\n\t\t\t\t\t\tfloat3 color = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x280) << 2));\n\t\t\t\t\t\tuint particleId = (attributeBuffer.Load((index
+      * 0x1 + 0x480) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
       alive = (bool)true;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tif (!alive)\n\t\t\t\t\t\t\treturn
       o;\n\t\t\t\t\t\t\t\n\t\t\t\t\t\tfloat3 position = asfloat(attributeBuffer.Load3((index
-      * 0x4 + 0x0) << 2));\n\t\t\t\t\t\tfloat alpha = (float)1;\n\t\t\t\t\t\tfloat3
-      axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3 axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3
-      axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat angleX = (float)0;\n\t\t\t\t\t\tfloat
-      angleY = (float)0;\n\t\t\t\t\t\tfloat angleZ = (float)0;\n\t\t\t\t\t\tfloat
-      pivotX = (float)0;\n\t\t\t\t\t\tfloat pivotY = (float)0;\n\t\t\t\t\t\tfloat
-      pivotZ = (float)0;\n\t\t\t\t\t\tfloat size = asfloat(attributeBuffer.Load((index
-      * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat scaleX = (float)1;\n\t\t\t\t\t\tfloat
-      scaleY = (float)1;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\tfloat3
-      color = asfloat(attributeBuffer.Load3((index * 0x4 + 0x200) << 2));\n\t\t\t\t\t\tuint
-      particleId = (attributeBuffer.Load((index * 0x1 + 0x400) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t
+      * 0x4 + 0x0) << 2));\n\t\t\t\t\t\tfloat alpha = asfloat(attributeBuffer.Load((index
+      * 0x1 + 0x200) << 2));\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
+      axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
+      angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
+      angleZ = (float)0;\n\t\t\t\t\t\tfloat pivotX = (float)0;\n\t\t\t\t\t\tfloat
+      pivotY = (float)0;\n\t\t\t\t\t\tfloat pivotZ = (float)0;\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = (float)1;\n\t\t\t\t\t\tfloat scaleY = (float)1;\n\t\t\t\t\t\tfloat
+      scaleZ = (float)1;\n\t\t\t\t\t\tfloat3 color = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x280) << 2));\n\t\t\t\t\t\tuint particleId = (attributeBuffer.Load((index
+      * 0x1 + 0x480) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t
       \   float tmp_v = (float)particleId;\n\t\t\t\t    float tmp_w = uniform_b +
       tmp_v;\n\t\t\t\t    float tmp_y = tmp_w / (float)80;\n\t\t\t\t    float tmp_z
       = frac(tmp_y);\n\t\t\t\t    float tmp_ba = tmp_z * (float)80;\n\t\t\t\t    uint
@@ -4070,13 +4077,17 @@ VisualEffectResource:
       x: inverse soft particles fade distance\n\t\t\t\t// y: alpha threshold\n\t\t\t\t//
       z: frame blending factor\n\t\t\t\tnointerpolation float3 builtInInterpolants
       : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t\tfloat3
-      posWS : TEXCOORD2;\n\t\t\t\t#endif\n\t\t\t};\n\t\t\t\n\t\t\tstruct ps_output\n\t\t\t{\n\t\t\t\tfloat4
-      color : SV_Target0;\n\t\t\t};\n\t\t\n\t\t#define VFX_VARYING_PS_INPUTS ps_input\n\t\t#define
-      VFX_VARYING_POSCS pos\n\t\t#define VFX_VARYING_COLOR color.rgb\n\t\t#define
+      posWS : TEXCOORD2;\n\t\t\t\t#endif\n\t\t\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\tfloat4
+      cPosPrevious : TEXCOORD3;\n\t\t\t\tfloat4 cPosNonJiterred : TEXCOORD4;\n\t\t\t\t#endif\n\t\t\t};\n\t\t\t\n\t\t\tstruct
+      ps_output\n\t\t\t{\n\t\t\t\tfloat4 color : SV_Target0;\n\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\tfloat4
+      outVelocity : SV_Target1;\n\t\t#endif\n\t\t\t};\n\t\t\n\t\t#define VFX_VARYING_PS_INPUTS
+      ps_input\n\t\t#define VFX_VARYING_POSCS pos\n\t\t#define VFX_VARYING_COLOR color.rgb\n\t\t#define
       VFX_VARYING_ALPHA color.a\n\t\t#define VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       builtInInterpolants.x\n\t\t#define VFX_VARYING_ALPHATHRESHOLD builtInInterpolants.y\n\t\t#define
       VFX_VARYING_FRAMEBLEND builtInInterpolants.z\n\t\t#define VFX_VARYING_UV uv\n\t\t#if
-      VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t#define VFX_VARYING_POSWS posWS\n\t\t#endif\n\t\t\t\t\n\t\t\t#if
+      VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t#define VFX_VARYING_POSWS posWS\n\t\t#endif\n\t\t#if
+      WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t#define VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t#define
+      VFX_VARYING_VELOCITY_CPOS_PREVIOUS cPosPrevious\n\t\t#endif\n\t\t\t\t\n\t\t\t#if
       !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
       VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/RenderPipeline/HDRP/VFXCommon.cginc\"\n\t\t\t#include
@@ -4097,28 +4108,30 @@ VisualEffectResource:
       (index >= asuint(nbMax) - deadCount)\n\t\t\t\t\t\t\treturn o; // cull\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       VFX_HAS_INDIRECT_DRAW\n\t\t\t\t\t\tindex = indirectBuffer[index];\n\t\t\t\t\t\tfloat3
       position = asfloat(attributeBuffer.Load3((index * 0x4 + 0x0) << 2));\n\t\t\t\t\t\tfloat
-      alpha = (float)1;\n\t\t\t\t\t\tbool alive = (bool)true;\n\t\t\t\t\t\tfloat3
-      axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3 axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3
-      axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat angleX = (float)0;\n\t\t\t\t\t\tfloat
-      angleY = (float)0;\n\t\t\t\t\t\tfloat angleZ = (float)0;\n\t\t\t\t\t\tfloat
-      pivotX = (float)0;\n\t\t\t\t\t\tfloat pivotY = (float)0;\n\t\t\t\t\t\tfloat
-      pivotZ = (float)0;\n\t\t\t\t\t\tfloat size = asfloat(attributeBuffer.Load((index
-      * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat scaleX = (float)1;\n\t\t\t\t\t\tfloat
-      scaleY = (float)1;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\tfloat3
-      color = asfloat(attributeBuffer.Load3((index * 0x4 + 0x200) << 2));\n\t\t\t\t\t\tuint
-      particleId = (attributeBuffer.Load((index * 0x1 + 0x400) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
+      alpha = asfloat(attributeBuffer.Load((index * 0x1 + 0x200) << 2));\n\t\t\t\t\t\tbool
+      alive = (bool)true;\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
+      axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
+      angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
+      angleZ = (float)0;\n\t\t\t\t\t\tfloat pivotX = (float)0;\n\t\t\t\t\t\tfloat
+      pivotY = (float)0;\n\t\t\t\t\t\tfloat pivotZ = (float)0;\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = (float)1;\n\t\t\t\t\t\tfloat scaleY = (float)1;\n\t\t\t\t\t\tfloat
+      scaleZ = (float)1;\n\t\t\t\t\t\tfloat3 color = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x280) << 2));\n\t\t\t\t\t\tuint particleId = (attributeBuffer.Load((index
+      * 0x1 + 0x480) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
       alive = (bool)true;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tif (!alive)\n\t\t\t\t\t\t\treturn
       o;\n\t\t\t\t\t\t\t\n\t\t\t\t\t\tfloat3 position = asfloat(attributeBuffer.Load3((index
-      * 0x4 + 0x0) << 2));\n\t\t\t\t\t\tfloat alpha = (float)1;\n\t\t\t\t\t\tfloat3
-      axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3 axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3
-      axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat angleX = (float)0;\n\t\t\t\t\t\tfloat
-      angleY = (float)0;\n\t\t\t\t\t\tfloat angleZ = (float)0;\n\t\t\t\t\t\tfloat
-      pivotX = (float)0;\n\t\t\t\t\t\tfloat pivotY = (float)0;\n\t\t\t\t\t\tfloat
-      pivotZ = (float)0;\n\t\t\t\t\t\tfloat size = asfloat(attributeBuffer.Load((index
-      * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat scaleX = (float)1;\n\t\t\t\t\t\tfloat
-      scaleY = (float)1;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\tfloat3
-      color = asfloat(attributeBuffer.Load3((index * 0x4 + 0x200) << 2));\n\t\t\t\t\t\tuint
-      particleId = (attributeBuffer.Load((index * 0x1 + 0x400) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t
+      * 0x4 + 0x0) << 2));\n\t\t\t\t\t\tfloat alpha = asfloat(attributeBuffer.Load((index
+      * 0x1 + 0x200) << 2));\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
+      axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
+      angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
+      angleZ = (float)0;\n\t\t\t\t\t\tfloat pivotX = (float)0;\n\t\t\t\t\t\tfloat
+      pivotY = (float)0;\n\t\t\t\t\t\tfloat pivotZ = (float)0;\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = (float)1;\n\t\t\t\t\t\tfloat scaleY = (float)1;\n\t\t\t\t\t\tfloat
+      scaleZ = (float)1;\n\t\t\t\t\t\tfloat3 color = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x280) << 2));\n\t\t\t\t\t\tuint particleId = (attributeBuffer.Load((index
+      * 0x1 + 0x480) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t
       \   float tmp_v = (float)particleId;\n\t\t\t\t    float tmp_w = uniform_b +
       tmp_v;\n\t\t\t\t    float tmp_y = tmp_w / (float)80;\n\t\t\t\t    float tmp_z
       = frac(tmp_y);\n\t\t\t\t    float tmp_ba = tmp_z * (float)80;\n\t\t\t\t    uint
@@ -4220,15 +4233,20 @@ VisualEffectResource:
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.cginc\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t#pragma
       fragment frag\n\t\t\tps_output frag(ps_input i)\n\t\t\t{\n\t\t\t\tps_output
       o = (ps_output)0;\n\t\t\t\to.color = VFXGetFragmentColor(i);\n\t\t\t\to.color
-      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i);\n\t\t        o.color = VFXApplyPreExposure(o.color);\n\t\t\t\to.color
+      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i);\n\t\t\t\to.color = VFXApplyPreExposure(o.color);\n\t\t\t\to.color
       = VFXApplyFog(o.color,i);\n\t\t\t\tVFXClipFragmentColor(o.color.a,i);\n\t\t\t\to.color.a
-      = saturate(o.color.a);\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\t\n\t}\n}\n"
+      = saturate(o.color.a);\n\t\t\t\t\n\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\t\n\t\t\t\t\t\tfloat2
+      velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) -
+      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t#if
+      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\tfloat4
+      encodedVelocity = 0.0f;\n\t\t\t\t\t\tVFXEncodeVelocity(velocity * 0.5f, encodedVelocity);\n\t\t\t\t\t\t\n\t\t\t\to.outVelocity
+      = encodedVelocity;\n\t\t#endif\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\t\n\t}\n}\n"
   - compute: 0
-    name: '[System 3]B Quad Output'
-    source: "Shader \"Hidden/VFX/System 3/(B) Quad Output\"\n{\n\tSubShader\n\t{\t\n\t\tCull
+    name: '[System 3]B Additive_Quad'
+    source: "Shader \"Hidden/VFX/System 3/(B) Additive_Quad\"\n{\n\tSubShader\n\t{\t\n\t\tCull
       Off\n\t\t\n\t\tTags { \"Queue\"=\"Transparent\" \"IgnoreProjector\"=\"True\"
       \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
-      SrcAlpha One\n\t\tZTest LEqual\n\t\tZWrite Off\n\t\tCull Off\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t#if
+      SrcAlpha One\n\t\tBlend 1 Off\n\t\tZTest LEqual\n\t\tZWrite Off\n\t\tCull Off\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t#if
       !defined(VFX_WORLD_SPACE) && !defined(VFX_LOCAL_SPACE)\n\t\t#define VFX_LOCAL_SPACE
       1\n\t\t#endif\n\t\t\n\t\t#define NB_THREADS_PER_GROUP 64\n\t\t#define VFX_USE_POSITION_CURRENT
       1\n\t\t#define VFX_USE_ALPHA_CURRENT 1\n\t\t#define VFX_USE_ALIVE_CURRENT 1\n\t\t#define
@@ -4239,9 +4257,9 @@ VisualEffectResource:
       1\n\t\t#define VFX_USE_SIZE_CURRENT 1\n\t\t#define VFX_USE_SCALEX_CURRENT 1\n\t\t#define
       VFX_USE_SCALEY_CURRENT 1\n\t\t#define VFX_USE_SCALEZ_CURRENT 1\n\t\t#define
       VFX_USE_COLOR_CURRENT 1\n\t\t#define VFX_USE_PARTICLEID_CURRENT 1\n\t\t#define
-      IS_TRANSPARENT_PARTICLE 1\n\t\t#define VFX_BLENDMODE_ADD 1\n\t\t\n\t\t\n\t\t\n\t\t#define
-      VFX_LOCAL_SPACE 1\n\t\t#include \"Packages/com.unity.visualeffectgraph/Shaders/RenderPipeline/HDRP/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t
-      \   float uniform_b;\n\t\t    uint3 PADDING_0;\n\t\tCBUFFER_END\n\t\tTexture2D
+      IS_TRANSPARENT_PARTICLE 1\n\t\t#define VFX_BLENDMODE_ADD 1\n\t\t#define WRITE_MOTION_VECTOR_IN_FORWARD
+      1\n\t\t\n\t\t\n\t\t\n\t\t#define VFX_LOCAL_SPACE 1\n\t\t#include \"Packages/com.unity.visualeffectgraph/Shaders/RenderPipeline/HDRP/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t
+      \   float uniform_b;\n\t\t    float currentFrameIndex;\n\t\t    uint2 PADDING_0;\n\t\tCBUFFER_END\n\t\tTexture2D
       mainTexture;\n\t\tSamplerState samplermainTexture;\n\t\t\n\n\t\t\n\t\t#define
       VFX_NEEDS_COLOR_INTERPOLATOR (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t\n\t\tByteAddressBuffer
       attributeBuffer;\t\n\t\t\n\t\t#if VFX_HAS_INDIRECT_DRAW\n\t\tStructuredBuffer<uint>
@@ -4257,13 +4275,17 @@ VisualEffectResource:
       x: inverse soft particles fade distance\n\t\t\t\t// y: alpha threshold\n\t\t\t\t//
       z: frame blending factor\n\t\t\t\tnointerpolation float3 builtInInterpolants
       : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t\tfloat3
-      posWS : TEXCOORD2;\n\t\t\t\t#endif\n\t\t\t};\n\t\t\t\n\t\t\tstruct ps_output\n\t\t\t{\n\t\t\t\tfloat4
-      color : SV_Target0;\n\t\t\t};\n\t\t\n\t\t#define VFX_VARYING_PS_INPUTS ps_input\n\t\t#define
-      VFX_VARYING_POSCS pos\n\t\t#define VFX_VARYING_COLOR color.rgb\n\t\t#define
+      posWS : TEXCOORD2;\n\t\t\t\t#endif\n\t\t\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\tfloat4
+      cPosPrevious : TEXCOORD3;\n\t\t\t\tfloat4 cPosNonJiterred : TEXCOORD4;\n\t\t\t\t#endif\n\t\t\t};\n\t\t\t\n\t\t\tstruct
+      ps_output\n\t\t\t{\n\t\t\t\tfloat4 color : SV_Target0;\n\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\tfloat4
+      outVelocity : SV_Target1;\n\t\t#endif\n\t\t\t};\n\t\t\n\t\t#define VFX_VARYING_PS_INPUTS
+      ps_input\n\t\t#define VFX_VARYING_POSCS pos\n\t\t#define VFX_VARYING_COLOR color.rgb\n\t\t#define
       VFX_VARYING_ALPHA color.a\n\t\t#define VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       builtInInterpolants.x\n\t\t#define VFX_VARYING_ALPHATHRESHOLD builtInInterpolants.y\n\t\t#define
       VFX_VARYING_FRAMEBLEND builtInInterpolants.z\n\t\t#define VFX_VARYING_UV uv\n\t\t#if
-      VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t#define VFX_VARYING_POSWS posWS\n\t\t#endif\n\t\t\t\t\n\t\t\t#if
+      VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t#define VFX_VARYING_POSWS posWS\n\t\t#endif\n\t\t#if
+      WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t#define VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t#define
+      VFX_VARYING_VELOCITY_CPOS_PREVIOUS cPosPrevious\n\t\t#endif\n\t\t\t\t\n\t\t\t#if
       !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
       VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/RenderPipeline/HDRP/VFXCommon.cginc\"\n\t\t\t#include
@@ -4276,7 +4298,9 @@ VisualEffectResource:
       float size, float Size) /*attribute:size Composition:Overwrite Source:Slot Random:Off
       channels:XYZ */\n\t\t\t{\n\t\t\t    size = Size;\n\t\t\t}\n\t\t\tvoid SetAttribute_C707D62A(inout
       float3 position, float3 Position) /*attribute:position Composition:Add Source:Slot
-      Random:Off channels:XYZ */\n\t\t\t{\n\t\t\t    position += Position;\n\t\t\t}\n\t\t\t\n\n\t\t\t\n\t\t\t#pragma
+      Random:Off channels:XYZ */\n\t\t\t{\n\t\t\t    position += Position;\n\t\t\t}\n\t\t\tvoid
+      SetAttribute_CEEAF35C(inout float alpha, float Alpha) /*attribute:alpha Composition:Overwrite
+      Source:Slot Random:Off channels:XYZ */\n\t\t\t{\n\t\t\t    alpha = Alpha;\n\t\t\t}\n\t\t\t\n\n\t\t\t\n\t\t\t#pragma
       vertex vert\n\t\t\tVFX_VARYING_PS_INPUTS vert(uint id : SV_VertexID, uint instanceID
       : SV_InstanceID)\n\t\t\t{\n\t\t\t\tuint index = (id >> 2) + instanceID * 2048;\n\t\t\t\tVFX_VARYING_PS_INPUTS
       o = (VFX_VARYING_PS_INPUTS)0;\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tuint deadCount
@@ -4284,84 +4308,87 @@ VisualEffectResource:
       (index >= asuint(nbMax) - deadCount)\n\t\t\t\t\t\t\treturn o; // cull\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       VFX_HAS_INDIRECT_DRAW\n\t\t\t\t\t\tindex = indirectBuffer[index];\n\t\t\t\t\t\tfloat3
       position = asfloat(attributeBuffer.Load3((index * 0x4 + 0x0) << 2));\n\t\t\t\t\t\tfloat
-      alpha = (float)1;\n\t\t\t\t\t\tbool alive = (bool)true;\n\t\t\t\t\t\tfloat3
-      axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3 axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3
-      axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat angleX = (float)0;\n\t\t\t\t\t\tfloat
-      angleY = (float)0;\n\t\t\t\t\t\tfloat angleZ = (float)0;\n\t\t\t\t\t\tfloat
-      pivotX = (float)0;\n\t\t\t\t\t\tfloat pivotY = (float)0;\n\t\t\t\t\t\tfloat
-      pivotZ = (float)0;\n\t\t\t\t\t\tfloat size = asfloat(attributeBuffer.Load((index
-      * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat scaleX = (float)1;\n\t\t\t\t\t\tfloat
-      scaleY = (float)1;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\tfloat3
-      color = asfloat(attributeBuffer.Load3((index * 0x4 + 0x200) << 2));\n\t\t\t\t\t\tuint
-      particleId = (attributeBuffer.Load((index * 0x1 + 0x400) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
+      alpha = asfloat(attributeBuffer.Load((index * 0x1 + 0x200) << 2));\n\t\t\t\t\t\tbool
+      alive = (bool)true;\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
+      axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
+      angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
+      angleZ = (float)0;\n\t\t\t\t\t\tfloat pivotX = (float)0;\n\t\t\t\t\t\tfloat
+      pivotY = (float)0;\n\t\t\t\t\t\tfloat pivotZ = (float)0;\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = (float)1;\n\t\t\t\t\t\tfloat scaleY = (float)1;\n\t\t\t\t\t\tfloat
+      scaleZ = (float)1;\n\t\t\t\t\t\tfloat3 color = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x280) << 2));\n\t\t\t\t\t\tuint particleId = (attributeBuffer.Load((index
+      * 0x1 + 0x480) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
       alive = (bool)true;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tif (!alive)\n\t\t\t\t\t\t\treturn
       o;\n\t\t\t\t\t\t\t\n\t\t\t\t\t\tfloat3 position = asfloat(attributeBuffer.Load3((index
-      * 0x4 + 0x0) << 2));\n\t\t\t\t\t\tfloat alpha = (float)1;\n\t\t\t\t\t\tfloat3
-      axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3 axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3
-      axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat angleX = (float)0;\n\t\t\t\t\t\tfloat
-      angleY = (float)0;\n\t\t\t\t\t\tfloat angleZ = (float)0;\n\t\t\t\t\t\tfloat
-      pivotX = (float)0;\n\t\t\t\t\t\tfloat pivotY = (float)0;\n\t\t\t\t\t\tfloat
-      pivotZ = (float)0;\n\t\t\t\t\t\tfloat size = asfloat(attributeBuffer.Load((index
-      * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat scaleX = (float)1;\n\t\t\t\t\t\tfloat
-      scaleY = (float)1;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\tfloat3
-      color = asfloat(attributeBuffer.Load3((index * 0x4 + 0x200) << 2));\n\t\t\t\t\t\tuint
-      particleId = (attributeBuffer.Load((index * 0x1 + 0x400) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t
-      \   float tmp_u = (float)particleId;\n\t\t\t\t    float tmp_v = uniform_b +
-      tmp_u;\n\t\t\t\t    float tmp_x = tmp_v / (float)80;\n\t\t\t\t    float tmp_y
-      = frac(tmp_x);\n\t\t\t\t    float tmp_z = tmp_y * (float)80;\n\t\t\t\t    uint
-      tmp_ba = (uint)tmp_z;\n\t\t\t\t    uint tmp_bc = tmp_ba / (uint)16;\n\t\t\t\t
-      \   uint tmp_bd = tmp_bc * (uint)16;\n\t\t\t\t    uint tmp_be = tmp_ba - tmp_bd;\n\t\t\t\t
-      \   uint tmp_bg = tmp_bc / (uint)2;\n\t\t\t\t    uint tmp_bh = tmp_bg * (uint)2;\n\t\t\t\t
-      \   uint tmp_bi = tmp_bc - tmp_bh;\n\t\t\t\t    uint tmp_bj = (uint)16 - tmp_be;\n\t\t\t\t
-      \   uint tmp_bk = tmp_bj - tmp_be;\n\t\t\t\t    uint tmp_bl = tmp_bi * tmp_bk;\n\t\t\t\t
-      \   uint tmp_bm = tmp_be + tmp_bl;\n\t\t\t\t    float tmp_bn = (float)tmp_bm;\n\t\t\t\t
-      \   float tmp_bp = tmp_bn / (float)16;\n\t\t\t\t    float tmp_br = tmp_bp *
-      (float)6.283185;\n\t\t\t\t    float tmp_bs = cos(tmp_br);\n\t\t\t\t    float3
-      tmp_bt = float3(tmp_bs, tmp_bs, tmp_bs);\n\t\t\t\t    float3 tmp_bv = tmp_bt
-      * float3(0,1,0);\n\t\t\t\t    float tmp_bw = sin(tmp_br);\n\t\t\t\t    float3
-      tmp_bx = float3(tmp_bw, tmp_bw, tmp_bw);\n\t\t\t\t    float3 tmp_bz = tmp_bx
-      * float3(-1,0,0);\n\t\t\t\t    float3 tmp_ca = tmp_bv + tmp_bz;\n\t\t\t\t    float
-      tmp_cb = frac(tmp_z);\n\t\t\t\t    float3 tmp_cc = float3(tmp_cb, tmp_cb, tmp_cb);\n\t\t\t\t
-      \   float tmp_ce = tmp_z + (float)1;\n\t\t\t\t    uint tmp_cf = (uint)tmp_ce;\n\t\t\t\t
-      \   uint tmp_cg = tmp_cf / (uint)16;\n\t\t\t\t    uint tmp_ch = tmp_cg * (uint)16;\n\t\t\t\t
-      \   uint tmp_ci = tmp_cf - tmp_ch;\n\t\t\t\t    uint tmp_cj = tmp_cg / (uint)2;\n\t\t\t\t
-      \   uint tmp_ck = tmp_cj * (uint)2;\n\t\t\t\t    uint tmp_cl = tmp_cg - tmp_ck;\n\t\t\t\t
-      \   uint tmp_cm = (uint)16 - tmp_ci;\n\t\t\t\t    uint tmp_cn = tmp_cm - tmp_ci;\n\t\t\t\t
-      \   uint tmp_co = tmp_cl * tmp_cn;\n\t\t\t\t    uint tmp_cp = tmp_ci + tmp_co;\n\t\t\t\t
-      \   float tmp_cq = (float)tmp_cp;\n\t\t\t\t    float tmp_cr = tmp_cq / (float)16;\n\t\t\t\t
-      \   float tmp_cs = tmp_cr * (float)6.283185;\n\t\t\t\t    float tmp_ct = cos(tmp_cs);\n\t\t\t\t
-      \   float3 tmp_cu = float3(tmp_ct, tmp_ct, tmp_ct);\n\t\t\t\t    float3 tmp_cv
-      = tmp_cu * float3(0,1,0);\n\t\t\t\t    float tmp_cw = sin(tmp_cs);\n\t\t\t\t
-      \   float3 tmp_cx = float3(tmp_cw, tmp_cw, tmp_cw);\n\t\t\t\t    float3 tmp_cy
-      = tmp_cx * float3(-1,0,0);\n\t\t\t\t    float3 tmp_cz = tmp_cv + tmp_cy;\n\t\t\t\t
-      \   float3 tmp_da = tmp_cz - tmp_ca;\n\t\t\t\t    float3 tmp_db = tmp_cc * tmp_da;\n\t\t\t\t
-      \   float3 tmp_dc = tmp_ca + tmp_db;\n\t\t\t\t    float3 tmp_de = tmp_dc * float3(0.75,0.75,0.75);\n\t\t\t\t
-      \   float tmp_df = tmp_z / (float)16;\n\t\t\t\t    uint tmp_dg = (uint)tmp_df;\n\t\t\t\t
-      \   float tmp_dh = (float)tmp_dg;\n\t\t\t\t    float tmp_dj = tmp_dh * (float)0.2;\n\t\t\t\t
-      \   float tmp_dk = (float)1 - tmp_dj;\n\t\t\t\t    float3 tmp_dl = float3(tmp_dk,
-      tmp_dk, tmp_dk);\n\t\t\t\t    float3 tmp_dm = tmp_de * tmp_dl;\n\t\t\t\t    float
-      tmp_dn = tmp_dm[1];\n\t\t\t\t    float tmp_do = tmp_dm[0];\n\t\t\t\t    float3
-      tmp_dq = float3(tmp_dn, tmp_do, (float)0);\n\t\t\t\t    SetAttribute_CAC29747(
-      /*inout */position, tmp_dq);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    float tmp_u
-      = (float)particleId;\n\t\t\t\t    float tmp_v = uniform_b + tmp_u;\n\t\t\t\t
-      \   float tmp_x = tmp_v / (float)80;\n\t\t\t\t    float tmp_y = frac(tmp_x);\n\t\t\t\t
-      \   float tmp_z = tmp_y * (float)80;\n\t\t\t\t    float tmp_bb = tmp_z / (float)16;\n\t\t\t\t
-      \   uint tmp_bc = (uint)tmp_bb;\n\t\t\t\t    float tmp_bd = (float)tmp_bc;\n\t\t\t\t
-      \   float tmp_bf = tmp_bd * (float)0.2;\n\t\t\t\t    float3 tmp_bh = float3(tmp_bf,
-      (float)1, (float)1);\n\t\t\t\t    float3 tmp_bi = HSVtoRGB(tmp_bh);\n\t\t\t\t
-      \   float tmp_bj = tmp_bi[0];\n\t\t\t\t    float tmp_bk = tmp_bi[1];\n\t\t\t\t
-      \   float tmp_bl = tmp_bi[2];\n\t\t\t\t    float3 tmp_bm = float3(tmp_bj, tmp_bk,
-      tmp_bl);\n\t\t\t\t    SetAttribute_FDD06EC7( /*inout */color, tmp_bm);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      * 0x4 + 0x0) << 2));\n\t\t\t\t\t\tfloat alpha = asfloat(attributeBuffer.Load((index
+      * 0x1 + 0x200) << 2));\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
+      axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
+      angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
+      angleZ = (float)0;\n\t\t\t\t\t\tfloat pivotX = (float)0;\n\t\t\t\t\t\tfloat
+      pivotY = (float)0;\n\t\t\t\t\t\tfloat pivotZ = (float)0;\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x3) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = (float)1;\n\t\t\t\t\t\tfloat scaleY = (float)1;\n\t\t\t\t\t\tfloat
+      scaleZ = (float)1;\n\t\t\t\t\t\tfloat3 color = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x280) << 2));\n\t\t\t\t\t\tuint particleId = (attributeBuffer.Load((index
+      * 0x1 + 0x480) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t
       \   float tmp_v = (float)particleId;\n\t\t\t\t    float tmp_w = uniform_b +
       tmp_v;\n\t\t\t\t    float tmp_y = tmp_w / (float)80;\n\t\t\t\t    float tmp_z
-      = frac(tmp_y);\n\t\t\t\t    float tmp_ba = tmp_z * (float)80;\n\t\t\t\t    float
-      tmp_bc = tmp_ba / (float)16;\n\t\t\t\t    uint tmp_bd = (uint)tmp_bc;\n\t\t\t\t
-      \   float tmp_be = (float)tmp_bd;\n\t\t\t\t    float tmp_bg = tmp_be * (float)0.2;\n\t\t\t\t
-      \   float tmp_bi = max(tmp_bg, (float)0);\n\t\t\t\t    float tmp_bk = min(tmp_bi,
-      (float)1);\n\t\t\t\t    float tmp_bm = tmp_bk * (float)-0.1;\n\t\t\t\t    float
-      tmp_bn = (float)0.15 + tmp_bm;\n\t\t\t\t    SetAttribute_3278B22F( /*inout */size,
-      tmp_bn);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    SetAttribute_C707D62A( /*inout */position,
-      float3(3.5,3.5,0));\n\t\t\t\t}\n\t\t\t\t\n\n\t\t\t\t\n\t\t\t\tif (!alive)\n\t\t\t\t\treturn
+      = frac(tmp_y);\n\t\t\t\t    float tmp_ba = tmp_z * (float)80;\n\t\t\t\t    uint
+      tmp_bb = (uint)tmp_ba;\n\t\t\t\t    uint tmp_bd = tmp_bb / (uint)16;\n\t\t\t\t
+      \   uint tmp_be = tmp_bd * (uint)16;\n\t\t\t\t    uint tmp_bf = tmp_bb - tmp_be;\n\t\t\t\t
+      \   uint tmp_bh = tmp_bd / (uint)2;\n\t\t\t\t    uint tmp_bi = tmp_bh * (uint)2;\n\t\t\t\t
+      \   uint tmp_bj = tmp_bd - tmp_bi;\n\t\t\t\t    uint tmp_bk = (uint)16 - tmp_bf;\n\t\t\t\t
+      \   uint tmp_bl = tmp_bk - tmp_bf;\n\t\t\t\t    uint tmp_bm = tmp_bj * tmp_bl;\n\t\t\t\t
+      \   uint tmp_bn = tmp_bf + tmp_bm;\n\t\t\t\t    float tmp_bo = (float)tmp_bn;\n\t\t\t\t
+      \   float tmp_bq = tmp_bo / (float)16;\n\t\t\t\t    float tmp_bs = tmp_bq *
+      (float)6.283185;\n\t\t\t\t    float tmp_bt = cos(tmp_bs);\n\t\t\t\t    float3
+      tmp_bu = float3(tmp_bt, tmp_bt, tmp_bt);\n\t\t\t\t    float3 tmp_bw = tmp_bu
+      * float3(0,1,0);\n\t\t\t\t    float tmp_bx = sin(tmp_bs);\n\t\t\t\t    float3
+      tmp_by = float3(tmp_bx, tmp_bx, tmp_bx);\n\t\t\t\t    float3 tmp_ca = tmp_by
+      * float3(-1,0,0);\n\t\t\t\t    float3 tmp_cb = tmp_bw + tmp_ca;\n\t\t\t\t    float
+      tmp_cc = frac(tmp_ba);\n\t\t\t\t    float3 tmp_cd = float3(tmp_cc, tmp_cc, tmp_cc);\n\t\t\t\t
+      \   float tmp_cf = tmp_ba + (float)1;\n\t\t\t\t    uint tmp_cg = (uint)tmp_cf;\n\t\t\t\t
+      \   uint tmp_ch = tmp_cg / (uint)16;\n\t\t\t\t    uint tmp_ci = tmp_ch * (uint)16;\n\t\t\t\t
+      \   uint tmp_cj = tmp_cg - tmp_ci;\n\t\t\t\t    uint tmp_ck = tmp_ch / (uint)2;\n\t\t\t\t
+      \   uint tmp_cl = tmp_ck * (uint)2;\n\t\t\t\t    uint tmp_cm = tmp_ch - tmp_cl;\n\t\t\t\t
+      \   uint tmp_cn = (uint)16 - tmp_cj;\n\t\t\t\t    uint tmp_co = tmp_cn - tmp_cj;\n\t\t\t\t
+      \   uint tmp_cp = tmp_cm * tmp_co;\n\t\t\t\t    uint tmp_cq = tmp_cj + tmp_cp;\n\t\t\t\t
+      \   float tmp_cr = (float)tmp_cq;\n\t\t\t\t    float tmp_cs = tmp_cr / (float)16;\n\t\t\t\t
+      \   float tmp_ct = tmp_cs * (float)6.283185;\n\t\t\t\t    float tmp_cu = cos(tmp_ct);\n\t\t\t\t
+      \   float3 tmp_cv = float3(tmp_cu, tmp_cu, tmp_cu);\n\t\t\t\t    float3 tmp_cw
+      = tmp_cv * float3(0,1,0);\n\t\t\t\t    float tmp_cx = sin(tmp_ct);\n\t\t\t\t
+      \   float3 tmp_cy = float3(tmp_cx, tmp_cx, tmp_cx);\n\t\t\t\t    float3 tmp_cz
+      = tmp_cy * float3(-1,0,0);\n\t\t\t\t    float3 tmp_da = tmp_cw + tmp_cz;\n\t\t\t\t
+      \   float3 tmp_db = tmp_da - tmp_cb;\n\t\t\t\t    float3 tmp_dc = tmp_cd * tmp_db;\n\t\t\t\t
+      \   float3 tmp_dd = tmp_cb + tmp_dc;\n\t\t\t\t    float3 tmp_df = tmp_dd * float3(0.75,0.75,0.75);\n\t\t\t\t
+      \   float tmp_dg = tmp_ba / (float)16;\n\t\t\t\t    uint tmp_dh = (uint)tmp_dg;\n\t\t\t\t
+      \   float tmp_di = (float)tmp_dh;\n\t\t\t\t    float tmp_dk = tmp_di * (float)0.2;\n\t\t\t\t
+      \   float tmp_dl = (float)1 - tmp_dk;\n\t\t\t\t    float3 tmp_dm = float3(tmp_dl,
+      tmp_dl, tmp_dl);\n\t\t\t\t    float3 tmp_dn = tmp_df * tmp_dm;\n\t\t\t\t    float
+      tmp_do = tmp_dn[1];\n\t\t\t\t    float tmp_dp = tmp_dn[0];\n\t\t\t\t    float3
+      tmp_dr = float3(tmp_do, tmp_dp, (float)0);\n\t\t\t\t    SetAttribute_CAC29747(
+      /*inout */position, tmp_dr);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    float tmp_v
+      = (float)particleId;\n\t\t\t\t    float tmp_w = uniform_b + tmp_v;\n\t\t\t\t
+      \   float tmp_y = tmp_w / (float)80;\n\t\t\t\t    float tmp_z = frac(tmp_y);\n\t\t\t\t
+      \   float tmp_ba = tmp_z * (float)80;\n\t\t\t\t    float tmp_bc = tmp_ba / (float)16;\n\t\t\t\t
+      \   uint tmp_bd = (uint)tmp_bc;\n\t\t\t\t    float tmp_be = (float)tmp_bd;\n\t\t\t\t
+      \   float tmp_bg = tmp_be * (float)0.2;\n\t\t\t\t    float3 tmp_bi = float3(tmp_bg,
+      (float)1, (float)1);\n\t\t\t\t    float3 tmp_bj = HSVtoRGB(tmp_bi);\n\t\t\t\t
+      \   float tmp_bk = tmp_bj[0];\n\t\t\t\t    float tmp_bl = tmp_bj[1];\n\t\t\t\t
+      \   float tmp_bm = tmp_bj[2];\n\t\t\t\t    float3 tmp_bn = float3(tmp_bk, tmp_bl,
+      tmp_bm);\n\t\t\t\t    SetAttribute_FDD06EC7( /*inout */color, tmp_bn);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_w = (float)particleId;\n\t\t\t\t    float tmp_x = uniform_b +
+      tmp_w;\n\t\t\t\t    float tmp_z = tmp_x / (float)80;\n\t\t\t\t    float tmp_ba
+      = frac(tmp_z);\n\t\t\t\t    float tmp_bb = tmp_ba * (float)80;\n\t\t\t\t    float
+      tmp_bd = tmp_bb / (float)16;\n\t\t\t\t    uint tmp_be = (uint)tmp_bd;\n\t\t\t\t
+      \   float tmp_bf = (float)tmp_be;\n\t\t\t\t    float tmp_bh = tmp_bf * (float)0.2;\n\t\t\t\t
+      \   float tmp_bj = max(tmp_bh, (float)0);\n\t\t\t\t    float tmp_bl = min(tmp_bj,
+      (float)1);\n\t\t\t\t    float tmp_bn = tmp_bl * (float)-0.1;\n\t\t\t\t    float
+      tmp_bo = (float)0.15 + tmp_bn;\n\t\t\t\t    SetAttribute_3278B22F( /*inout */size,
+      tmp_bo);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    SetAttribute_C707D62A( /*inout */position,
+      float3(3.5,3.5,0));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    SetAttribute_CEEAF35C(
+      /*inout */alpha, (float)1);\n\t\t\t\t}\n\t\t\t\t\n\n\t\t\t\t\n\t\t\t\tif (!alive)\n\t\t\t\t\treturn
       o;\n\t\t\t\t\n\t\t\t\to.VFX_VARYING_UV.x = float(id & 1);\n\t\t\t\to.VFX_VARYING_UV.y
       = float((id & 2) >> 1);\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tfloat3 size3 = float3(size,size,size);\n\t\t\t\t\t\t#if
       VFX_USE_SCALEX_CURRENT\n\t\t\t\t\t\tsize3.x *= scaleX;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if
@@ -4407,9 +4434,14 @@ VisualEffectResource:
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.cginc\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t#pragma
       fragment frag\n\t\t\tps_output frag(ps_input i)\n\t\t\t{\n\t\t\t\tps_output
       o = (ps_output)0;\n\t\t\t\to.color = VFXGetFragmentColor(i);\n\t\t\t\to.color
-      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i);\n\t\t        o.color = VFXApplyPreExposure(o.color);\n\t\t\t\to.color
+      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i);\n\t\t\t\to.color = VFXApplyPreExposure(o.color);\n\t\t\t\to.color
       = VFXApplyFog(o.color,i);\n\t\t\t\tVFXClipFragmentColor(o.color.a,i);\n\t\t\t\to.color.a
-      = saturate(o.color.a);\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\t\n\t}\n}\n"
+      = saturate(o.color.a);\n\t\t\t\t\n\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\t\n\t\t\t\t\t\tfloat2
+      velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) -
+      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t#if
+      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\tfloat4
+      encodedVelocity = 0.0f;\n\t\t\t\t\t\tVFXEncodeVelocity(velocity * 0.5f, encodedVelocity);\n\t\t\t\t\t\t\n\t\t\t\to.outVelocity
+      = encodedVelocity;\n\t\t#endif\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\t\n\t}\n}\n"
   - compute: 1
     name: '[System 1]MotionVector'
     source: "#pragma kernel CSMain\n#define NB_THREADS_PER_GROUP 64\n#define VFX_USE_LIFETIME_CURRENT
@@ -4657,47 +4689,47 @@ VisualEffectResource:
       id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP + groupId.y * dispatchWidth
       * NB_THREADS_PER_GROUP;\n\tuint index = id;\n\tif (id < nbMax)\n\t{\n\t\tbool
       alive = (bool)true;\n\n\n\t\tif (alive)\n\t\t{\n\t\t\tfloat3 position = asfloat(attributeBuffer.Load3((index
-      * 0x4 + 0x0) << 2));\nfloat alpha = (float)1;\nfloat3 axisX = float3(1,0,0);\nfloat3
-      axisY = float3(0,1,0);\nfloat3 axisZ = float3(0,0,1);\nfloat angleX = (float)0;\nfloat
-      angleY = (float)0;\nfloat angleZ = (float)0;\nfloat pivotX = (float)0;\nfloat
-      pivotY = (float)0;\nfloat pivotZ = (float)0;\nfloat size = asfloat(attributeBuffer.Load((index
-      * 0x4 + 0x3) << 2));\nfloat scaleX = (float)1;\nfloat scaleY = (float)1;\nfloat
-      scaleZ = (float)1;\nfloat3 color = asfloat(attributeBuffer.Load3((index * 0x4
-      + 0x200) << 2));\nuint particleId = (attributeBuffer.Load((index * 0x1 + 0x400)
-      << 2));\n\n\n\t\t\t{\n\t\t\t    float tmp_v = (float)particleId;\n\t\t\t    float
-      tmp_w = uniform_b + tmp_v;\n\t\t\t    float tmp_y = tmp_w / (float)80;\n\t\t\t
-      \   float tmp_z = frac(tmp_y);\n\t\t\t    float tmp_ba = tmp_z * (float)80;\n\t\t\t
-      \   uint tmp_bb = (uint)tmp_ba;\n\t\t\t    uint tmp_bd = tmp_bb / (uint)16;\n\t\t\t
-      \   uint tmp_be = tmp_bd * (uint)16;\n\t\t\t    uint tmp_bf = tmp_bb - tmp_be;\n\t\t\t
-      \   uint tmp_bh = tmp_bd / (uint)2;\n\t\t\t    uint tmp_bi = tmp_bh * (uint)2;\n\t\t\t
-      \   uint tmp_bj = tmp_bd - tmp_bi;\n\t\t\t    uint tmp_bk = (uint)16 - tmp_bf;\n\t\t\t
-      \   uint tmp_bl = tmp_bk - tmp_bf;\n\t\t\t    uint tmp_bm = tmp_bj * tmp_bl;\n\t\t\t
-      \   uint tmp_bn = tmp_bf + tmp_bm;\n\t\t\t    float tmp_bo = (float)tmp_bn;\n\t\t\t
-      \   float tmp_bq = tmp_bo / (float)16;\n\t\t\t    float tmp_bs = tmp_bq * (float)6.283185;\n\t\t\t
-      \   float tmp_bt = cos(tmp_bs);\n\t\t\t    float3 tmp_bu = float3(tmp_bt, tmp_bt,
-      tmp_bt);\n\t\t\t    float3 tmp_bw = tmp_bu * float3(0,1,0);\n\t\t\t    float
-      tmp_bx = sin(tmp_bs);\n\t\t\t    float3 tmp_by = float3(tmp_bx, tmp_bx, tmp_bx);\n\t\t\t
-      \   float3 tmp_ca = tmp_by * float3(-1,0,0);\n\t\t\t    float3 tmp_cb = tmp_bw
-      + tmp_ca;\n\t\t\t    float tmp_cc = frac(tmp_ba);\n\t\t\t    float3 tmp_cd =
-      float3(tmp_cc, tmp_cc, tmp_cc);\n\t\t\t    float tmp_cf = tmp_ba + (float)1;\n\t\t\t
-      \   uint tmp_cg = (uint)tmp_cf;\n\t\t\t    uint tmp_ch = tmp_cg / (uint)16;\n\t\t\t
-      \   uint tmp_ci = tmp_ch * (uint)16;\n\t\t\t    uint tmp_cj = tmp_cg - tmp_ci;\n\t\t\t
-      \   uint tmp_ck = tmp_ch / (uint)2;\n\t\t\t    uint tmp_cl = tmp_ck * (uint)2;\n\t\t\t
-      \   uint tmp_cm = tmp_ch - tmp_cl;\n\t\t\t    uint tmp_cn = (uint)16 - tmp_cj;\n\t\t\t
-      \   uint tmp_co = tmp_cn - tmp_cj;\n\t\t\t    uint tmp_cp = tmp_cm * tmp_co;\n\t\t\t
-      \   uint tmp_cq = tmp_cj + tmp_cp;\n\t\t\t    float tmp_cr = (float)tmp_cq;\n\t\t\t
-      \   float tmp_cs = tmp_cr / (float)16;\n\t\t\t    float tmp_ct = tmp_cs * (float)6.283185;\n\t\t\t
-      \   float tmp_cu = cos(tmp_ct);\n\t\t\t    float3 tmp_cv = float3(tmp_cu, tmp_cu,
-      tmp_cu);\n\t\t\t    float3 tmp_cw = tmp_cv * float3(0,1,0);\n\t\t\t    float
-      tmp_cx = sin(tmp_ct);\n\t\t\t    float3 tmp_cy = float3(tmp_cx, tmp_cx, tmp_cx);\n\t\t\t
-      \   float3 tmp_cz = tmp_cy * float3(-1,0,0);\n\t\t\t    float3 tmp_da = tmp_cw
-      + tmp_cz;\n\t\t\t    float3 tmp_db = tmp_da - tmp_cb;\n\t\t\t    float3 tmp_dc
-      = tmp_cd * tmp_db;\n\t\t\t    float3 tmp_dd = tmp_cb + tmp_dc;\n\t\t\t    float3
-      tmp_df = tmp_dd * float3(0.75,0.75,0.75);\n\t\t\t    float tmp_dg = tmp_ba /
-      (float)16;\n\t\t\t    uint tmp_dh = (uint)tmp_dg;\n\t\t\t    float tmp_di =
-      (float)tmp_dh;\n\t\t\t    float tmp_dk = tmp_di * (float)0.2;\n\t\t\t    float
-      tmp_dl = (float)1 - tmp_dk;\n\t\t\t    float3 tmp_dm = float3(tmp_dl, tmp_dl,
-      tmp_dl);\n\t\t\t    float3 tmp_dn = tmp_df * tmp_dm;\n\t\t\t    SetAttribute_CAC29747(
+      * 0x4 + 0x0) << 2));\nfloat alpha = asfloat(attributeBuffer.Load((index * 0x1
+      + 0x200) << 2));\nfloat3 axisX = float3(1,0,0);\nfloat3 axisY = float3(0,1,0);\nfloat3
+      axisZ = float3(0,0,1);\nfloat angleX = (float)0;\nfloat angleY = (float)0;\nfloat
+      angleZ = (float)0;\nfloat pivotX = (float)0;\nfloat pivotY = (float)0;\nfloat
+      pivotZ = (float)0;\nfloat size = asfloat(attributeBuffer.Load((index * 0x4 +
+      0x3) << 2));\nfloat scaleX = (float)1;\nfloat scaleY = (float)1;\nfloat scaleZ
+      = (float)1;\nfloat3 color = asfloat(attributeBuffer.Load3((index * 0x4 + 0x280)
+      << 2));\nuint particleId = (attributeBuffer.Load((index * 0x1 + 0x480) << 2));\n\n\n\t\t\t{\n\t\t\t
+      \   float tmp_v = (float)particleId;\n\t\t\t    float tmp_w = uniform_b + tmp_v;\n\t\t\t
+      \   float tmp_y = tmp_w / (float)80;\n\t\t\t    float tmp_z = frac(tmp_y);\n\t\t\t
+      \   float tmp_ba = tmp_z * (float)80;\n\t\t\t    uint tmp_bb = (uint)tmp_ba;\n\t\t\t
+      \   uint tmp_bd = tmp_bb / (uint)16;\n\t\t\t    uint tmp_be = tmp_bd * (uint)16;\n\t\t\t
+      \   uint tmp_bf = tmp_bb - tmp_be;\n\t\t\t    uint tmp_bh = tmp_bd / (uint)2;\n\t\t\t
+      \   uint tmp_bi = tmp_bh * (uint)2;\n\t\t\t    uint tmp_bj = tmp_bd - tmp_bi;\n\t\t\t
+      \   uint tmp_bk = (uint)16 - tmp_bf;\n\t\t\t    uint tmp_bl = tmp_bk - tmp_bf;\n\t\t\t
+      \   uint tmp_bm = tmp_bj * tmp_bl;\n\t\t\t    uint tmp_bn = tmp_bf + tmp_bm;\n\t\t\t
+      \   float tmp_bo = (float)tmp_bn;\n\t\t\t    float tmp_bq = tmp_bo / (float)16;\n\t\t\t
+      \   float tmp_bs = tmp_bq * (float)6.283185;\n\t\t\t    float tmp_bt = cos(tmp_bs);\n\t\t\t
+      \   float3 tmp_bu = float3(tmp_bt, tmp_bt, tmp_bt);\n\t\t\t    float3 tmp_bw
+      = tmp_bu * float3(0,1,0);\n\t\t\t    float tmp_bx = sin(tmp_bs);\n\t\t\t    float3
+      tmp_by = float3(tmp_bx, tmp_bx, tmp_bx);\n\t\t\t    float3 tmp_ca = tmp_by *
+      float3(-1,0,0);\n\t\t\t    float3 tmp_cb = tmp_bw + tmp_ca;\n\t\t\t    float
+      tmp_cc = frac(tmp_ba);\n\t\t\t    float3 tmp_cd = float3(tmp_cc, tmp_cc, tmp_cc);\n\t\t\t
+      \   float tmp_cf = tmp_ba + (float)1;\n\t\t\t    uint tmp_cg = (uint)tmp_cf;\n\t\t\t
+      \   uint tmp_ch = tmp_cg / (uint)16;\n\t\t\t    uint tmp_ci = tmp_ch * (uint)16;\n\t\t\t
+      \   uint tmp_cj = tmp_cg - tmp_ci;\n\t\t\t    uint tmp_ck = tmp_ch / (uint)2;\n\t\t\t
+      \   uint tmp_cl = tmp_ck * (uint)2;\n\t\t\t    uint tmp_cm = tmp_ch - tmp_cl;\n\t\t\t
+      \   uint tmp_cn = (uint)16 - tmp_cj;\n\t\t\t    uint tmp_co = tmp_cn - tmp_cj;\n\t\t\t
+      \   uint tmp_cp = tmp_cm * tmp_co;\n\t\t\t    uint tmp_cq = tmp_cj + tmp_cp;\n\t\t\t
+      \   float tmp_cr = (float)tmp_cq;\n\t\t\t    float tmp_cs = tmp_cr / (float)16;\n\t\t\t
+      \   float tmp_ct = tmp_cs * (float)6.283185;\n\t\t\t    float tmp_cu = cos(tmp_ct);\n\t\t\t
+      \   float3 tmp_cv = float3(tmp_cu, tmp_cu, tmp_cu);\n\t\t\t    float3 tmp_cw
+      = tmp_cv * float3(0,1,0);\n\t\t\t    float tmp_cx = sin(tmp_ct);\n\t\t\t    float3
+      tmp_cy = float3(tmp_cx, tmp_cx, tmp_cx);\n\t\t\t    float3 tmp_cz = tmp_cy *
+      float3(-1,0,0);\n\t\t\t    float3 tmp_da = tmp_cw + tmp_cz;\n\t\t\t    float3
+      tmp_db = tmp_da - tmp_cb;\n\t\t\t    float3 tmp_dc = tmp_cd * tmp_db;\n\t\t\t
+      \   float3 tmp_dd = tmp_cb + tmp_dc;\n\t\t\t    float3 tmp_df = tmp_dd * float3(0.75,0.75,0.75);\n\t\t\t
+      \   float tmp_dg = tmp_ba / (float)16;\n\t\t\t    uint tmp_dh = (uint)tmp_dg;\n\t\t\t
+      \   float tmp_di = (float)tmp_dh;\n\t\t\t    float tmp_dk = tmp_di * (float)0.2;\n\t\t\t
+      \   float tmp_dl = (float)1 - tmp_dk;\n\t\t\t    float3 tmp_dm = float3(tmp_dl,
+      tmp_dl, tmp_dl);\n\t\t\t    float3 tmp_dn = tmp_df * tmp_dm;\n\t\t\t    SetAttribute_CAC29747(
       /*inout */position, tmp_dn);\n\t\t\t}\n\t\t\t{\n\t\t\t    float tmp_v = (float)particleId;\n\t\t\t
       \   float tmp_w = uniform_b + tmp_v;\n\t\t\t    float tmp_y = tmp_w / (float)80;\n\t\t\t
       \   float tmp_z = frac(tmp_y);\n\t\t\t    float tmp_ba = tmp_z * (float)80;\n\t\t\t
@@ -4717,6 +4749,109 @@ VisualEffectResource:
       tmp_bo = (float)0.15 + tmp_bn;\n\t\t\t    SetAttribute_3278B22F( /*inout */size,
       tmp_bo);\n\t\t\t}\n\t\t\t{\n\t\t\t    SetAttribute_C707D62A( /*inout */position,
       float3(1.75,3.5,0));\n\t\t\t}\n\t\t\t\n\n\t\t\t\n\t\t\tfloat3 size3 = float3(size,size,size);\n\t\t\t#if
+      VFX_USE_SCALEX_CURRENT\n\t\t\tsize3.x *= scaleX;\n\t\t\t#endif\n\t\t\t#if VFX_USE_SCALEY_CURRENT\n\t\t\tsize3.y
+      *= scaleY;\n\t\t\t#endif\n\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\tsize3.z *=
+      scaleZ;\n\t\t\t#endif\n\t\t\t\n\t\t\tfloat4x4 elementToVFX = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\n\t\t\tUNITY_UNROLL\n\t\t\tfor
+      (int itIndexMatrixRow = 0; itIndexMatrixRow < 3; ++itIndexMatrixRow)\n\t\t\t{\n\t\t\t\tUNITY_UNROLL\n\t\t\t\tfor
+      (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t{\n\t\t\t\t\tuint
+      itIndexMatrix = itIndexMatrixCol * 4 + itIndexMatrixRow;\n\t\t\t\t\tfloat value
+      = elementToVFX[itIndexMatrixRow][itIndexMatrixCol];\n\t\t\t\t\telementToVFXBuffer.Store((index
+      * 16 + itIndexMatrix) << 2, asuint(value));\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\telementToVFXBuffer.Store((index*16
+      + 15) << 2, alive ? asuint(currentFrameIndex) : 0u);\n\t}\n}\n"
+  - compute: 1
+    name: '[System 3]MotionVector'
+    source: "#pragma kernel CSMain\n#define NB_THREADS_PER_GROUP 64\n#define VFX_USE_POSITION_CURRENT
+      1\n#define VFX_USE_ALPHA_CURRENT 1\n#define VFX_USE_ALIVE_CURRENT 1\n#define
+      VFX_USE_AXISX_CURRENT 1\n#define VFX_USE_AXISY_CURRENT 1\n#define VFX_USE_AXISZ_CURRENT
+      1\n#define VFX_USE_ANGLEX_CURRENT 1\n#define VFX_USE_ANGLEY_CURRENT 1\n#define
+      VFX_USE_ANGLEZ_CURRENT 1\n#define VFX_USE_PIVOTX_CURRENT 1\n#define VFX_USE_PIVOTY_CURRENT
+      1\n#define VFX_USE_PIVOTZ_CURRENT 1\n#define VFX_USE_SIZE_CURRENT 1\n#define
+      VFX_USE_SCALEX_CURRENT 1\n#define VFX_USE_SCALEY_CURRENT 1\n#define VFX_USE_SCALEZ_CURRENT
+      1\n#define VFX_USE_COLOR_CURRENT 1\n#define VFX_USE_PARTICLEID_CURRENT 1\n#define
+      VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.visualeffectgraph/Shaders/RenderPipeline/HDRP/VFXDefines.hlsl\"\n\n\nCBUFFER_START(parameters)\n
+      \   float uniform_b;\n    float currentFrameIndex;\n    uint2 PADDING_0;\nCBUFFER_END\nTexture2D
+      mainTexture;\nSamplerState samplermainTexture;\n\n\n#include \"Packages/com.unity.visualeffectgraph/Shaders/Common/VFXCommonCompute.cginc\"\n#include
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.cginc\"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nByteAddressBuffer
+      attributeBuffer;\nRWByteAddressBuffer elementToVFXBuffer;\n#if VFX_USE_ALIVE_CURRENT\nStructuredBuffer<uint>
+      deadListOut;\n#endif\n\n#if VFX_HAS_INDIRECT_DRAW\nStructuredBuffer<uint> indirectBuffer;\n#endif\n\nCBUFFER_START(updateParams)\n\tuint
+      nbMax;\n\tuint dispatchWidth;\n\tuint systemSeed;\nCBUFFER_END\n\nvoid SetAttribute_CAC29747(inout
+      float3 position, float3 Position) /*attribute:position Composition:Overwrite
+      Source:Slot Random:Off channels:XYZ */\n{\n    position = Position;\n}\nvoid
+      SetAttribute_FDD06EC7(inout float3 color, float3 Color) /*attribute:color Composition:Overwrite
+      Source:Slot Random:Off channels:XYZ */\n{\n    color = Color;\n}\nvoid SetAttribute_3278B22F(inout
+      float size, float Size) /*attribute:size Composition:Overwrite Source:Slot Random:Off
+      channels:XYZ */\n{\n    size = Size;\n}\nvoid SetAttribute_C707D62A(inout float3
+      position, float3 Position) /*attribute:position Composition:Add Source:Slot
+      Random:Off channels:XYZ */\n{\n    position += Position;\n}\nvoid SetAttribute_CEEAF35C(inout
+      float alpha, float Alpha) /*attribute:alpha Composition:Overwrite Source:Slot
+      Random:Off channels:XYZ */\n{\n    alpha = Alpha;\n}\n\n\n\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\nvoid
+      CSMain(uint3 groupId\t\t: SV_GroupID,\n\t\t\tuint3 groupThreadId\t: SV_GroupThreadID)\n{\n\tuint
+      id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP + groupId.y * dispatchWidth
+      * NB_THREADS_PER_GROUP;\n\tuint index = id;\n\tif (id < nbMax)\n\t{\n\t\tbool
+      alive = (bool)true;\n\n\n\t\tif (alive)\n\t\t{\n\t\t\tfloat3 position = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x0) << 2));\nfloat alpha = asfloat(attributeBuffer.Load((index * 0x1
+      + 0x200) << 2));\nfloat3 axisX = float3(1,0,0);\nfloat3 axisY = float3(0,1,0);\nfloat3
+      axisZ = float3(0,0,1);\nfloat angleX = (float)0;\nfloat angleY = (float)0;\nfloat
+      angleZ = (float)0;\nfloat pivotX = (float)0;\nfloat pivotY = (float)0;\nfloat
+      pivotZ = (float)0;\nfloat size = asfloat(attributeBuffer.Load((index * 0x4 +
+      0x3) << 2));\nfloat scaleX = (float)1;\nfloat scaleY = (float)1;\nfloat scaleZ
+      = (float)1;\nfloat3 color = asfloat(attributeBuffer.Load3((index * 0x4 + 0x280)
+      << 2));\nuint particleId = (attributeBuffer.Load((index * 0x1 + 0x480) << 2));\n\n\n\t\t\t{\n\t\t\t
+      \   float tmp_v = (float)particleId;\n\t\t\t    float tmp_w = uniform_b + tmp_v;\n\t\t\t
+      \   float tmp_y = tmp_w / (float)80;\n\t\t\t    float tmp_z = frac(tmp_y);\n\t\t\t
+      \   float tmp_ba = tmp_z * (float)80;\n\t\t\t    uint tmp_bb = (uint)tmp_ba;\n\t\t\t
+      \   uint tmp_bd = tmp_bb / (uint)16;\n\t\t\t    uint tmp_be = tmp_bd * (uint)16;\n\t\t\t
+      \   uint tmp_bf = tmp_bb - tmp_be;\n\t\t\t    uint tmp_bh = tmp_bd / (uint)2;\n\t\t\t
+      \   uint tmp_bi = tmp_bh * (uint)2;\n\t\t\t    uint tmp_bj = tmp_bd - tmp_bi;\n\t\t\t
+      \   uint tmp_bk = (uint)16 - tmp_bf;\n\t\t\t    uint tmp_bl = tmp_bk - tmp_bf;\n\t\t\t
+      \   uint tmp_bm = tmp_bj * tmp_bl;\n\t\t\t    uint tmp_bn = tmp_bf + tmp_bm;\n\t\t\t
+      \   float tmp_bo = (float)tmp_bn;\n\t\t\t    float tmp_bq = tmp_bo / (float)16;\n\t\t\t
+      \   float tmp_bs = tmp_bq * (float)6.283185;\n\t\t\t    float tmp_bt = cos(tmp_bs);\n\t\t\t
+      \   float3 tmp_bu = float3(tmp_bt, tmp_bt, tmp_bt);\n\t\t\t    float3 tmp_bw
+      = tmp_bu * float3(0,1,0);\n\t\t\t    float tmp_bx = sin(tmp_bs);\n\t\t\t    float3
+      tmp_by = float3(tmp_bx, tmp_bx, tmp_bx);\n\t\t\t    float3 tmp_ca = tmp_by *
+      float3(-1,0,0);\n\t\t\t    float3 tmp_cb = tmp_bw + tmp_ca;\n\t\t\t    float
+      tmp_cc = frac(tmp_ba);\n\t\t\t    float3 tmp_cd = float3(tmp_cc, tmp_cc, tmp_cc);\n\t\t\t
+      \   float tmp_cf = tmp_ba + (float)1;\n\t\t\t    uint tmp_cg = (uint)tmp_cf;\n\t\t\t
+      \   uint tmp_ch = tmp_cg / (uint)16;\n\t\t\t    uint tmp_ci = tmp_ch * (uint)16;\n\t\t\t
+      \   uint tmp_cj = tmp_cg - tmp_ci;\n\t\t\t    uint tmp_ck = tmp_ch / (uint)2;\n\t\t\t
+      \   uint tmp_cl = tmp_ck * (uint)2;\n\t\t\t    uint tmp_cm = tmp_ch - tmp_cl;\n\t\t\t
+      \   uint tmp_cn = (uint)16 - tmp_cj;\n\t\t\t    uint tmp_co = tmp_cn - tmp_cj;\n\t\t\t
+      \   uint tmp_cp = tmp_cm * tmp_co;\n\t\t\t    uint tmp_cq = tmp_cj + tmp_cp;\n\t\t\t
+      \   float tmp_cr = (float)tmp_cq;\n\t\t\t    float tmp_cs = tmp_cr / (float)16;\n\t\t\t
+      \   float tmp_ct = tmp_cs * (float)6.283185;\n\t\t\t    float tmp_cu = cos(tmp_ct);\n\t\t\t
+      \   float3 tmp_cv = float3(tmp_cu, tmp_cu, tmp_cu);\n\t\t\t    float3 tmp_cw
+      = tmp_cv * float3(0,1,0);\n\t\t\t    float tmp_cx = sin(tmp_ct);\n\t\t\t    float3
+      tmp_cy = float3(tmp_cx, tmp_cx, tmp_cx);\n\t\t\t    float3 tmp_cz = tmp_cy *
+      float3(-1,0,0);\n\t\t\t    float3 tmp_da = tmp_cw + tmp_cz;\n\t\t\t    float3
+      tmp_db = tmp_da - tmp_cb;\n\t\t\t    float3 tmp_dc = tmp_cd * tmp_db;\n\t\t\t
+      \   float3 tmp_dd = tmp_cb + tmp_dc;\n\t\t\t    float3 tmp_df = tmp_dd * float3(0.75,0.75,0.75);\n\t\t\t
+      \   float tmp_dg = tmp_ba / (float)16;\n\t\t\t    uint tmp_dh = (uint)tmp_dg;\n\t\t\t
+      \   float tmp_di = (float)tmp_dh;\n\t\t\t    float tmp_dk = tmp_di * (float)0.2;\n\t\t\t
+      \   float tmp_dl = (float)1 - tmp_dk;\n\t\t\t    float3 tmp_dm = float3(tmp_dl,
+      tmp_dl, tmp_dl);\n\t\t\t    float3 tmp_dn = tmp_df * tmp_dm;\n\t\t\t    float
+      tmp_do = tmp_dn[1];\n\t\t\t    float tmp_dp = tmp_dn[0];\n\t\t\t    float3 tmp_dr
+      = float3(tmp_do, tmp_dp, (float)0);\n\t\t\t    SetAttribute_CAC29747( /*inout
+      */position, tmp_dr);\n\t\t\t}\n\t\t\t{\n\t\t\t    float tmp_v = (float)particleId;\n\t\t\t
+      \   float tmp_w = uniform_b + tmp_v;\n\t\t\t    float tmp_y = tmp_w / (float)80;\n\t\t\t
+      \   float tmp_z = frac(tmp_y);\n\t\t\t    float tmp_ba = tmp_z * (float)80;\n\t\t\t
+      \   float tmp_bc = tmp_ba / (float)16;\n\t\t\t    uint tmp_bd = (uint)tmp_bc;\n\t\t\t
+      \   float tmp_be = (float)tmp_bd;\n\t\t\t    float tmp_bg = tmp_be * (float)0.2;\n\t\t\t
+      \   float3 tmp_bi = float3(tmp_bg, (float)1, (float)1);\n\t\t\t    float3 tmp_bj
+      = HSVtoRGB(tmp_bi);\n\t\t\t    float tmp_bk = tmp_bj[0];\n\t\t\t    float tmp_bl
+      = tmp_bj[1];\n\t\t\t    float tmp_bm = tmp_bj[2];\n\t\t\t    float3 tmp_bn =
+      float3(tmp_bk, tmp_bl, tmp_bm);\n\t\t\t    SetAttribute_FDD06EC7( /*inout */color,
+      tmp_bn);\n\t\t\t}\n\t\t\t{\n\t\t\t    float tmp_w = (float)particleId;\n\t\t\t
+      \   float tmp_x = uniform_b + tmp_w;\n\t\t\t    float tmp_z = tmp_x / (float)80;\n\t\t\t
+      \   float tmp_ba = frac(tmp_z);\n\t\t\t    float tmp_bb = tmp_ba * (float)80;\n\t\t\t
+      \   float tmp_bd = tmp_bb / (float)16;\n\t\t\t    uint tmp_be = (uint)tmp_bd;\n\t\t\t
+      \   float tmp_bf = (float)tmp_be;\n\t\t\t    float tmp_bh = tmp_bf * (float)0.2;\n\t\t\t
+      \   float tmp_bj = max(tmp_bh, (float)0);\n\t\t\t    float tmp_bl = min(tmp_bj,
+      (float)1);\n\t\t\t    float tmp_bn = tmp_bl * (float)-0.1;\n\t\t\t    float
+      tmp_bo = (float)0.15 + tmp_bn;\n\t\t\t    SetAttribute_3278B22F( /*inout */size,
+      tmp_bo);\n\t\t\t}\n\t\t\t{\n\t\t\t    SetAttribute_C707D62A( /*inout */position,
+      float3(3.5,3.5,0));\n\t\t\t}\n\t\t\t{\n\t\t\t    SetAttribute_CEEAF35C( /*inout
+      */alpha, (float)1);\n\t\t\t}\n\t\t\t\n\n\t\t\t\n\t\t\tfloat3 size3 = float3(size,size,size);\n\t\t\t#if
       VFX_USE_SCALEX_CURRENT\n\t\t\tsize3.x *= scaleX;\n\t\t\t#endif\n\t\t\t#if VFX_USE_SCALEY_CURRENT\n\t\t\tsize3.y
       *= scaleY;\n\t\t\t#endif\n\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\tsize3.z *=
       scaleZ;\n\t\t\t#endif\n\t\t\t\n\t\t\tfloat4x4 elementToVFX = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\n\t\t\tUNITY_UNROLL\n\t\t\tfor
@@ -5350,7 +5485,7 @@ VisualEffectResource:
       capacity: 1
       stride: 4
     - type: 1
-      size: 1104
+      size: 1232
       layout:
       - name: position
         type: 3
@@ -5364,16 +5499,22 @@ VisualEffectResource:
           bucket: 0
           structure: 4
           element: 3
+      - name: alpha
+        type: 1
+        offset:
+          bucket: 512
+          structure: 1
+          element: 0
       - name: color
         type: 3
         offset:
-          bucket: 512
+          bucket: 640
           structure: 4
           element: 0
       - name: particleId
         type: 6
         offset:
-          bucket: 1024
+          bucket: 1152
           structure: 1
           element: 0
       capacity: 80
@@ -5517,7 +5658,7 @@ VisualEffectResource:
       capacity: 1
       stride: 4
     - type: 1
-      size: 1152
+      size: 1280
       layout:
       - name: position
         type: 3
@@ -5531,16 +5672,22 @@ VisualEffectResource:
           bucket: 0
           structure: 4
           element: 3
+      - name: alpha
+        type: 1
+        offset:
+          bucket: 512
+          structure: 1
+          element: 0
       - name: color
         type: 3
         offset:
-          bucket: 512
+          bucket: 640
           structure: 4
           element: 0
       - name: particleId
         type: 6
         offset:
-          bucket: 1024
+          bucket: 1152
           structure: 1
           element: 0
       capacity: 128
@@ -5588,6 +5735,13 @@ VisualEffectResource:
     - desc:
         type: 1
         size: 64
+        layout: []
+        capacity: 0
+        stride: 4
+      frameCount: 2
+    - desc:
+        type: 1
+        size: 5120
         layout: []
         capacity: 0
         stride: 4
@@ -6134,6 +6288,28 @@ VisualEffectResource:
         index: 33
       processor: {fileID: 0}
       shaderSourceIndex: 16
+    - type: 805306368
+      buffers:
+      - nameId: attributeBuffer
+        index: 2
+      temporaryBuffers:
+      - mapping:
+          nameId: elementToVFXBuffer
+          index: 6
+        pastFrameIndex: 0
+        perCameraBuffer: 1
+      values:
+      - nameId: uniform_b
+        index: 5
+      - nameId: currentFrameIndex
+        index: 33
+      - nameId: mainTexture
+        index: 50
+      params:
+      - nameId: currentFrameIndex
+        index: 33
+      processor: {fileID: 0}
+      shaderSourceIndex: 17
     - type: 1073741826
       buffers:
       - nameId: attributeBuffer
@@ -6162,13 +6338,22 @@ VisualEffectResource:
       buffers:
       - nameId: attributeBuffer
         index: 2
-      temporaryBuffers: []
+      temporaryBuffers:
+      - mapping:
+          nameId: elementToVFXBufferPrevious
+          index: 6
+        pastFrameIndex: 1
+        perCameraBuffer: 1
       values:
       - nameId: uniform_b
         index: 5
+      - nameId: currentFrameIndex
+        index: 33
       - nameId: mainTexture
         index: 50
       params:
+      - nameId: currentFrameIndex
+        index: 33
       - nameId: sortPriority
         index: 0
       processor: {fileID: 0}
@@ -9611,7 +9796,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614826}
   - {fileID: 8926484042661614827}
   m_OutputSlots: []
-  m_Label: 
+  m_Label: Additive_Mesh_A
   m_Data: {fileID: 8926484042661614645}
   m_InputFlowSlot:
   - link:
@@ -16764,13 +16949,14 @@ MonoBehaviour:
   - {fileID: 8926484042661615246}
   - {fileID: 8926484042661615251}
   - {fileID: 8926484042661615253}
+  - {fileID: 8926484042661615258}
   m_UIPosition: {x: 5688, y: 614}
   m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_InputSlots:
   - {fileID: 8926484042661615238}
   m_OutputSlots: []
-  m_Label: 
+  m_Label: Additive_Quad
   m_Data: {fileID: 8926484042661614863}
   m_InputFlowSlot:
   - link:
@@ -16789,7 +16975,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 0
+  generateMotionVectors: 1
   useGeometryShader: 0
 --- !u!114 &8926484042661615238
 MonoBehaviour:
@@ -17375,6 +17561,66 @@ MonoBehaviour:
     m_Space: 2147483647
   m_Property:
     name: z
+    m_serializedType:
+      m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+    attributes: []
+  m_Direction: 0
+  m_LinkedSlots: []
+--- !u!114 &8926484042661615258
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a971fa2e110a0ac42ac1d8dae408704b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Parent: {fileID: 8926484042661615237}
+  m_Children: []
+  m_UIPosition: {x: 0, y: 0}
+  m_UICollapsed: 0
+  m_UISuperCollapsed: 0
+  m_InputSlots:
+  - {fileID: 8926484042661615259}
+  m_OutputSlots: []
+  m_Disabled: 0
+  attribute: alpha
+  Composition: 0
+  Source: 0
+  Random: 0
+  channels: 6
+--- !u!114 &8926484042661615259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f780aa281814f9842a7c076d436932e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Parent: {fileID: 0}
+  m_Children: []
+  m_UIPosition: {x: 0, y: 0}
+  m_UICollapsed: 1
+  m_UISuperCollapsed: 0
+  m_MasterSlot: {fileID: 8926484042661615259}
+  m_MasterData:
+    m_Owner: {fileID: 8926484042661615258}
+    m_Value:
+      m_Type:
+        m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
+          PublicKeyToken=b77a5c561934e089
+      m_SerializableObject: 1
+    m_Space: 2147483647
+  m_Property:
+    name: Alpha
     m_serializedType:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089

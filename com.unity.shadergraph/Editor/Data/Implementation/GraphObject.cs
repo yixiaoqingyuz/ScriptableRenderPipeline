@@ -66,7 +66,6 @@ namespace UnityEditor.Graphing
 
         public void OnAfterDeserialize()
         {
-            Debug.Log($"{nameof(OnAfterDeserialize)}");
             if (graph == null)
             {
                 graph = DeserializeGraph();

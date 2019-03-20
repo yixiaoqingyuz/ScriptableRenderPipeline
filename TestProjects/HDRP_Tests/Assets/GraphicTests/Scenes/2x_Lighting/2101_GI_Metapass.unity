@@ -96,7 +96,7 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaAO: 1
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
-  m_LightingDataAsset: {fileID: 112000004, guid: 14f6d0dce04bf12478f65e281efc9d99,
+  m_LightingDataAsset: {fileID: 112000004, guid: d713c6bd4fe07ad4ea3c7d0d129a997c,
     type: 2}
   m_UseShadowmask: 0
 --- !u!196 &4
@@ -2663,21 +2663,6 @@ PrefabInstance:
       propertyPath: near clip plane
       value: 120
       objectReference: {fileID: 0}
-    - target: {fileID: 114482499083377642, guid: c07ace9ab142ca9469fa377877c2f1e7,
-        type: 3}
-      propertyPath: backgroundColorHDR.r
-      value: 0.21223079
-      objectReference: {fileID: 0}
-    - target: {fileID: 114482499083377642, guid: c07ace9ab142ca9469fa377877c2f1e7,
-        type: 3}
-      propertyPath: backgroundColorHDR.g
-      value: 0.21223079
-      objectReference: {fileID: 0}
-    - target: {fileID: 114482499083377642, guid: c07ace9ab142ca9469fa377877c2f1e7,
-        type: 3}
-      propertyPath: backgroundColorHDR.b
-      value: 0.21223079
-      objectReference: {fileID: 0}
     - target: {fileID: 114995348509370400, guid: c07ace9ab142ca9469fa377877c2f1e7,
         type: 3}
       propertyPath: ImageComparisonSettings.TargetWidth
@@ -2710,6 +2695,21 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 11400000, guid: cc7b7e628a645144db38289e55e360a8,
         type: 2}
+    - target: {fileID: 114482499083377642, guid: c07ace9ab142ca9469fa377877c2f1e7,
+        type: 3}
+      propertyPath: backgroundColorHDR.r
+      value: 0.21223079
+      objectReference: {fileID: 0}
+    - target: {fileID: 114482499083377642, guid: c07ace9ab142ca9469fa377877c2f1e7,
+        type: 3}
+      propertyPath: backgroundColorHDR.g
+      value: 0.21223079
+      objectReference: {fileID: 0}
+    - target: {fileID: 114482499083377642, guid: c07ace9ab142ca9469fa377877c2f1e7,
+        type: 3}
+      propertyPath: backgroundColorHDR.b
+      value: 0.21223079
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c07ace9ab142ca9469fa377877c2f1e7, type: 3}
 --- !u!20 &749245063 stripped

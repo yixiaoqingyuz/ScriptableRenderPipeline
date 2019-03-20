@@ -97,7 +97,7 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaAO: 1
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
-  m_LightingDataAsset: {fileID: 112000004, guid: 0894336a8ba3230429c15ad24eee8182,
+  m_LightingDataAsset: {fileID: 112000004, guid: 48f157fcae80d34449fd5bd499f47fb7,
     type: 2}
   m_UseShadowmask: 0
 --- !u!196 &4
@@ -395,10 +395,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: dcaf425d0dc18f741874ced23c5027b1, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: 403f4beb0e3252a449a37d846480e8ef, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -415,7 +415,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -432,9 +432,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -451,7 +451,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -468,7 +468,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -1178,10 +1178,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: 226d344a848aa234d999c7d026d39d88, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: d248cf46f6da3374dbff78787e53d9c3, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -1198,7 +1198,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -1215,9 +1215,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -1234,7 +1234,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -1251,7 +1251,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -1960,10 +1960,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: 7966e469a30016c41a20983d1f57ae2a, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: 254f081f689f9384da6e049a5e23c5c8, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -1980,7 +1980,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -1997,9 +1997,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -2016,7 +2016,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -2033,7 +2033,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -2412,10 +2412,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: 321a5f0220c6a0641adebc1e1e61bc57, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: 224fd9c48b42be64592153c6960a51f6, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -2432,7 +2432,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -2449,9 +2449,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -2468,7 +2468,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -2485,7 +2485,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -2864,10 +2864,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: 48893adfacbefc549bae8a979bc2e1fe, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: dc79e979d420d2c42b9002285db8aa6a, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -2884,7 +2884,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -2901,9 +2901,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -2920,7 +2920,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -2937,7 +2937,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -3316,10 +3316,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: b806a4aac65063e4783d9244685ca4b2, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: ddd9679a9a3168b4c928d65c10573ed9, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -3336,7 +3336,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -3353,9 +3353,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -3372,7 +3372,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -3389,7 +3389,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -3860,10 +3860,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: 2867bd8385b47f146baf3e8670bf2ae5, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: 679f2d9df5a5aa44988a4e493c81e012, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -3880,7 +3880,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -3897,9 +3897,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -3916,7 +3916,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -3933,7 +3933,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -4124,16 +4124,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 114733060649624252, guid: c07ace9ab142ca9469fa377877c2f1e7,
-        type: 3}
-      propertyPath: width
-      value: 853
-      objectReference: {fileID: 0}
-    - target: {fileID: 114733060649624252, guid: c07ace9ab142ca9469fa377877c2f1e7,
-        type: 3}
-      propertyPath: height
-      value: 480
-      objectReference: {fileID: 0}
     - target: {fileID: 4209882255362944, guid: c07ace9ab142ca9469fa377877c2f1e7, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -4171,16 +4161,6 @@ PrefabInstance:
       propertyPath: far clip plane
       value: 15
       objectReference: {fileID: 0}
-    - target: {fileID: 114270329781043846, guid: c07ace9ab142ca9469fa377877c2f1e7,
-        type: 3}
-      propertyPath: width
-      value: 853
-      objectReference: {fileID: 0}
-    - target: {fileID: 114270329781043846, guid: c07ace9ab142ca9469fa377877c2f1e7,
-        type: 3}
-      propertyPath: height
-      value: 480
-      objectReference: {fileID: 0}
     - target: {fileID: 114995348509370400, guid: c07ace9ab142ca9469fa377877c2f1e7,
         type: 3}
       propertyPath: ImageComparisonSettings.AverageCorrectnessThreshold
@@ -4200,6 +4180,26 @@ PrefabInstance:
         type: 3}
       propertyPath: waitFrames
       value: 120
+      objectReference: {fileID: 0}
+    - target: {fileID: 114270329781043846, guid: c07ace9ab142ca9469fa377877c2f1e7,
+        type: 3}
+      propertyPath: width
+      value: 853
+      objectReference: {fileID: 0}
+    - target: {fileID: 114270329781043846, guid: c07ace9ab142ca9469fa377877c2f1e7,
+        type: 3}
+      propertyPath: height
+      value: 480
+      objectReference: {fileID: 0}
+    - target: {fileID: 114733060649624252, guid: c07ace9ab142ca9469fa377877c2f1e7,
+        type: 3}
+      propertyPath: width
+      value: 853
+      objectReference: {fileID: 0}
+    - target: {fileID: 114733060649624252, guid: c07ace9ab142ca9469fa377877c2f1e7,
+        type: 3}
+      propertyPath: height
+      value: 480
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c07ace9ab142ca9469fa377877c2f1e7, type: 3}
@@ -4398,10 +4398,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: 31946139669f60b49bc0aa86e90ef440, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: 9295d4db1937a1d40896835c04f11fbb, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -4418,7 +4418,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -4435,9 +4435,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -4454,7 +4454,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -4471,7 +4471,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -5107,10 +5107,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: 752bd4308a129d04c8cafa5f9d72c76b, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: 3a740a0fb56e9a147bad30fed13bb2c9, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -5127,7 +5127,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -5144,9 +5144,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -5163,7 +5163,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -5180,7 +5180,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -5559,10 +5559,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: abad5247540083b41b44bf10f833b504, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: c123982c3035d284a8a0a7be35b0993d, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -5579,7 +5579,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -5596,9 +5596,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -5615,7 +5615,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -5632,7 +5632,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -6259,10 +6259,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: 3f373fdc8b0245a4bbfa711626782e92, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: cb028e99347f322449e19dbd71cda7c8, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -6279,7 +6279,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -6296,9 +6296,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -6315,7 +6315,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -6332,7 +6332,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -6711,10 +6711,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: 3a981dda6114eed42b7f76eefdea79f7, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: 2f6963e26ce1cf64281c9cfba1f2e6eb, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -6731,7 +6731,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -6748,9 +6748,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -6767,7 +6767,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -6784,7 +6784,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -7241,10 +7241,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: d65e9681a8dedea49897cff49349a881, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: 3dd0e7d432bec7444943effcf3b22db6, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -7261,7 +7261,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -7278,9 +7278,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -7297,7 +7297,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -7314,7 +7314,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -7668,8 +7668,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 4
-  m_Version: 4
+  version: 3
+  m_Version: 3
   directionalIntensity: 3.1415927
   punctualIntensity: 600
   areaIntensity: 200
@@ -7686,7 +7686,7 @@ MonoBehaviour:
   affectSpecular: 1
   nonLightmappedOnly: 0
   lightTypeExtent: 1
-  m_SpotLightShape: 0
+  spotLightShape: 0
   shapeWidth: 3
   shapeHeight: 3
   aspectRatio: 1
@@ -7700,11 +7700,6 @@ MonoBehaviour:
   displayLightIntensity: 200
   displayAreaLightEmissiveMesh: 0
   areaLightCookie: {fileID: 0}
-  areaLightShadowCone: 120
-  evsmExponent: 15
-  evsmLightLeakBias: 0
-  evsmVarianceBias: 0.00001
-  evsmBlurPasses: 0
   lightLayers: 1
   shadowNearPlane: 0.2
   shadowSoftness: 0.5
@@ -7770,8 +7765,8 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 10}
-  m_UseBoundingSphereOverride: 1
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &1331608287
@@ -8217,10 +8212,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: cdf6d6fa55607784b83c760827b601d1, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: 7e47d1d88eeeb264084a36baac92753a, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -8237,7 +8232,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -8254,9 +8249,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -8273,7 +8268,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -8290,7 +8285,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -8669,10 +8664,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: 4d476952d5bd1e742826294e02602f75, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: 4501d39750dd6fe4583362ba7dd1ec0a, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -8689,7 +8684,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -8706,9 +8701,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -8725,7 +8720,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -8742,7 +8737,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -9121,10 +9116,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: 7ecc5a94a07ef014384ea22f32973bf4, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: 3a56b24e846e57745a7a1ea239c25446, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -9141,7 +9136,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -9158,9 +9153,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -9177,7 +9172,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -9194,7 +9189,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:
@@ -9853,10 +9848,10 @@ MonoBehaviour:
     camera:
       camera: 0
   m_ProxyVolume: {fileID: 0}
-  m_BakedTexture: {fileID: 8900000, guid: f3916a5b70500b94fa3759c1b2bde3dd, type: 3}
+  m_BakedTexture: {fileID: 8900000, guid: ff9d90e09d7e48e409142690bd6ba1be, type: 3}
   m_CustomTexture: {fileID: 0}
   m_BakedRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -9873,7 +9868,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -9890,9 +9885,9 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_CustomRenderData:
-    m_WorldToCameraRHS:
+    worldToCameraRHS:
       e00: 0
       e01: 0
       e02: 0
@@ -9909,7 +9904,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_ProjectionMatrix:
+    projectionMatrix:
       e00: 0
       e01: 0
       e02: 0
@@ -9926,7 +9921,7 @@ MonoBehaviour:
       e31: 0
       e32: 0
       e33: 0
-    m_CapturePosition: {x: 0, y: 0, z: 0}
+    capturePosition: {x: 0, y: 0, z: 0}
   m_HDProbeVersion: 3
   m_ObsoleteInfiniteProjection: 1
   m_ObsoleteInfluenceVolume:

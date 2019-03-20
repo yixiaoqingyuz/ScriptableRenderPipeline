@@ -148,7 +148,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         ShaderTagId[] m_TransparentDepthPrepassNames = { HDShaderPassNames.s_TransparentDepthPrepassName };
         ShaderTagId[] m_TransparentDepthPostpassNames = { HDShaderPassNames.s_TransparentDepthPostpassName };
         ShaderTagId[] m_ForwardErrorPassNames = { HDShaderPassNames.s_AlwaysName, HDShaderPassNames.s_ForwardBaseName, HDShaderPassNames.s_DeferredName, HDShaderPassNames.s_PrepassBaseName, HDShaderPassNames.s_VertexName, HDShaderPassNames.s_VertexLMRGBMName, HDShaderPassNames.s_VertexLMName };
-        ShaderTagId[] m_SinglePassName = new ShaderTagId[1];
+        static ShaderTagId[] m_SinglePassName = new ShaderTagId[1];
 
         // Stencil usage in HDRenderPipeline.
         // Currently we use only 2 bits to identify the kind of lighting that is expected from the render pipeline
@@ -1557,7 +1557,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             if (m_UseRenderGraph)
             {
-                ExecuteWithRenderGraph();
+                ExecuteWithRenderGraph(renderRequest, renderContext, cmd, densityVolumes);
                 return;
             }
 
@@ -2322,7 +2322,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 #endif
         }
 
-        void RenderOpaqueRenderList(CullingResults cull,
+        static void RenderOpaqueRenderList(CullingResults cull,
             HDCamera hdCamera,
             ScriptableRenderContext renderContext,
             CommandBuffer cmd,
@@ -2336,7 +2336,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             RenderOpaqueRenderList(cull, hdCamera, renderContext, cmd, m_SinglePassName, rendererConfiguration, inRenderQueueRange, stateBlock, overrideMaterial);
         }
 
-        void RenderOpaqueRenderList(CullingResults cull,
+        static void RenderOpaqueRenderList(CullingResults cull,
             HDCamera hdCamera,
             ScriptableRenderContext renderContext,
             CommandBuffer cmd,

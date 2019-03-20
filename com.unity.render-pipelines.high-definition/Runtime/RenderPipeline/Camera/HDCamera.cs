@@ -30,6 +30,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public Vector4   screenParams;
         public int       volumeLayerMask;
         public Transform volumeAnchor;
+        // This viewport size is scaled by dynamic resolution and is positioned at (0, 0) (HDRP always renders internally at (0,0))
+        public Rect      renderingViewport;
         // This will have the correct viewport position and the size will be full resolution (ie : not taking dynamic rez into account)
         public Rect      finalViewport;
 
@@ -454,6 +456,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             screenParams = new Vector4(screenSize.x, screenSize.y, 1 + screenSize.z, 1 + screenSize.w);
 
             finalViewport = new Rect(camera.pixelRect.x, camera.pixelRect.y, nonScaledSize.x, nonScaledSize.y);
+            renderingViewport = new Rect(0.0f, 0.0f, m_ActualWidth, m_ActualHeight);
 
             if (vlSys != null)
             {

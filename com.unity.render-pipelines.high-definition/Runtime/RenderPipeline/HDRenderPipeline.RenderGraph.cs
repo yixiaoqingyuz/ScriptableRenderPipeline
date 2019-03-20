@@ -3,25 +3,41 @@ using UnityEngine.Rendering;
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
+    using TextureDesc = RenderGraphResourceRegistry.TextureDesc;
+
     public partial class HDRenderPipeline
     {
-
-        //bool msaa = hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA);
-        //RenderGraphMutableResource depthBuffer = m_RenderGraph.ImportTexture(m_SharedRTManager.GetDepthStencilBuffer(msaa));
-        //RenderGraphMutableResource normalBuffer = m_RenderGraph.ImportTexture(m_SharedRTManager.GetNormalBuffer(msaa));
-        //RenderGraphMutableResource depthAsColorMSAABuffer = msaa ? m_RenderGraph.ImportTexture(m_SharedRTManager.GetDepthTexture(true)) : new RenderGraphMutableResource();
-
-
-        void ExecuteWithRenderGraph()
+        void ExecuteWithRenderGraph(RenderRequest renderRequest, ScriptableRenderContext renderContext, CommandBuffer cmd, DensityVolumeList densityVolumes)
         {
+            var hdCamera = renderRequest.hdCamera;
+            var camera = hdCamera.camera;
+            var cullingResults = renderRequest.cullingResults.cullingResults;
+            //var target = renderRequest.target;
 
+            bool msaa = hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA);
+            bool clearNormalBuffer = m_CurrentDebugDisplaySettings.IsDebugDisplayEnabled();
+            bool clearColorBuffer = NeedClearColorBuffer(hdCamera);
+
+            RenderGraphMutableResource depthBuffer = m_RenderGraph.CreateTexture(new TextureDesc(Vector2.one) { depthBufferBits = DepthBits.Depth32, clearBuffer = true,  bindTextureMS = msaa, enableMSAA = msaa, xrInstancing = true, useDynamicScale = true, name = "CameraDepthStencil" });
+            RenderGraphMutableResource normalBuffer = m_RenderGraph.CreateTexture(new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R8G8B8A8_UNorm, clearBuffer = clearNormalBuffer, clearColor = Color.black, bindTextureMS = msaa, enableMSAA = msaa, xrInstancing = true, useDynamicScale = true, enableRandomWrite = !msaa, name = "NormalBuffer" });
+            RenderGraphMutableResource depthAsColorMSAABuffer = msaa ? m_RenderGraph.CreateTexture(new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R32_SFloat, clearBuffer = true, clearColor = Color.black, bindTextureMS = true, enableMSAA = true, xrInstancing = true, useDynamicScale = true, name = "DepthAsColorMSAA" }) : new RenderGraphMutableResource();
+
+            StartStereoRendering(cmd, renderContext, camera);
+            RenderDepthPrepass(m_RenderGraph, cullingResults, hdCamera, depthBuffer, normalBuffer, depthAsColorMSAABuffer);
+
+            RenderGraph.RenderGraphGlobalParams renderGraphParams = new RenderGraph.RenderGraphGlobalParams();
+            renderGraphParams.renderingViewport = hdCamera.renderingViewport;
+
+            m_RenderGraph.Execute(renderContext, cmd, renderGraphParams);
         }
 
         class PrepassData : RenderGraph.RenderPassData
         {
             public HDCamera hdCamera;
+            public Rect renderingViewport;
             public CullingResults cullResult;
             public bool excludeMotion;
+            public bool msaaEnabled;
             public ShaderTagId[] firstPassNames;
             public RenderQueueRange firstPassRenderQueue;
             public ShaderTagId[] secondPassNames;
@@ -73,8 +89,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         using (var builder = renderGraph.AddRenderPass<PrepassData>("Depth Prepass (forward)", out var passData, CustomSamplerId.DepthPrepass.GetSampler()))
                         {
                             passData.hdCamera = hdCamera;
+                            passData.renderingViewport = hdCamera.renderingViewport;
                             passData.cullResult = cull;
                             passData.excludeMotion = objectMotionEnabled;
+                            passData.msaaEnabled = msaa;
                             passData.firstPassNames = m_DepthOnlyAndDepthForwardOnlyPassNames;
                             passData.firstPassRenderQueue = HDRenderQueue.k_RenderQueue_AllOpaque;
 
@@ -84,22 +102,22 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                                 passData.depthAsColorBuffer = builder.WriteTexture(depthAsColorMSAA);
 
                             builder.SetRenderFunc(
-                            (RenderGraph.RenderPassData data, RenderGraphResourceRegistry resources, RenderGraphTempPool tempPool, CommandBuffer cmd, ScriptableRenderContext renderContext) =>
+                            (RenderGraph.RenderPassData data, RenderGraph.RenderGraphGlobalParams globalParams, RenderGraph.RenderGraphContext renderGraphContext) =>
                             {
                                 PrepassData prepassData = (PrepassData)data;
-                                bool msaaEnabled = prepassData.hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA);
 
-                                var mrt = RenderGraphUtils.GetMRTArray(msaaEnabled ? 2 : 1);
-                                mrt[0] = resources.GetTexture(prepassData.normalBuffer);
-                                if (msaaEnabled)
-                                    mrt[1] = resources.GetTexture(prepassData.depthAsColorBuffer);
+                                var mrt = RenderGraphUtils.GetMRTArray(prepassData.msaaEnabled ? 2 : 1);
+                                mrt[0] = renderGraphContext.resources.GetTexture(prepassData.normalBuffer);
+                                if (prepassData.msaaEnabled)
+                                    mrt[1] = renderGraphContext.resources.GetTexture(prepassData.depthAsColorBuffer);
 
-                                HDUtils.SetRenderTarget(cmd, prepassData.hdCamera, mrt, resources.GetTexture(prepassData.depthBuffer));
-                                XRUtils.DrawOcclusionMesh(cmd, prepassData.hdCamera.camera, prepassData.hdCamera.camera.stereoEnabled);
+                                HDUtils.SetRenderTarget(renderGraphContext.cmd, prepassData.renderingViewport, mrt, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
+                                // XRTODO: wait for XR SDK integration and implement custom version in HDUtils with dynamic resolution support
+                                //XRUtils.DrawOcclusionMesh(cmd, hdCamera.camera, hdCamera.camera.stereoEnabled);
 
                                 // Full forward: Output normal buffer for both forward and forwardOnly
                                 // Exclude object that render velocity (if motion vector are enabled)
-                                RenderOpaqueRenderList(prepassData.cullResult, prepassData.hdCamera, renderContext, cmd, prepassData.firstPassNames, 0, prepassData.firstPassRenderQueue, excludeMotionVector: prepassData.excludeMotion);
+                                RenderOpaqueRenderList(prepassData.cullResult, prepassData.hdCamera, renderGraphContext.renderContext, renderGraphContext.cmd, prepassData.firstPassNames, 0, prepassData.firstPassRenderQueue, excludeMotionVector: prepassData.excludeMotion);
                             });
                         }
                     }
@@ -115,8 +133,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         using (var builder = renderGraph.AddRenderPass<PrepassData>(passName, out var passData, CustomSamplerId.DepthPrepass.GetSampler()))
                         {
                             passData.hdCamera = hdCamera;
+                            passData.renderingViewport = hdCamera.renderingViewport;
                             passData.cullResult = cull;
                             passData.excludeMotion = excludeMotion;
+                            passData.msaaEnabled = msaa;
                             passData.firstPassNames = m_DepthOnlyPassNames;
                             passData.firstPassRenderQueue = fullDeferredPrepass ? HDRenderQueue.k_RenderQueue_AllOpaque : partialPrepassRenderQueueRange;
                             passData.secondPassNames = m_DepthForwardOnlyPassNames;
@@ -128,24 +148,24 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                                 passData.depthAsColorBuffer = builder.WriteTexture(depthAsColorMSAA);
 
                             builder.SetRenderFunc(
-                            (RenderGraph.RenderPassData data, RenderGraphResourceRegistry resources, RenderGraphTempPool tempPool, CommandBuffer cmd, ScriptableRenderContext renderContext) =>
+                            (RenderGraph.RenderPassData data, RenderGraph.RenderGraphGlobalParams globalParams, RenderGraph.RenderGraphContext renderGraphContext) =>
                             {
                                 PrepassData prepassData = (PrepassData)data;
-                                bool msaaEnabled = prepassData.hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA);
 
                                 // First deferred material
-                                HDUtils.SetRenderTarget(cmd, prepassData.hdCamera, resources.GetTexture(prepassData.depthBuffer));
-                                XRUtils.DrawOcclusionMesh(cmd, prepassData.hdCamera.camera, prepassData.hdCamera.camera.stereoEnabled);
-                                RenderOpaqueRenderList(prepassData.cullResult, prepassData.hdCamera, renderContext, cmd, prepassData.firstPassNames, 0, prepassData.firstPassRenderQueue, excludeMotionVector: prepassData.excludeMotion);
+                                HDUtils.SetRenderTarget(renderGraphContext.cmd, prepassData.renderingViewport, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
+                                // XRTODO: wait for XR SDK integration and implement custom version in HDUtils with dynamic resolution support
+                                //XRUtils.DrawOcclusionMesh(cmd, hdCamera.camera, hdCamera.camera.stereoEnabled);
+                                RenderOpaqueRenderList(prepassData.cullResult, prepassData.hdCamera, renderGraphContext.renderContext, renderGraphContext.cmd, prepassData.firstPassNames, 0, prepassData.firstPassRenderQueue, excludeMotionVector: prepassData.excludeMotion);
 
                                 // Then forward only material that output normal buffer
-                                var mrt = RenderGraphUtils.GetMRTArray(msaa ? 2 : 1);
-                                mrt[0] = resources.GetTexture(prepassData.normalBuffer);
-                                if (msaa)
-                                    mrt[1] = resources.GetTexture(prepassData.depthAsColorBuffer);
+                                var mrt = RenderGraphUtils.GetMRTArray(prepassData.msaaEnabled ? 2 : 1);
+                                mrt[0] = renderGraphContext.resources.GetTexture(prepassData.normalBuffer);
+                                if (prepassData.msaaEnabled)
+                                    mrt[1] = renderGraphContext.resources.GetTexture(prepassData.depthAsColorBuffer);
 
-                                HDUtils.SetRenderTarget(cmd, prepassData.hdCamera, mrt, resources.GetTexture(prepassData.depthBuffer));
-                                RenderOpaqueRenderList(prepassData.cullResult, prepassData.hdCamera, renderContext, cmd, prepassData.secondPassNames, 0, prepassData.secondPassRenderQueue, excludeMotionVector: prepassData.excludeMotion);
+                                HDUtils.SetRenderTarget(renderGraphContext.cmd, prepassData.renderingViewport, mrt, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
+                                RenderOpaqueRenderList(prepassData.cullResult, prepassData.hdCamera, renderGraphContext.renderContext, renderGraphContext.cmd, prepassData.secondPassNames, 0, prepassData.secondPassRenderQueue, excludeMotionVector: prepassData.excludeMotion);
                             });
                         }
                     }
@@ -164,6 +184,34 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     #endif
 
             return shouldRenderMotionVectorAfterGBuffer;
+        }
+
+        bool NeedClearColorBuffer(HDCamera hdCamera)
+        {
+            if (hdCamera.clearColorMode == HDAdditionalCameraData.ClearColorMode.Color ||
+                // If the luxmeter is enabled, the sky isn't rendered so we clear the background color
+                m_DebugDisplaySettings.data.lightingDebugSettings.debugLightingMode == DebugLightingMode.LuxMeter ||
+                // If we want the sky but the sky don't exist, still clear with background color
+                (hdCamera.clearColorMode == HDAdditionalCameraData.ClearColorMode.Sky && !m_SkyManager.IsVisualSkyValid()) ||
+                // Special handling for Preview we force to clear with background color (i.e black)
+                // Note that the sky use in this case is the last one setup. If there is no scene or game, there is no sky use as reflection in the preview
+                HDUtils.IsRegularPreviewCamera(hdCamera.camera)
+                )
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        Color GetColorBufferClearColor(HDCamera hdCamera)
+        {
+            Color clearColor = hdCamera.backgroundColorHDR;
+            // We set the background color to black when the luxmeter is enabled to avoid picking the sky color
+            if (m_DebugDisplaySettings.data.lightingDebugSettings.debugLightingMode == DebugLightingMode.LuxMeter)
+                clearColor = Color.black;
+
+            return clearColor;
         }
     }
 }

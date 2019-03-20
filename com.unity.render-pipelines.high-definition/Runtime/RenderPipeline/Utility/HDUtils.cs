@@ -93,7 +93,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // Helper to help to display debug info on screen
         static float s_OverlayLineHeight = -1.0f;
         public static void ResetOverlay() => s_OverlayLineHeight = -1.0f;
-        
+
         public static void NextOverlayCoord(ref float x, ref float y, float overlayWidth, float overlayHeight, HDCamera hdCamera)
         {
             x += overlayWidth;
@@ -153,7 +153,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return tanHalfVertFoV * (2.0f / resolutionY) * planeDepth;
         }
 
-        private static void SetViewportAndClear(CommandBuffer cmd, HDCamera camera, RTHandleSystem.RTHandle buffer, ClearFlag clearFlag, Color clearColor)
+        private static void SetViewportAndClear(CommandBuffer cmd, Rect cameraViewport, RTHandleSystem.RTHandle buffer, ClearFlag clearFlag, Color clearColor)
         {
             // Clearing a partial viewport currently does not go through the hardware clear.
             // Instead it goes through a quad rendered with a specific shader.
@@ -166,7 +166,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 #endif
             CoreUtils.ClearRenderTarget(cmd, clearFlag, clearColor);
 #if UNITY_EDITOR
-            SetViewport(cmd, camera, buffer);
+            SetViewport(cmd, cameraViewport, buffer);
 #endif
         }
 
@@ -175,12 +175,21 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public static void SetRenderTarget(CommandBuffer cmd, HDCamera camera, RTHandleSystem.RTHandle buffer, ClearFlag clearFlag, Color clearColor, int miplevel = 0, CubemapFace cubemapFace = CubemapFace.Unknown, int depthSlice = -1)
         {
             cmd.SetRenderTarget(buffer, miplevel, cubemapFace, depthSlice);
-            SetViewportAndClear(cmd, camera, buffer, clearFlag, clearColor);
+            SetViewportAndClear(cmd, camera.renderingViewport, buffer, clearFlag, clearColor);
+        }
+
+        public static void SetRenderTarget(CommandBuffer cmd, Rect cameraViewport, RTHandleSystem.RTHandle buffer, ClearFlag clearFlag, Color clearColor, int miplevel = 0, CubemapFace cubemapFace = CubemapFace.Unknown, int depthSlice = -1)
+        {
+            cmd.SetRenderTarget(buffer, miplevel, cubemapFace, depthSlice);
+            SetViewportAndClear(cmd, cameraViewport, buffer, clearFlag, clearColor);
         }
 
         public static void SetRenderTarget(CommandBuffer cmd, HDCamera camera, RTHandleSystem.RTHandle buffer, ClearFlag clearFlag = ClearFlag.None, int miplevel = 0, CubemapFace cubemapFace = CubemapFace.Unknown, int depthSlice = -1)
             => SetRenderTarget(cmd, camera, buffer, clearFlag, Color.clear, miplevel, cubemapFace, depthSlice);
-        
+
+        public static void SetRenderTarget(CommandBuffer cmd, Rect cameraViewport, RTHandleSystem.RTHandle buffer, ClearFlag clearFlag = ClearFlag.None, int miplevel = 0, CubemapFace cubemapFace = CubemapFace.Unknown, int depthSlice = -1)
+            => SetRenderTarget(cmd, cameraViewport, buffer, clearFlag, Color.clear, miplevel, cubemapFace, depthSlice);
+
         public static void SetRenderTarget(CommandBuffer cmd, HDCamera camera, RTHandleSystem.RTHandle colorBuffer, RTHandleSystem.RTHandle depthBuffer, int miplevel = 0, CubemapFace cubemapFace = CubemapFace.Unknown, int depthSlice = -1)
         {
             int cw = colorBuffer.rt.width;
@@ -215,25 +224,30 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             Debug.Assert(cw == dw && ch == dh);
 
             CoreUtils.SetRenderTarget(cmd, colorBuffer, depthBuffer, miplevel, cubemapFace, depthSlice);
-            SetViewportAndClear(cmd, camera, colorBuffer, clearFlag, clearColor);
+            SetViewportAndClear(cmd, camera.renderingViewport, colorBuffer, clearFlag, clearColor);
+        }
+
+        public static void SetRenderTarget(CommandBuffer cmd, Rect cameraViewport, RenderTargetIdentifier[] colorBuffers, RTHandleSystem.RTHandle depthBuffer)
+        {
+            CoreUtils.SetRenderTarget(cmd, colorBuffers, depthBuffer, ClearFlag.None, Color.clear);
+            SetViewport(cmd, cameraViewport, depthBuffer);
         }
 
         public static void SetRenderTarget(CommandBuffer cmd, HDCamera camera, RenderTargetIdentifier[] colorBuffers, RTHandleSystem.RTHandle depthBuffer)
         {
-            CoreUtils.SetRenderTarget(cmd, colorBuffers, depthBuffer, ClearFlag.None, Color.clear);
-            SetViewport(cmd, camera, depthBuffer);
+            SetRenderTarget(cmd, camera.renderingViewport, colorBuffers, depthBuffer);
         }
 
         public static void SetRenderTarget(CommandBuffer cmd, HDCamera camera, RenderTargetIdentifier[] colorBuffers, RTHandleSystem.RTHandle depthBuffer, ClearFlag clearFlag = ClearFlag.None)
         {
             CoreUtils.SetRenderTarget(cmd, colorBuffers, depthBuffer); // Don't clear here, viewport needs to be set before we do.
-            SetViewportAndClear(cmd, camera, depthBuffer, clearFlag, Color.clear);
+            SetViewportAndClear(cmd, camera.renderingViewport, depthBuffer, clearFlag, Color.clear);
         }
 
         public static void SetRenderTarget(CommandBuffer cmd, HDCamera camera, RenderTargetIdentifier[] colorBuffers, RTHandleSystem.RTHandle depthBuffer, ClearFlag clearFlag, Color clearColor)
         {
             cmd.SetRenderTarget(colorBuffers, depthBuffer);
-            SetViewportAndClear(cmd, camera, depthBuffer, clearFlag, clearColor);
+            SetViewportAndClear(cmd, camera.renderingViewport, depthBuffer, clearFlag, clearColor);
         }
 
         // Scaling viewport is done for auto-scaling render targets.
@@ -241,12 +255,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // When we render using a camera whose viewport is smaller than the RTHandles reference size (and thus smaller than the RT actual size), we need to set it explicitly (otherwise, native code will set the viewport at the size of the RT)
         // For auto-scaled RTs (like for example a half-resolution RT), we need to scale this viewport accordingly.
         // For non scaled RTs we just do nothing, the native code will set the viewport at the size of the RT anyway.
-        public static void SetViewport(CommandBuffer cmd, HDCamera camera, RTHandleSystem.RTHandle target)
+        public static void SetViewport(CommandBuffer cmd, Rect cameraViewport, RTHandleSystem.RTHandle target)
         {
             if (target.useScaling)
             {
-                Debug.Assert(camera != null, "Missing HDCamera when setting up Render Target with auto-scale and Viewport.");
-                Vector2Int scaledViewportSize = target.GetScaledSize(new Vector2Int(camera.actualWidth, camera.actualHeight));
+                Vector2Int scaledViewportSize = target.GetScaledSize(new Vector2Int((int)cameraViewport.width, (int)cameraViewport.height));
                 cmd.SetViewport(new Rect(0.0f, 0.0f, scaledViewportSize.x, scaledViewportSize.y));
             }
         }
@@ -368,7 +381,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public static string GetCorePath()
             => "Packages/com.unity.render-pipelines.core/";
-        
+
         public struct PackedMipChainInfo
         {
             public Vector2Int textureSize;
@@ -594,7 +607,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             // In order to simplify writing them, we don't Y-flip in the post process pass but add a final blit at the end of the frame.
             return !Debug.isDebugBuild;
         }
-        
+
         // These two convertion functions are used to store GUID assets inside materials,
         // a unity asset GUID is exactly 16 bytes long which is also a Vector4 so by adding a
         // Vector4 field inside the shader we can store references of an asset inside the material
@@ -606,7 +619,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             for (int i = 0; i < 16; i++)
                 bytes[i] = byte.Parse(guid.Substring(i * 2, 2), System.Globalization.NumberStyles.HexNumber);
-            
+
             unsafe
             {
                 fixed (byte * b = bytes)

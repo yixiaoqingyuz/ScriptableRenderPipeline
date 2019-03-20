@@ -42,6 +42,11 @@ namespace UnityEngine.Experimental.Rendering
             public RenderTextureMemoryless memoryless;
             public string name;
 
+            // Initial state. Those should not be used in the hash
+            public bool clearBuffer;
+            //public float clearDepthValue;
+            public Color clearColor;
+
             public TextureDesc(int width, int height)
                 : this()
             {
@@ -126,7 +131,7 @@ namespace UnityEngine.Experimental.Rendering
             }
         }
 
-        struct TextureResource
+        internal struct TextureResource
         {
             public TextureDesc  desc;
             public bool         imported;
@@ -227,59 +232,78 @@ namespace UnityEngine.Experimental.Rendering
             return new RenderGraphMutableResource(newHandle, RenderGraphResourceType.Texture);
         }
 
-        internal void UpdateResourceFirstWrite(RenderGraphMutableResource res, int passIndex)
+        // Not sure about this... breaks encapsulation but it allows us to avoid having render graph execution code here
+        // (lastRead/FirstWrite/ClearResource etc)
+        internal ref TextureResource GetResource(RenderGraphResource res)
         {
-            m_TextureResources[res.handle].firstWritePassIndex = Math.Min(passIndex, m_TextureResources[res.handle].firstWritePassIndex);
+            return ref m_TextureResources[res.handle];
         }
 
-        internal void UpdateResourceLastRead(RenderGraphResource res, int passIndex)
+        internal void CreateResourceForPass(RenderGraphResource res)
         {
-            m_TextureResources[res.handle].lastReadPassIndex = Math.Max(passIndex, m_TextureResources[res.handle].lastReadPassIndex);
+            ref var resource = ref m_TextureResources[res.handle];
+            var desc = resource.desc;
+            int hashCode = desc.GetHashCode();
+
+            resource.rt = null;
+            if (!TryGetRenderTarget(hashCode, out resource.rt))
+            {
+                // Note: Name used here will be the one visible in the memory profiler so it means that whatever is the first pass that actually allocate the texture will set the name.
+                // TODO: Find a way to display name by pass.
+                switch (desc.sizeMode)
+                {
+                    case TextureSizeMode.Explicit:
+                        resource.rt = RTHandles.Alloc(desc.width, desc.height, desc.slices, desc.depthBufferBits, desc.colorFormat, desc.filterMode, desc.wrapMode, desc.dimension, desc.enableRandomWrite,
+                        desc.useMipMap, desc.autoGenerateMips, desc.isShadowMap, desc.anisoLevel, desc.mipMapBias, desc.msaaSamples, desc.bindTextureMS, desc.useDynamicScale, desc.xrInstancing, desc.memoryless, desc.name);
+                        break;
+                    case TextureSizeMode.Scale:
+                        resource.rt = RTHandles.Alloc(desc.scale, desc.slices, desc.depthBufferBits, desc.colorFormat, desc.filterMode, desc.wrapMode, desc.dimension, desc.enableRandomWrite,
+                        desc.useMipMap, desc.autoGenerateMips, desc.isShadowMap, desc.anisoLevel, desc.mipMapBias, desc.enableMSAA, desc.bindTextureMS, desc.useDynamicScale, desc.xrInstancing, desc.memoryless, desc.name);
+                        break;
+                    case TextureSizeMode.Functor:
+                        resource.rt = RTHandles.Alloc(desc.func, desc.slices, desc.depthBufferBits, desc.colorFormat, desc.filterMode, desc.wrapMode, desc.dimension, desc.enableRandomWrite,
+                        desc.useMipMap, desc.autoGenerateMips, desc.isShadowMap, desc.anisoLevel, desc.mipMapBias, desc.enableMSAA, desc.bindTextureMS, desc.useDynamicScale, desc.xrInstancing, desc.memoryless, desc.name);
+                        break;
+                }
+            }
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            if (hashCode != -1)
+            {
+                m_AllocatedTextures.Add((hashCode, resource.rt));
+            }
+#endif
+
+            resource.cachedHash = hashCode;
         }
 
-        internal void CreateResourcesForPass(int passIndex, List<RenderGraphMutableResource> resourceWriteList)
+        internal void ReleaseResourceForPass(RenderGraphResource res)
         {
-            foreach (var resource in resourceWriteList)
-            {
-                ref var resourceDesc = ref m_TextureResources[resource.handle];
-                if (!resourceDesc.imported && resourceDesc.firstWritePassIndex == passIndex)
-                {
-                    resourceDesc.cachedHash = CreateTextureResource(resourceDesc.desc, out resourceDesc.rt);
-                }
-            }
+            ref var resource = ref m_TextureResources[res.handle];
+            ReleaseTextureResource(resource.cachedHash, resource.rt);
+            resource.cachedHash = -1;
+            resource.rt = null;
         }
 
-        internal void ReleaseResourcesForPass(int passIndex, List<RenderGraphResource> resourceReadList, List<RenderGraphMutableResource> resourceWriteList)
+        void ReleaseTextureResource(int hash, RTHandle rt)
         {
-            foreach (var resource in resourceReadList)
+            if (!m_TexturePool.TryGetValue(hash, out var stack))
             {
-                ref var resourceDesc = ref m_TextureResources[resource.handle];
-                if (!resourceDesc.imported && resourceDesc.lastReadPassIndex == passIndex)
-                {
-                    ReleaseTextureResource(resourceDesc.cachedHash, resourceDesc.rt);
-                    resourceDesc.rt = null;
-                    resourceDesc.cachedHash = -1;
-                }
+                stack = new Stack<RTHandle>();
+                m_TexturePool.Add(hash, stack);
             }
 
-            // If a resource was created for only a single pass, we don't want users to have to declare explicitly the read operation.
-            // So here we test resources written, if they have the initial lastReadPassIndex value of zero, it means that no subsequent pass will read it so we can release it
-            foreach (var resource in resourceWriteList)
-            {
-                ref var resourceDesc = ref m_TextureResources[resource.handle];
-                if (!resourceDesc.imported && resourceDesc.lastReadPassIndex == 0)
-                {
-                    ReleaseTextureResource(resourceDesc.cachedHash, resourceDesc.rt);
-                    resourceDesc.rt = null;
-                    resourceDesc.cachedHash = -1;
-                }
-            }
+            stack.Push(rt);
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            m_AllocatedTextures.Remove((hash, rt));
+#endif
         }
 
         void ValidateTextureDesc(in TextureDesc desc)
         {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-            if (desc.colorFormat == GraphicsFormat.None)
+            if (desc.colorFormat == GraphicsFormat.None && desc.depthBufferBits == DepthBits.None)
             {
                 throw new ArgumentException("Texture was created with an invalid color format.");
             }
@@ -307,57 +331,6 @@ namespace UnityEngine.Experimental.Rendering
                 if (desc.msaaSamples != MSAASamples.None)
                     throw new ArgumentException("msaaSamples TextureDesc parameter is not supported for textures using Scale or Functor size mode.");
             }
-#endif
-        }
-
-        int CreateTextureResource(in TextureDesc desc, out RTHandle rt)
-        {
-            int hashCode = desc.GetHashCode();
-
-            rt = null;
-            if (!TryGetRenderTarget(hashCode, out rt))
-            {
-                // Note: Name used here will be the one visible in the memory profiler so it means that whatever is the first pass that actually allocate the texture will set the name.
-                // TODO: Find a way to display name by pass.
-                switch(desc.sizeMode)
-                {
-                    case TextureSizeMode.Explicit:
-                        rt = RTHandles.Alloc(desc.width, desc.height, desc.slices, desc.depthBufferBits, desc.colorFormat, desc.filterMode, desc.wrapMode, desc.dimension, desc.enableRandomWrite,
-                        desc.useMipMap, desc.autoGenerateMips, desc.isShadowMap, desc.anisoLevel, desc.mipMapBias, desc.msaaSamples, desc.bindTextureMS, desc.useDynamicScale, desc.xrInstancing, desc.memoryless, desc.name);
-                        break;
-                    case TextureSizeMode.Scale:
-                        rt = RTHandles.Alloc(desc.scale, desc.slices, desc.depthBufferBits, desc.colorFormat, desc.filterMode, desc.wrapMode, desc.dimension, desc.enableRandomWrite,
-                        desc.useMipMap, desc.autoGenerateMips, desc.isShadowMap, desc.anisoLevel, desc.mipMapBias, desc.enableMSAA, desc.bindTextureMS, desc.useDynamicScale, desc.xrInstancing, desc.memoryless, desc.name);
-                        break;
-                    case TextureSizeMode.Functor:
-                        rt = RTHandles.Alloc(desc.func, desc.slices, desc.depthBufferBits, desc.colorFormat, desc.filterMode, desc.wrapMode, desc.dimension, desc.enableRandomWrite,
-                        desc.useMipMap, desc.autoGenerateMips, desc.isShadowMap, desc.anisoLevel, desc.mipMapBias, desc.enableMSAA, desc.bindTextureMS, desc.useDynamicScale, desc.xrInstancing, desc.memoryless, desc.name);
-                        break;
-                }
-            }
-
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-            if (hashCode != -1)
-            {
-                m_AllocatedTextures.Add((hashCode, rt));
-            }
-#endif
-
-            return hashCode;
-        }
-
-        void ReleaseTextureResource(int hash, RTHandle rt)
-        {
-            if (!m_TexturePool.TryGetValue(hash, out var stack))
-            {
-                stack = new Stack<RTHandle>();
-                m_TexturePool.Add(hash, stack);
-            }
-
-            stack.Push(rt);
-
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-            m_AllocatedTextures.Remove((hash, rt));
 #endif
         }
 

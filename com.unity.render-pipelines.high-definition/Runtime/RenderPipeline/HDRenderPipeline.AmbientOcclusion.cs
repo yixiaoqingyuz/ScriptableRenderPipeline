@@ -190,9 +190,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 CreateTransientResources(builder, renderPassData, renderPassData.msaaEnabled);
 
                 builder.SetRenderFunc(
-                (RenderGraph.RenderPassData data, RenderGraphResourceRegistry resources, RenderGraphTempPool tempPool, CommandBuffer cmd, ScriptableRenderContext renderContext) =>
+                (RenderGraph.RenderPassData data, RenderGraph.RenderGraphGlobalParams globalParams, RenderGraph.RenderGraphContext renderGraphContext) =>
                 {
                     AOPassData passData = (AOPassData)data;
+                    var cmd = renderGraphContext.cmd;
+                    var resources = renderGraphContext.resources;
+                    var tempPool = renderGraphContext.tempPool;
 
                     // Share alloc between all render commands
                     float[] sampleWeightTable = tempPool.GetTempArray<float>(12);
@@ -442,9 +445,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
 
                 builder.SetRenderFunc(
-                (RenderGraph.RenderPassData data, RenderGraphResourceRegistry resources, RenderGraphTempPool tempPool, CommandBuffer cmd, ScriptableRenderContext renderContext) =>
+                (RenderGraph.RenderPassData data, RenderGraph.RenderGraphGlobalParams globalParams, RenderGraph.RenderGraphContext renderGraphContext) =>
                 {
                     AOPostPassData passData = (AOPostPassData)data;
+                    var cmd = renderGraphContext.cmd;
+                    var tempPool = renderGraphContext.tempPool;
+                    var resources = renderGraphContext.resources;
 
                     // MSAA Resolve
                     if (passData.enableMSAA)

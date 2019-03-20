@@ -38,6 +38,9 @@ platforms:
   - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
   - cd com.unity.render-pipelines.high-definition && upm-ci package pack
   - cd com.unity.render-pipelines.high-definition && upm-ci package test --unity-version {{ editor.version }}
+  dependencies:
+  - {{ platform.name }}_{{ editor.version }}_core
+  - {{ platform.name }}_{{ editor.version }}_SG
   artifacts:
     logs.zip:
       paths:
@@ -58,6 +61,8 @@ platforms:
   - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
   - cd com.unity.render-pipelines.lightweight && upm-ci package pack
   - cd com.unity.render-pipelines.lightweight && upm-ci package test --unity-version {{ editor.version }}
+  dependencies:
+  - {{ platform.name }}_{{ editor.version }}_core
   artifacts:
     logs.zip:
       paths:
@@ -78,6 +83,8 @@ platforms:
   - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
   - cd com.unity.shadergraph && upm-ci package pack
   - cd com.unity.shadergraph && upm-ci package test --unity-version {{ editor.version }}
+  dependencies:
+  - {{ platform.name }}_{{ editor.version }}_core
   artifacts:
     logs.zip:
       paths:
@@ -98,6 +105,8 @@ platforms:
   - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
   - cd com.unity.visualeffectgraph && upm-ci package pack
   - cd com.unity.visualeffectgraph && upm-ci package test --unity-version {{ editor.version }}
+  dependencies:
+  - {{ platform.name }}_{{ editor.version }}_core
   artifacts:
     logs.zip:
       paths:

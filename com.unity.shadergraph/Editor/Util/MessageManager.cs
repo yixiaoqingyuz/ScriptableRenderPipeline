@@ -8,7 +8,7 @@ namespace UnityEditor.Graphing.Util
 {
     class MessageManager
     {
-        Dictionary<object, Dictionary<Identifier, List<ShaderMessage>>> m_Messages =
+        protected Dictionary<object, Dictionary<Identifier, List<ShaderMessage>>> m_Messages =
             new Dictionary<object, Dictionary<Identifier, List<ShaderMessage>>>();
 
         Dictionary<Identifier, List<ShaderMessage>> m_Combined = new Dictionary<Identifier, List<ShaderMessage>>();
@@ -52,15 +52,12 @@ namespace UnityEditor.Graphing.Util
             {
                 foreach (var messageList in messageMap.Value)
                 {
-                    List<ShaderMessage> foundList;
-                    if (m_Combined.TryGetValue(messageList.Key, out foundList))
+                    if (!m_Combined.TryGetValue(messageList.Key, out var foundList))
                     {
-                        foundList.AddRange(messageList.Value);
+                        foundList = new List<ShaderMessage>();
+                        m_Combined.Add(messageList.Key, foundList);
                     }
-                    else
-                    {
-                        m_Combined[messageList.Key] = messageList.Value;
-                    }
+                    foundList.AddRange(messageList.Value);
 
                     if (messageList.Value.Count == 0)
                     {

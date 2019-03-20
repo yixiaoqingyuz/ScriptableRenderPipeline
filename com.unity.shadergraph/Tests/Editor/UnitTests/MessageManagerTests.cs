@@ -9,10 +9,18 @@ using UnityEditor.Rendering;
 
 namespace UnityEditor.ShaderGraph.UnitTests
 {
+    class TestMessageManager : MessageManager
+    {
+        public Dictionary<object, Dictionary<Identifier, List<ShaderMessage>>> Messages
+        {
+            get { return m_Messages; }
+        }
+    }
+    
     class MessageManagerTests
     {
-        MessageManager m_EmptyMgr;
-        MessageManager m_ComplexMgr;
+        TestMessageManager m_EmptyMgr;
+        TestMessageManager m_ComplexMgr;
         string p0 = "Provider 0";
         string p1 = "Provider 1";
         Identifier node0 = new Identifier(0);
@@ -28,9 +36,9 @@ namespace UnityEditor.ShaderGraph.UnitTests
         [SetUp]
         public void Setup()
         {
-            m_EmptyMgr = new MessageManager();
+            m_EmptyMgr = new TestMessageManager();
             
-            m_ComplexMgr = new MessageManager();
+            m_ComplexMgr = new TestMessageManager();
             m_ComplexMgr.AddOrAppendError(p0, node0, e0);
             m_ComplexMgr.AddOrAppendError(p0, node0, e1);
             m_ComplexMgr.AddOrAppendError(p0, node1, e2);
@@ -41,7 +49,7 @@ namespace UnityEditor.ShaderGraph.UnitTests
         }
 
         // Simple helper to avoid typing that ungodly generic type
-        List<KeyValuePair<Identifier, List<ShaderMessage>>> GetListFrom(MessageManager mgr)
+        static List<KeyValuePair<Identifier, List<ShaderMessage>>> GetListFrom(MessageManager mgr)
         {
             return new List<KeyValuePair<Identifier, List<ShaderMessage>>>(mgr.GetNodeMessages());
         }
@@ -80,6 +88,22 @@ namespace UnityEditor.ShaderGraph.UnitTests
             GetListFrom(m_EmptyMgr);
 
             Assert.IsFalse(m_EmptyMgr.nodeMessagesChanged);
+        }
+
+        [Test]
+        public void GettingMessages_DoesNotChangeLists()
+        {
+            m_EmptyMgr.AddOrAppendError(p0, node0, e0);
+            m_EmptyMgr.AddOrAppendError(p0, node0, e1);
+            m_EmptyMgr.AddOrAppendError(p1, node0, e2);
+
+            GetListFrom(m_EmptyMgr);
+            
+            Assert.AreEqual(2, m_EmptyMgr.Messages[p0][node0].Count);
+            Assert.AreEqual(e0, m_EmptyMgr.Messages[p0][node0][0]);
+            Assert.AreEqual(e1, m_EmptyMgr.Messages[p0][node0][1]);
+            Assert.AreEqual(1, m_EmptyMgr.Messages[p1][node0].Count);
+            Assert.AreEqual(e2, m_EmptyMgr.Messages[p1][node0][0]);
         }
         
         [Test]

@@ -125,6 +125,8 @@ namespace UnityEditor.ShaderGraph.Drawing
                     Close();
                     return;
                 }
+                
+                graphObject.HandleUndoRedo();
 
                 var materialGraph = graphObject.graph as GraphData;
                 if (materialGraph == null)
@@ -162,15 +164,6 @@ namespace UnityEditor.ShaderGraph.Drawing
                 graphObject = null;
                 Debug.LogException(e);
                 throw;
-            }
-        }
-
-        void OnEnable()
-        {
-            if (graphObject != null)
-            {
-                Update();
-                graphObject.onUndoRedo += Update;    
             }
         }
 
@@ -519,7 +512,6 @@ namespace UnityEditor.ShaderGraph.Drawing
 
                 var textGraph = File.ReadAllText(path, Encoding.UTF8);
                 graphObject = CreateInstance<GraphObject>();
-                graphObject.onUndoRedo += Update;
                 graphObject.hideFlags = HideFlags.HideAndDontSave;
                 graphObject.graph = JsonUtility.FromJson<GraphData>(textGraph);
                 graphObject.graph.assetGuid = assetGuid;

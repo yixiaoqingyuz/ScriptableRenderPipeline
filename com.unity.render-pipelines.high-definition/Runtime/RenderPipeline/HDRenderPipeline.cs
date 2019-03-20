@@ -1864,7 +1864,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 // Render gizmos that should be affected by post processes
                 if (showGizmos)
                 {
-                    Gizmos.exposure = m_PostProcessSystem.GetExposureTexture(hdCamera).rt;
+        //            Gizmos.exposure = m_PostProcessSystem.GetExposureTexture(hdCamera).rt;
                     RenderGizmos(cmd, camera, renderContext, GizmoSubset.PreImageEffects);
                 }
 #endif
@@ -3040,7 +3040,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             using (new ProfilingSample(cmd, "Color Gaussian MIP Chain", CustomSamplerId.ColorPyramid.GetSampler()))
             {
                 m_PyramidSizeV2I.Set(hdCamera.actualWidth, hdCamera.actualHeight);
-                lodCount = m_MipGenerator.RenderColorGaussianPyramid(cmd, m_PyramidSizeV2I, m_CameraColorBuffer, currentColorPyramid, hdCamera.doubleBufferedViewportScale.x, hdCamera.doubleBufferedViewportScale.y);
+              //  lodCount = m_MipGenerator.RenderColorGaussianPyramid(cmd, m_PyramidSizeV2I, m_CameraColorBuffer, currentColorPyramid, hdCamera.doubleBufferedViewportScale.x, hdCamera.doubleBufferedViewportScale.y, true);
+                lodCount = m_MipGenerator.RenderColorGaussianPyramid(cmd, m_PyramidSizeV2I, m_CameraColorBuffer, currentColorPyramid, hdCamera.doubleBufferedViewportScale.x, hdCamera.doubleBufferedViewportScale.y, false);
                 hdCamera.colorPyramidHistoryMipCount = lodCount;
             }
 

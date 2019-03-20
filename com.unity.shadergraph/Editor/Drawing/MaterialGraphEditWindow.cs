@@ -165,6 +165,12 @@ namespace UnityEditor.ShaderGraph.Drawing
             }
         }
 
+        void OnEnable()
+        {
+            Update();
+            graphObject.onUndoRedo += Update;
+        }
+
         void OnDisable()
         {
             graphEditorView = null;
@@ -510,6 +516,7 @@ namespace UnityEditor.ShaderGraph.Drawing
 
                 var textGraph = File.ReadAllText(path, Encoding.UTF8);
                 graphObject = CreateInstance<GraphObject>();
+                graphObject.onUndoRedo += Update;
                 graphObject.hideFlags = HideFlags.HideAndDontSave;
                 graphObject.graph = JsonUtility.FromJson<GraphData>(textGraph);
                 graphObject.graph.assetGuid = assetGuid;

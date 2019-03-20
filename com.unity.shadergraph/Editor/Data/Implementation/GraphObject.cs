@@ -24,6 +24,8 @@ namespace UnityEditor.Graphing
         [NonSerialized]
         GraphData m_DeserializedGraph;
 
+        public event Action onUndoRedo;
+
         public GraphData graph
         {
             get { return m_Graph; }
@@ -98,6 +100,7 @@ namespace UnityEditor.Graphing
             {
                 graph.ReplaceWith(m_DeserializedGraph);
                 m_DeserializedGraph = null;
+                onUndoRedo?.Invoke();
             }
         }
     }

@@ -8,7 +8,7 @@ platforms:
 ---
 {% for editor in editors %}
 {% for platform in platforms %}
-{{ platform.name }}_{{ editor.version }}:
+{{ platform.name }}_{{ editor.version }}_core:
   name: Build and Test com.unity.render-pipelines.core version {{ editor.version }} on {{ platform.name }}
   agent:
     type: {{ platform.type }}
@@ -23,14 +23,12 @@ platforms:
       paths:
       - "**/upm-ci~/test-results/**/*"
       - "**/upm-ci~/packages/**/*.tgz"
-
-
 {% endfor %}
 {% endfor %}
 
 {% for editor in editors %}
 {% for platform in platforms %}
-{{ platform.name }}_{{ editor.version }}:
+{{ platform.name }}_{{ editor.version }}_HDRP:
   name: Build and Test com.unity.render-pipelines.high-definition version {{ editor.version }} on {{ platform.name }}
   agent:
     type: {{ platform.type }}
@@ -45,14 +43,12 @@ platforms:
       paths:
       - "**/upm-ci~/test-results/**/*"
       - "**/upm-ci~/packages/**/*.tgz"
-
-
 {% endfor %}
 {% endfor %}
 
 {% for editor in editors %}
 {% for platform in platforms %}
-{{ platform.name }}_{{ editor.version }}:
+{{ platform.name }}_{{ editor.version }}_LWRP:
   name: Build and Test com.unity.render-pipelines.lightweight version {{ editor.version }} on {{ platform.name }}
   agent:
     type: {{ platform.type }}
@@ -67,14 +63,12 @@ platforms:
       paths:
       - "**/upm-ci~/test-results/**/*"
       - "**/upm-ci~/packages/**/*.tgz"
-
-
 {% endfor %}
 {% endfor %}
 
 {% for editor in editors %}
 {% for platform in platforms %}
-{{ platform.name }}_{{ editor.version }}:
+{{ platform.name }}_{{ editor.version }}_SG:
   name: Build and Test com.unity.shadergraph version {{ editor.version }} on {{ platform.name }}
   agent:
     type: {{ platform.type }}
@@ -89,14 +83,12 @@ platforms:
       paths:
       - "**/upm-ci~/test-results/**/*"
       - "**/upm-ci~/packages/**/*.tgz"
-
-
 {% endfor %}
 {% endfor %}
 
 {% for editor in editors %}
 {% for platform in platforms %}
-{{ platform.name }}_{{ editor.version }}:
+{{ platform.name }}_{{ editor.version }}_VFX:
   name: Build and Test com.unity.visualeffectgraph version {{ editor.version }} on {{ platform.name }}
   agent:
     type: {{ platform.type }}
@@ -111,7 +103,5 @@ platforms:
       paths:
       - "**/upm-ci~/test-results/**/*"
       - "**/upm-ci~/packages/**/*.tgz"
-
-
 {% endfor %}
 {% endfor %}

@@ -41,7 +41,13 @@ Pass
 		#if USE_NORMAL_BENDING
 		float2 bentFactors : TEXCOORD5;
 		#endif
-		float3 posWS : TEXCOORD6;
+		
+		#if WRITE_MOTION_VECTOR_IN_FORWARD
+		float4 cPosPrevious : TEXCOORD6;
+		float4 cPosNonJiterred : TEXCOORD7;
+		#endif
+		
+		float3 posWS : TEXCOORD8;
 	};
 	
 ${VFXHDRPLitVaryingsMacros}	
@@ -61,6 +67,11 @@ ${VFXHDRPLitVaryingsMacros}
 #endif
 #define VFX_VARYING_POSWS posWS
 
+#if WRITE_MOTION_VECTOR_IN_FORWARD
+#define VFX_VARYING_VELOCITY_CPOS cPosNonJiterred
+#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS cPosPrevious
+#endif
+
 ${VFXBegin:VFXVertexAdditionalProcess}
 ${VFXHDRPLitFillVaryings}
 ${VFXEnd}
@@ -70,14 +81,23 @@ ${VFXEnd}
 	${VFXInclude("Shaders/RenderPipeline/HDRP/VFXLit.template")}
 					
 	#pragma fragment frag
-	void frag(ps_input i, out float4 outColor : SV_Target0
+	void frag(ps_input i
+	, out float4 outColor : SV_Target0
 	#if USE_DOUBLE_SIDED
 	, bool frontFace : SV_IsFrontFace
+	#endif
+	#if WRITE_MOTION_VECTOR_IN_FORWARD
+	, out float4 outVelocity : SV_Target1
 	#endif
 	)
 	{
 		${VFXComputeNormalWS}
 		outColor = VFXGetPixelOutputForward(i,normalWS,uvData);
+		
+#if WRITE_MOTION_VECTOR_IN_FORWARD
+		${VFXComputeOutputVelocity}
+		outVelocity = encodedVelocity;
+#endif
 	}
 	ENDHLSL
 }

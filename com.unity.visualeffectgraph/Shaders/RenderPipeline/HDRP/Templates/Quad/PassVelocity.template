@@ -1,12 +1,14 @@
 Pass
 {		
-	Tags { "LightMode"="DepthOnly" }
+	Tags { "LightMode"="MotionVectors" }
+	
+	${VFXStencilMotionVector}
 
 	ZWrite On
 	Blend Off
 	
 	HLSLPROGRAM
-	#define IS_MOTION_VECTORS_PASS 0
+	#define IS_MOTION_VECTORS_PASS 1
 	${VFXInclude("Shaders/RenderPipeline/HDRP/Templates/Quad/PassDepthOrMV.template")}
 	ENDHLSL
 }

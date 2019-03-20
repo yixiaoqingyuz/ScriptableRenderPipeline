@@ -1,0 +1,121 @@
+editors:
+  - version: 2019.1
+platforms:
+  - name: win
+    type: Unity::VM::GPU
+    image: sdet/gamecode_win10:latest
+    flavor: m1.large
+---
+{% for editor in editors %}
+{% for platform in platforms %}
+{{ platform.name }}_{{ editor.version }}:
+  name: Build and Test com.unity.render-pipelines.core version {{ editor.version }} on {{ platform.name }}
+  agent:
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
+  commands:
+  - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
+  - cd com.unity.render-pipelines.core && upm-ci package pack
+  - cd com.unity.render-pipelines.core && upm-ci package test --unity-version {{ editor.version }}
+  artifacts:
+    logs.zip:
+      paths:
+      - "**/upm-ci~/test-results/**/*"
+      - "**/upm-ci~/packages/**/*.tgz"
+
+
+{% endfor %}
+{% endfor %}
+
+---
+{% for editor in editors %}
+{% for platform in platforms %}
+{{ platform.name }}_{{ editor.version }}:
+  name: Build and Test com.unity.render-pipelines.high-definition version {{ editor.version }} on {{ platform.name }}
+  agent:
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
+  commands:
+  - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
+  - cd com.unity.render-pipelines.high-definition && upm-ci package pack
+  - cd com.unity.render-pipelines.high-definition && upm-ci package test --unity-version {{ editor.version }}
+  artifacts:
+    logs.zip:
+      paths:
+      - "**/upm-ci~/test-results/**/*"
+      - "**/upm-ci~/packages/**/*.tgz"
+
+
+{% endfor %}
+{% endfor %}
+
+---
+{% for editor in editors %}
+{% for platform in platforms %}
+{{ platform.name }}_{{ editor.version }}:
+  name: Build and Test com.unity.render-pipelines.lightweight version {{ editor.version }} on {{ platform.name }}
+  agent:
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
+  commands:
+  - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
+  - cd com.unity.render-pipelines.lightweight && upm-ci package pack
+  - cd com.unity.render-pipelines.lightweight && upm-ci package test --unity-version {{ editor.version }}
+  artifacts:
+    logs.zip:
+      paths:
+      - "**/upm-ci~/test-results/**/*"
+      - "**/upm-ci~/packages/**/*.tgz"
+
+
+{% endfor %}
+{% endfor %}
+
+---
+{% for editor in editors %}
+{% for platform in platforms %}
+{{ platform.name }}_{{ editor.version }}:
+  name: Build and Test com.unity.shadergraph version {{ editor.version }} on {{ platform.name }}
+  agent:
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
+  commands:
+  - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
+  - cd com.unity.shadergraph && upm-ci package pack
+  - cd com.unity.shadergraph && upm-ci package test --unity-version {{ editor.version }}
+  artifacts:
+    logs.zip:
+      paths:
+      - "**/upm-ci~/test-results/**/*"
+      - "**/upm-ci~/packages/**/*.tgz"
+
+
+{% endfor %}
+{% endfor %}
+
+---
+{% for editor in editors %}
+{% for platform in platforms %}
+{{ platform.name }}_{{ editor.version }}:
+  name: Build and Test com.unity.visualeffectgraph version {{ editor.version }} on {{ platform.name }}
+  agent:
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
+  commands:
+  - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
+  - cd com.unity.visualeffectgraph && upm-ci package pack
+  - cd com.unity.visualeffectgraph && upm-ci package test --unity-version {{ editor.version }}
+  artifacts:
+    logs.zip:
+      paths:
+      - "**/upm-ci~/test-results/**/*"
+      - "**/upm-ci~/packages/**/*.tgz"
+
+
+{% endfor %}
+{% endfor %}

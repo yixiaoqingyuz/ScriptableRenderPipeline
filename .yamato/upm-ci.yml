@@ -13,9 +13,11 @@ projects:
   #- name: PostProcessing
 testplatforms:
   - name: StandaloneWindows64
-    args: --platform StandaloneWindows64
+    args: --suite=playmode --platform StandaloneWindows64
   - name: playmode
     args: --suite=playmode
+  - name: editmode
+    agrs: --suite=editor
 ---
 {% for editor in editors %}
 {% for platform in platforms %}

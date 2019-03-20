@@ -31,6 +31,10 @@ all_project_ci:
   dependencies:
   {% for editor in editors %}
   {% for platform in platforms %}
+  {% for project in projects %}
+  {% for testplatform in testplatforms %}
     - .yamato/upm-ci.yml#{{ project.name }}_{{ platform.name }}_{{ editor.version }}_{{ testplatform.name }}
+  {% endfor %}
+  {% endfor %}  
   {% endfor %}
   {% endfor %}

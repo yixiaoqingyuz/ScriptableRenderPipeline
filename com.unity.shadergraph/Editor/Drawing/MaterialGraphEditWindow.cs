@@ -167,8 +167,11 @@ namespace UnityEditor.ShaderGraph.Drawing
 
         void OnEnable()
         {
-            Update();
-            graphObject.onUndoRedo += Update;
+            if (graphObject != null)
+            {
+                Update();
+                graphObject.onUndoRedo += Update;    
+            }
         }
 
         void OnDisable()

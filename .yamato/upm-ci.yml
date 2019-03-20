@@ -17,7 +17,7 @@ testplatforms:
   - name: playmode
     args: --suite=playmode
   - name: editmode
-    agrs: --suite=editor
+    args: --suite=editor --platform=editmode
 ---
 {% for editor in editors %}
 {% for platform in platforms %}

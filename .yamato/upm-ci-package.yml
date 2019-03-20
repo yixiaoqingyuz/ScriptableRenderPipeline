@@ -28,7 +28,6 @@ platforms:
 {% endfor %}
 {% endfor %}
 
----
 {% for editor in editors %}
 {% for platform in platforms %}
 {{ platform.name }}_{{ editor.version }}:
@@ -51,7 +50,6 @@ platforms:
 {% endfor %}
 {% endfor %}
 
----
 {% for editor in editors %}
 {% for platform in platforms %}
 {{ platform.name }}_{{ editor.version }}:
@@ -74,7 +72,6 @@ platforms:
 {% endfor %}
 {% endfor %}
 
----
 {% for editor in editors %}
 {% for platform in platforms %}
 {{ platform.name }}_{{ editor.version }}:
@@ -97,7 +94,6 @@ platforms:
 {% endfor %}
 {% endfor %}
 
----
 {% for editor in editors %}
 {% for platform in platforms %}
 {{ platform.name }}_{{ editor.version }}:

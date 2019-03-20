@@ -21,8 +21,8 @@ testplatforms:
 {% for platform in platforms %}
 {% for project in projects %}
 {% for testplatform in testplatforms %}
-{{ project.name }}_{{ platform.name }}_{{ editor.version }}:
-  name : Build and Test {{ project.name }} on version {{ editor.version }} on {{ platform.name }}
+{{ project.name }}_{{ platform.name }}_{{ editor.version }}_{{ testplatform.name }}:
+  name : Build and Test {{ project.name }} on version {{ editor.version }} on {{ platform.name }}_{{ testplatform.name }}
   agent:
     type: {{ platform.type }}
     image: {{ platform.image }}

@@ -23,8 +23,9 @@ StructuredBuffer<uint> indirectBuffer;
 ByteAddressBuffer deadListCount;
 #endif
 
-//TODOPAUL
+#if WRITE_MOTION_VECTOR_IN_FORWARD || USE_MOTION_VECTORS_PASS
 ByteAddressBuffer elementToVFXBufferPrevious;
+#endif
 
 CBUFFER_START(outputParams)
 	float nbMax;

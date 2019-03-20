@@ -1,0 +1,36 @@
+editors:
+  - version: 2019.1
+platforms:
+  - name: win
+    type: Unity::VM::GPU
+    image: sdet/gamecode_win10:latest
+    flavor: m1.large
+projects:
+  #- name: ShaderGraph
+  #- name: VisualEffectGraph
+  - name: LWGraphicsTest
+  #- name: HDRP_Tests
+  #- name: PostProcessing
+testplatforms:
+  - name: StandaloneWindows64
+    args: --suite=playmode --platform StandaloneWindows64
+  - name: playmode
+    args: --suite=playmode
+  - name: editmode
+    agrs: --suite=editor
+---
+all_project_ci:
+  name: All Project CI
+  agent:
+    name: whatever
+    type: Unity::VM
+    image: cds-ops/ubuntu-18.04-agent:latest
+    flavor: b1.small
+  commands:
+    - dir
+  dependencies:
+  {% for editor in editors %}
+  {% for platform in platforms %}
+    - .yamato/upm-ci.yml#{{ project.name }}_{{ platform.name }}_{{ editor.version }}_{{ testplatform.name }}
+  {% endfor %}
+  {% endfor %}

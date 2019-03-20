@@ -120,7 +120,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // We can't do it in place as the color pyramid has to be read while writing to the color
         // buffer in some cases (e.g. refraction, distortion)
         // Returns the number of mips
-        public int RenderColorGaussianPyramid(CommandBuffer cmd, Vector2Int size, Texture source, RenderTexture destination, float viewportScaleX = 1.0f, float viewportScaleY = 1.0f, bool compute = true)
+        public int RenderColorGaussianPyramid(CommandBuffer cmd, Vector2Int size, Texture source, RenderTexture destination, float viewportScaleX = -1.0f, float viewportScaleY = -1.0f)
         {
             // Select between Tex2D and Tex2DArray versions of the kernels
             int kernelIndex = (source.dimension == TextureDimension.Tex2DArray) ? kKernelTex2DArray : kKernelTex2D;
@@ -151,7 +151,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 #if UNITY_SWITCH
             bool preferFragment = true;
 #else
-            bool preferFragment = true || ( !compute && SystemInfo.deviceType != DeviceType.Console );  // TODO: Check whether the colour buffer format supports UAV typed loads.
+            bool preferFragment = SystemInfo.deviceType != DeviceType.Console;
             #endif
 
             int srcMipLevel  = 0;
@@ -179,9 +179,19 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     );
                 }
 
+                Vector2 currentRTHandleSize = new Vector2(m_TempDownsamplePyramid[kernelIndex].rt.width * 2.0f, m_TempDownsamplePyramid[kernelIndex].rt.height * 2.0f);
+                // In some cases, we do not have a camera to get the correct scale from (i.e. planar probes). In those cases we'll compute the scale factor as appropiate manually.
+                bool validViewportScalePassed = viewportScaleX > 0 && viewportScaleY > 0;
+                // This set of scales is to account the usual RTHandle system.
+                float rtHandleScaleX = validViewportScalePassed ? viewportScaleX : destination.width / currentRTHandleSize.x;
+                float rtHandleScaleY = validViewportScalePassed ? viewportScaleY : destination.height / currentRTHandleSize.y;
+                // This set of scales is to account for differences between the temp rendertarget (that lives in the normal rt handle system) and the destination.
+                float tmpRTScaleX = currentRTHandleSize.x * destination.texelSize.x;
+                float tmpRTScaleY = currentRTHandleSize.y * destination.texelSize.y;
+
                 // Copies src mip0 to dst mip0
                 m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, source);
-                m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(viewportScaleX, viewportScaleY, 0f,0f));
+                m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(validViewportScalePassed ? viewportScaleX : (float)size.x / destination.width, validViewportScalePassed ? viewportScaleY : (float)size.y / destination.height, 0f, 0f));
                 m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, 0f);
                 cmd.SetRenderTarget(destination, 0, CubemapFace.Unknown, -1);
                 cmd.SetViewport(new Rect(0, 0, srcMipWidth, srcMipHeight));
@@ -189,20 +199,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                 // Note: smaller mips are excluded as we don't need them and the gaussian compute works
                 // on 8x8 blocks
-                // TODO: Could be further optimized by merging the smaller mips to reduce the amount of dispatches
-                // Specifically, levels 2x2 and 1x1 (or their variations, depending on the aspect ratio) should not be used.
                 while (srcMipWidth >= 8 || srcMipHeight >= 8)
                 {
                     int dstMipWidth  = Mathf.Max(1, srcMipWidth  >> 1);
                     int dstMipHeight = Mathf.Max(1, srcMipHeight >> 1);
 
-                    Vector2 currentRTHandleSize = new Vector2(m_TempDownsamplePyramid[kernelIndex].rt.width * 2.0f, m_TempDownsamplePyramid[kernelIndex].rt.height * 2.0f);
-                    // This set of scales is to account the usual RTHandle system.
-                    float rtHandleScaleX = destination.width / currentRTHandleSize.x;
-                    float rtHandleScaleY = destination.height / currentRTHandleSize.y;
-                    // This set of scales is to account for differences between the temp rendertarget (that lives in the normal rt handle system) and the destination.
-                    float tmpRTScaleX = m_TempDownsamplePyramid[kernelIndex].rt.width * destination.texelSize.x;
-                    float tmpRTScaleY = m_TempDownsamplePyramid[kernelIndex].rt.height * destination.texelSize.y;
                     // This scale is to account for the fact that we store in top mip the whole mip chain for the tmp target.
                     float tmpRTMipScaleX = (float)dstMipWidth / tempTargetWidth;
                     float tmpRTMipScaleY = (float)dstMipHeight / tempTargetHeight;
@@ -211,7 +212,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     {
                         // Downsample.
                         m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, destination);
-                        m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(2.0f * rtHandleScaleX * tmpRTScaleX, 2.0f * rtHandleScaleY * tmpRTScaleY, 0f, 0f));
+                        m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(rtHandleScaleX * tmpRTScaleX, rtHandleScaleY * tmpRTScaleY, 0f, 0f));
                         m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, srcMipLevel);
                         cmd.SetRenderTarget(m_TempDownsamplePyramid[kernelIndex], 0, CubemapFace.Unknown, -1);
                         cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
@@ -249,10 +250,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
             else
             {
-                using (new ProfilingSample(cmd, "Compute pyramid", CustomSamplerId.ColorPyramid.GetSampler()))
-                { }
-
-                    var cs = m_ColorPyramidCS;
+                var cs = m_ColorPyramidCS;
                 int downsampleKernel = m_ColorDownsampleKernel[kernelIndex];
                 int downsampleKernelMip0 = m_ColorDownsampleKernelCopyMip0[kernelIndex];
                 int gaussianKernel = m_ColorGaussianKernel[kernelIndex];

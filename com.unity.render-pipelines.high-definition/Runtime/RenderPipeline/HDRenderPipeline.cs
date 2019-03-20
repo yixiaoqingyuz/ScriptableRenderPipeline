@@ -3040,8 +3040,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             using (new ProfilingSample(cmd, "Color Gaussian MIP Chain", CustomSamplerId.ColorPyramid.GetSampler()))
             {
                 m_PyramidSizeV2I.Set(hdCamera.actualWidth, hdCamera.actualHeight);
-              //  lodCount = m_MipGenerator.RenderColorGaussianPyramid(cmd, m_PyramidSizeV2I, m_CameraColorBuffer, currentColorPyramid, hdCamera.doubleBufferedViewportScale.x, hdCamera.doubleBufferedViewportScale.y, true);
-                lodCount = m_MipGenerator.RenderColorGaussianPyramid(cmd, m_PyramidSizeV2I, m_CameraColorBuffer, currentColorPyramid, hdCamera.doubleBufferedViewportScale.x, hdCamera.doubleBufferedViewportScale.y, false);
+                lodCount = m_MipGenerator.RenderColorGaussianPyramid(cmd, m_PyramidSizeV2I, m_CameraColorBuffer, currentColorPyramid, hdCamera.doubleBufferedViewportScale.x, hdCamera.doubleBufferedViewportScale.y);
                 hdCamera.colorPyramidHistoryMipCount = lodCount;
             }
 

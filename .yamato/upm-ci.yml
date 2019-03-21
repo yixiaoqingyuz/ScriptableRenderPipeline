@@ -6,14 +6,14 @@ platforms:
     image: sdet/gamecode_win10:latest
     flavor: m1.large
 projects:
-  #- name: ShaderGraph
-  #- name: VisualEffectGraph
+  - name: ShaderGraph
+  - name: VisualEffectGraph
   - name: LWGraphicsTest
-  #- name: HDRP_Tests
-  #- name: PostProcessing
+  - name: HDRP_Tests
+  - name: PostProcessing
 testplatforms:
-  - name: StandaloneWindows64
-    args: --suite=playmode --platform=StandaloneWindows64
+  #- name: StandaloneWindows64
+  #  args: --suite=playmode --platform=StandaloneWindows64
   - name: playmode
     args: --suite=playmode
   - name: editmode

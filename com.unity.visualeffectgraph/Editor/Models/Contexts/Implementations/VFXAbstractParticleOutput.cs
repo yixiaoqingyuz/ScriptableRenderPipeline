@@ -172,12 +172,9 @@ namespace UnityEditor.VFX
             {
                 var gpuMapper = VFXExpressionMapper.FromBlocks(activeChildrenWithImplicit);
                 gpuMapper.AddExpressions(CollectGPUExpressions(GetExpressionsFromSlots(this)), -1);
+                if (generateMotionVectors)
+                    gpuMapper.AddExpression(VFXBuiltInExpression.FrameIndex, "currentFrameIndex", -1);
                 mapper = gpuMapper;
-            }
-
-            if (generateMotionVectors)
-            {
-                mapper.AddExpression(VFXBuiltInExpression.FrameIndex, "currentFrameIndex", -1);
             }
             return mapper;
         }

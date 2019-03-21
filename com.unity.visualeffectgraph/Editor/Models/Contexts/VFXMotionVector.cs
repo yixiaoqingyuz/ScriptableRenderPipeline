@@ -29,13 +29,19 @@ namespace UnityEditor.VFX
         public override VFXTaskType taskType { get { return VFXTaskType.Update; } }
 
         public override VFXExpressionMapper GetExpressionMapper(VFXDeviceTarget target)
-        {   //TODOPAUL verify which mapper really needs this
-            VFXExpressionMapper mapper = m_encapsulatedOutput != null ? m_encapsulatedOutput.GetExpressionMapper(target) : null;
-            if (mapper == null)
-                mapper = new VFXExpressionMapper();
-            if (mapper.FromNameAndId("currentFrameIndex", -1) == null)
-                mapper.AddExpression(VFXBuiltInExpression.FrameIndex, "currentFrameIndex", -1);
-            return mapper;
+        {
+            if (m_encapsulatedOutput)
+            {
+                var expressionMapper = m_encapsulatedOutput.GetExpressionMapper(target);
+                if (target == VFXDeviceTarget.GPU)
+                {
+                    var currentFrameIndex = expressionMapper.FromNameAndId("currentFrameIndex", -1);
+                    if (currentFrameIndex == null)
+                        Debug.LogError("CurrentFrameIndex isn't reachable in encapsulatedOutput for motionVector");
+                }
+                return expressionMapper;
+            }
+            return null;
         }
 
         protected override IEnumerable<VFXBlock> implicitPostBlock

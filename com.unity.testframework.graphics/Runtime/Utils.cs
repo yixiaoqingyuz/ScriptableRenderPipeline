@@ -25,7 +25,7 @@ namespace UnityEditor.TestTools.Graphics
                     return RuntimePlatform.OSXPlayer;
                 case BuildTarget.PS4:
                     return RuntimePlatform.PS4;
-#if !UNITY_2018_3_OR_NEWER
+#if !UNITY_2018_3_OR_NEWER //should these all be elifs??
                 case BuildTarget.PSP2:
                     return RuntimePlatform.PSP2;
 #endif

@@ -110,7 +110,7 @@ namespace UnityEngine.TestTools.Graphics
 
             try
             {
-                Assert.That(expected, Is.Not.Null, "No reference image was provided.");
+                Assert.That(expected, Is.Not.Null, "No reference image was provided at "+ string.Format("{0}/{1}/{2}", UseGraphicsTestCasesAttribute.ColorSpace, UseGraphicsTestCasesAttribute.Platform, UseGraphicsTestCasesAttribute.GraphicsDevice));
 
                 Assert.That(actual.width, Is.EqualTo(expected.width),
                     "The expected image had width {0}px, but the actual image had width {1}px.", expected.width,

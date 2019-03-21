@@ -1,77 +1,214 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Rendering.LookDev
 {
-
-    public enum Layout { ViewA, ViewB, HorizontalSplit, VerticalSplit, CustomSplit, CustomCircular }
-
-    internal class LookDevWindow : EditorWindow
+    public enum Layout
     {
-        VisualElement views;
-        VisualElement environment;
-        
-        const string oneViewClass = "oneView";
-        const string twoViewsClass = "twoViews";
-        
-        LookDevContext.Display layout
+        ViewA,
+        ViewB,
+        HorizontalSplit,
+        VerticalSplit,
+        CustomSplit,
+        CustomCircular
+    }
+
+    internal interface ILookDevDisplayer
+    {
+        Rect GetRect(ViewIndex index);
+        void SetTexture(ViewIndex index, Texture texture);
+
+        event Action<LayoutContext.Layout> OnLayoutChanged;
+    }
+
+    /// <summary>
+    /// Displayer and User Interaction 
+    /// </summary>
+    internal class LookDevWindow : EditorWindow, ILookDevDisplayer
+    {
+        // /!\ WARNING:
+        //The following const are used in the uss.
+        //If you change them, update the uss file too.
+        const string k_MainContainerName = "mainContainer";
+        const string k_EnvironmentContainerName = "environmentContainer";
+        const string k_ViewContainerName = "viewContainer";
+        const string k_FirstViewName = "firstView";
+        const string k_SecondViewName = "secondView";
+        const string k_ToolbarName = "toolbar";
+        const string k_ToolbarRadioName = "toolbarRadio";
+        const string k_ToolbarEnvironmentName = "toolbarEnvironment";
+        const string k_SharedContainerClass = "container";
+        const string k_OneViewClass = "oneView";
+        const string k_TwoViewsClass = "twoViews";
+        const string k_ShowEnvironmentPanelClass = "showEnvironmentPanel";
+
+        VisualElement m_MainContainer;
+        VisualElement m_ViewContainer;
+        VisualElement m_EnvironmentContainer;
+
+        Image[] m_Views = new Image[2];
+
+        LayoutContext.Layout layout
         {
-            get => LookDev.currentContext.displayLayout;
+            get => LookDev.currentContext.layout.viewLayout;
             set
             {
-                if (LookDev.currentContext.displayLayout != value)
+                if (LookDev.currentContext.layout.viewLayout != value)
                 {
-                    if (value == LookDevContext.Display.HorizontalSplit || value == LookDevContext.Display.VerticalSplit)
+                    if (value == LayoutContext.Layout.HorizontalSplit || value == LayoutContext.Layout.VerticalSplit)
                     {
-                        if (views.ClassListContains(oneViewClass))
+                        if (m_ViewContainer.ClassListContains(k_OneViewClass))
                         {
-                            views.RemoveFromClassList(oneViewClass);
-                            views.AddToClassList(twoViewsClass);
+                            m_ViewContainer.RemoveFromClassList(k_OneViewClass);
+                            m_ViewContainer.AddToClassList(k_TwoViewsClass);
                         }
                     }
                     else
                     {
-                        if (views.ClassListContains(twoViewsClass))
+                        if (m_ViewContainer.ClassListContains(k_TwoViewsClass))
                         {
-                            views.RemoveFromClassList(twoViewsClass);
-                            views.AddToClassList(oneViewClass);
+                            m_ViewContainer.RemoveFromClassList(k_TwoViewsClass);
+                            m_ViewContainer.AddToClassList(k_OneViewClass);
                         }
                     }
 
-                    if (views.ClassListContains(LookDev.currentContext.displayLayout.ToString()))
-                        views.RemoveFromClassList(LookDev.currentContext.displayLayout.ToString());
-                    views.AddToClassList(value.ToString());
+                    if (m_ViewContainer.ClassListContains(LookDev.currentContext.layout.viewLayout.ToString()))
+                        m_ViewContainer.RemoveFromClassList(LookDev.currentContext.layout.viewLayout.ToString());
+                    m_ViewContainer.AddToClassList(value.ToString());
 
-                    var tmpContext = LookDev.currentContext;
-                    tmpContext.displayLayout = value;
-                    LookDev.currentContext = tmpContext;
+                    LookDev.currentContext.layout.viewLayout = value;
+
+                    OnLayoutChangedInternal?.Invoke(value);
+                }
+            }
+        }
+        
+        bool showEnvironmentPanel
+        {
+            get => LookDev.currentContext.layout.showEnvironmentPanel;
+            set
+            {
+                if (LookDev.currentContext.layout.showEnvironmentPanel != value)
+                {
+                    if (value)
+                    {
+                        if (!m_MainContainer.ClassListContains(k_ShowEnvironmentPanelClass))
+                            m_MainContainer.AddToClassList(k_ShowEnvironmentPanelClass);
+                    }
+                    else
+                    {
+                        if (m_MainContainer.ClassListContains(k_ShowEnvironmentPanelClass))
+                            m_MainContainer.RemoveFromClassList(k_ShowEnvironmentPanelClass);
+                    }
+
+                    LookDev.currentContext.layout.showEnvironmentPanel = value;
                 }
             }
         }
 
+        event Action<LayoutContext.Layout> OnLayoutChangedInternal;
+        event Action<LayoutContext.Layout> ILookDevDisplayer.OnLayoutChanged
+        {
+            add => OnLayoutChangedInternal += value;
+            remove => OnLayoutChangedInternal -= value;
+        }
 
+        public event Action OnWindowClosed;
 
         void OnEnable()
         {
-            //titleContent = LookDevStyle.WindowTitleAndIcon;
+            rootVisualElement.styleSheets.Add(
+                AssetDatabase.LoadAssetAtPath<StyleSheet>(LookDevStyle.k_uss));
             
-            rootVisualElement.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(LookDevStyle.k_uss));
+            CreateToolbar();
+            
+            m_MainContainer = new VisualElement() { name = k_MainContainerName };
+            m_MainContainer.AddToClassList(k_SharedContainerClass);
+            rootVisualElement.Add(m_MainContainer);
 
-            views = new VisualElement() { name = "viewContainers" };
-            views.AddToClassList(layout == LookDevContext.Display.HorizontalSplit || layout == LookDevContext.Display.VerticalSplit ? "twoViews" : "oneView");
-            views.AddToClassList("container");
-            rootVisualElement.Add(views);
-            var viewA = new VisualElement() { name = "viewA" };
-            views.Add(viewA);
-            views.Add(new VisualElement() { name = "viewB" });
-
-            rootVisualElement.Add(new Button(() =>
-            {
-                if (layout  == LookDevContext.Display.HorizontalSplit)
-                    layout = LookDevContext.Display.FullA;
-                else if (layout == LookDevContext.Display.FullA)
-                    layout = LookDevContext.Display.HorizontalSplit;
-            }) { text = "One/Two views" });
+            CreateViews();
+            CreateEnvironment();
         }
+
+        void OnDisable() => OnWindowClosed?.Invoke();
+
+        void CreateToolbar()
+        {
+            // Layout swapper part
+            var toolbarRadio = new ToolbarRadio() { name = k_ToolbarRadioName };
+            toolbarRadio.AddRadios(new[] {
+                CoreEditorUtils.LoadIcon(LookDevStyle.k_IconFolder, "LookDevSingle1"),
+                CoreEditorUtils.LoadIcon(LookDevStyle.k_IconFolder, "LookDevSingle2"),
+                CoreEditorUtils.LoadIcon(LookDevStyle.k_IconFolder, "LookDevSideBySideVertical"),
+                CoreEditorUtils.LoadIcon(LookDevStyle.k_IconFolder, "LookDevSideBySideHorizontal"),
+                CoreEditorUtils.LoadIcon(LookDevStyle.k_IconFolder, "LookDevSplit"),
+                CoreEditorUtils.LoadIcon(LookDevStyle.k_IconFolder, "LookDevZone"),
+                });
+            toolbarRadio.RegisterCallback((ChangeEvent<int> evt)
+                => layout = (LayoutContext.Layout)evt.newValue);
+            toolbarRadio.SetValueWithoutNotify((int)layout);
+
+            // Environment part
+            var toolbarEnvironment = new Toolbar() { name = k_ToolbarEnvironmentName };
+            var showEnvironmentToggle = new ToolbarToggle() { text = "Show Environment" };
+            showEnvironmentToggle.RegisterCallback((ChangeEvent<bool> evt)
+                => showEnvironmentPanel = evt.newValue);
+            showEnvironmentToggle.SetValueWithoutNotify(showEnvironmentPanel);
+            toolbarEnvironment.Add(showEnvironmentToggle);
+
+            //other parts to be completed
+
+            // Aggregate parts
+            var toolbar = new Toolbar() { name = k_ToolbarName };
+            toolbar.Add(new Label() { text = "Layout:" });
+            toolbar.Add(toolbarRadio);
+            toolbar.Add(new ToolbarSpacer());
+            //to complete
+
+
+            toolbar.Add(new ToolbarSpacer() { flex = true });
+            toolbar.Add(toolbarEnvironment);
+            rootVisualElement.Add(toolbar);
+        }
+
+        void CreateViews()
+        {
+            if (m_MainContainer == null || m_MainContainer.Equals(null))
+                throw new System.MemberAccessException("m_MainContainer should be assigned prior CreateViews()");
+
+            m_ViewContainer = new VisualElement() { name = k_ViewContainerName };
+            m_ViewContainer.AddToClassList(LookDev.currentContext.layout.isMultiView ? k_TwoViewsClass : k_OneViewClass);
+            m_ViewContainer.AddToClassList(k_SharedContainerClass);
+            m_MainContainer.Add(m_ViewContainer);
+
+            m_Views[(int)ViewIndex.FirstOrFull] = new Image() { name = k_FirstViewName, image = Texture2D.blackTexture };
+            m_ViewContainer.Add(m_Views[(int)ViewIndex.FirstOrFull]);
+            m_Views[(int)ViewIndex.Second] = new Image() { name = k_SecondViewName, image = Texture2D.blackTexture };
+            m_ViewContainer.Add(m_Views[(int)ViewIndex.Second]);
+        }
+
+        void CreateEnvironment()
+        {
+            if (m_MainContainer == null || m_MainContainer.Equals(null))
+                throw new System.MemberAccessException("m_MainContainer should be assigned prior CreateEnvironment()");
+
+            m_EnvironmentContainer = new VisualElement() { name = k_EnvironmentContainerName };
+            m_MainContainer.Add(m_EnvironmentContainer);
+            if (showEnvironmentPanel)
+                m_MainContainer.AddToClassList(k_ShowEnvironmentPanelClass);
+
+            //to complete
+        }
+
+        Rect ILookDevDisplayer.GetRect(ViewIndex index)
+            => m_Views[(int)index].contentRect;
+
+        void ILookDevDisplayer.SetTexture(ViewIndex index, Texture texture)
+            => m_Views[(int)index].image = texture;
     }
+    
 }

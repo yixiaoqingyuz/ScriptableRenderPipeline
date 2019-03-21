@@ -47,21 +47,41 @@ namespace UnityEditor.Rendering.LookDev
             AddToClassList(ussClassName);
         }
 
-        public void AddRadio(string text)
+        public void AddRadio(string text = null, Texture2D icon = null)
         {
             var toggle = new ToolbarToggle();
             toggle.RegisterValueChangedCallback(InnerValueChanged(radioLength));
-            toggle.text = text;
             toggle.SetValueWithoutNotify(radioLength == 0);
             radios.Add(toggle);
+            if (icon != null)
+            {
+                var childsContainer = toggle.Q(null, ToolbarToggle.inputUssClassName);
+                childsContainer.Add(new Image() { image = icon });
+                if (text != null)
+                    childsContainer.Add(new Label() { text = text });
+            }
+            else
+                toggle.text = text;
             Add(toggle);
             radioLength++;
         }
 
-        public void AddRadios(string[] texts)
+        public void AddRadios(string[] labels)
         {
-            foreach (var text in texts)
-                AddRadio(text);
+            foreach (var label in labels)
+                AddRadio(label);
+        }
+
+        public void AddRadios(Texture2D[] icons)
+        {
+            foreach (var icon in icons)
+                AddRadio(null, icon);
+        }
+
+        public void AddRadios((string text, Texture2D icon)[] labels)
+        {
+            foreach (var label in labels)
+                AddRadio(label.text, label.icon);
         }
 
         EventCallback<ChangeEvent<bool>> InnerValueChanged(int radioIndex)

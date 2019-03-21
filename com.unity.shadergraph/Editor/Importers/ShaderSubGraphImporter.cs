@@ -13,7 +13,6 @@ class ShaderSubGraphImporter : ScriptedImporter
     {
         var graphAsset = ScriptableObject.CreateInstance<SubGraphAsset>();
         graphAsset.importedAt = DateTime.Now.Ticks;
-        
 
         Texture2D texture = Resources.Load<Texture2D>("Icons/sg_subgraph_icon@64");
         ctx.AddObjectToAsset("MainAsset", graphAsset, texture);

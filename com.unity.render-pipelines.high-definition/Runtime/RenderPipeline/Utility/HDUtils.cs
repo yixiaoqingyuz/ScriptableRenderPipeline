@@ -202,6 +202,18 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             SetRenderTarget(cmd, camera, colorBuffer, depthBuffer, ClearFlag.None, Color.clear, miplevel, cubemapFace, depthSlice);
         }
 
+        public static void SetRenderTarget(CommandBuffer cmd, Rect cameraViewport, RTHandleSystem.RTHandle colorBuffer, RTHandleSystem.RTHandle depthBuffer, int miplevel = 0, CubemapFace cubemapFace = CubemapFace.Unknown, int depthSlice = -1)
+        {
+            int cw = colorBuffer.rt.width;
+            int ch = colorBuffer.rt.height;
+            int dw = depthBuffer.rt.width;
+            int dh = depthBuffer.rt.height;
+
+            Debug.Assert(cw == dw && ch == dh);
+
+            SetRenderTarget(cmd, cameraViewport, colorBuffer, depthBuffer, ClearFlag.None, Color.clear, miplevel, cubemapFace, depthSlice);
+        }
+
         public static void SetRenderTarget(CommandBuffer cmd, HDCamera camera, RTHandleSystem.RTHandle colorBuffer, RTHandleSystem.RTHandle depthBuffer, ClearFlag clearFlag, int miplevel = 0, CubemapFace cubemapFace = CubemapFace.Unknown, int depthSlice = -1)
         {
             int cw = colorBuffer.rt.width;
@@ -225,6 +237,19 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             CoreUtils.SetRenderTarget(cmd, colorBuffer, depthBuffer, miplevel, cubemapFace, depthSlice);
             SetViewportAndClear(cmd, camera.renderingViewport, colorBuffer, clearFlag, clearColor);
+        }
+
+        public static void SetRenderTarget(CommandBuffer cmd, Rect cameraViewport, RTHandleSystem.RTHandle colorBuffer, RTHandleSystem.RTHandle depthBuffer, ClearFlag clearFlag, Color clearColor, int miplevel = 0, CubemapFace cubemapFace = CubemapFace.Unknown, int depthSlice = -1)
+        {
+            int cw = colorBuffer.rt.width;
+            int ch = colorBuffer.rt.height;
+            int dw = depthBuffer.rt.width;
+            int dh = depthBuffer.rt.height;
+
+            Debug.Assert(cw == dw && ch == dh);
+
+            CoreUtils.SetRenderTarget(cmd, colorBuffer, depthBuffer, miplevel, cubemapFace, depthSlice);
+            SetViewportAndClear(cmd, cameraViewport, colorBuffer, clearFlag, clearColor);
         }
 
         public static void SetRenderTarget(CommandBuffer cmd, Rect cameraViewport, RenderTargetIdentifier[] colorBuffers, RTHandleSystem.RTHandle depthBuffer)

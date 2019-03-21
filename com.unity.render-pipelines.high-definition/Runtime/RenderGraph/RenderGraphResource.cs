@@ -23,6 +23,8 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             this.handle = handle;
             this.type = type;
         }
+
+        internal bool IsValid() { return type != RenderGraphResourceType.Invalid; }
     }
 
     public struct RenderGraphMutableResource
@@ -50,5 +52,6 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             return new RenderGraphResource(handle);
         }
 
+        internal bool IsValid() { return type != RenderGraphResourceType.Invalid; }
     }
 }

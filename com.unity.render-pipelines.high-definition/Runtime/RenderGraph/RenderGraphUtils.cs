@@ -6,8 +6,9 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
     public static class RenderGraphUtils
     {
 
-        const int kMinMRTCount = 1;
-        const int kMaxMRTCount = 8;
+        public static readonly int kMinMRTCount = 1;
+        public static readonly int kMaxMRTCount = 8;
+
         static List<RenderTargetIdentifier[]> s_MRTArrays = new List<RenderTargetIdentifier[]>();
 
         public static RenderTargetIdentifier[] GetMRTArray(int mrtCount)

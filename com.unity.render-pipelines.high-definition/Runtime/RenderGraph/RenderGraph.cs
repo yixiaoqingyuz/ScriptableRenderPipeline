@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 
     public class RenderGraph
     {
-        internal class RenderPassDescriptor
+        internal class RenderPass
         {
             public string                           passName;
             public RenderFunc                       renderFunc;
@@ -35,22 +35,52 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             public List<RenderGraphMutableResource> resourceWriteList = new List<RenderGraphMutableResource>();
             public List<RenderGraphResource>        usedRendererListList = new List<RenderGraphResource>();
             public bool                             enableAsyncCompute;
+            public RenderGraphMutableResource       depthBuffer { get { return m_DepthBuffer; } }
+            public RenderGraphMutableResource[]     colorBuffers { get { return m_ColorBuffers; } }
+            public int                              colorBufferMaxIndex { get { return m_MaxColorBufferIndex; } }
+
+            RenderGraphMutableResource[]            m_ColorBuffers = new RenderGraphMutableResource[RenderGraphUtils.kMaxMRTCount];
+            RenderGraphMutableResource              m_DepthBuffer;
+            int                                     m_MaxColorBufferIndex = -1;
 
             internal void Clear()
             {
                 passName = "";
-                passData = null;
                 renderFunc = null;
+                passData = null;
+                customSampler = null;
                 resourceReadList.Clear();
                 resourceWriteList.Clear();
                 usedRendererListList.Clear();
                 enableAsyncCompute = false;
+
+                // Invalidate everything
+                m_MaxColorBufferIndex = -1;
+                m_DepthBuffer = new RenderGraphMutableResource();
+                for (int i = 0; i < RenderGraphUtils.kMaxMRTCount; ++i)
+                {
+                    m_ColorBuffers[i] = new RenderGraphMutableResource();
+                }
+            }
+
+            internal void SetColorBuffer(in RenderGraphMutableResource resource, int index)
+            {
+                Debug.Assert(index < RenderGraphUtils.kMaxMRTCount && index >= 0);
+                m_MaxColorBufferIndex = Math.Max(m_MaxColorBufferIndex, index);
+                m_ColorBuffers[index] = resource;
+                resourceWriteList.Add(resource);
+            }
+
+            internal void SetDepthBuffer(in RenderGraphMutableResource resource)
+            {
+                m_DepthBuffer = resource;
+                resourceWriteList.Add(resource);
             }
         }
 
         RenderGraphResourceRegistry             m_Resources = new RenderGraphResourceRegistry();
         RenderGraphObjectPool                   m_RenderGraphPool = new RenderGraphObjectPool();
-        List<RenderPassDescriptor>              m_RenderPasses = new List<RenderPassDescriptor>();
+        List<RenderPass>                        m_RenderPasses = new List<RenderPass>();
         List<RenderGraphResource>               m_RendererLists = new List<RenderGraphResource>();
         Dictionary<Type, Queue<RenderPassData>> m_RenderPassDataPool = new Dictionary<Type, Queue<RenderPassData>>();
 
@@ -77,7 +107,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             // WARNING: Currently pooling won't re-init the data inside PassData... this could lead to problems if users don't fill all the members properly (like having stale resource handles for example)
             passData = AllocatePassData<PassData>();
 
-            var renderPass = m_RenderGraphPool.Get<RenderPassDescriptor>();
+            var renderPass = m_RenderGraphPool.Get<RenderPass>();
             renderPass.Clear();
             renderPass.passName = passName;
             renderPass.renderFunc = null;
@@ -148,8 +178,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         }
         #endregion
 
-        #region Internal Interface
-        void PreRenderPassExecute(int passIndex, in RenderPassDescriptor pass, RenderGraphContext rgContext, RenderGraphGlobalParams parameters)
+        void PreRenderPassCreateAndClearRenderTargets(int passIndex, in RenderPass pass, RenderGraphContext rgContext, RenderGraphGlobalParams parameters)
         {
             foreach (var resource in pass.resourceWriteList)
             {
@@ -171,7 +200,55 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             }
         }
 
-        void PostRenderPassExecute(int passIndex, in RenderPassDescriptor pass)
+        void PreRenderPassSetRenderTargets(in RenderPass pass, RenderGraphContext rgContext, RenderGraphGlobalParams parameters)
+        {
+            if (pass.depthBuffer.IsValid() || pass.colorBufferMaxIndex != -1)
+            {
+                var mrtArray = RenderGraphUtils.GetMRTArray(pass.colorBufferMaxIndex + 1);
+                var colorBuffers = pass.colorBuffers;
+
+                if (pass.colorBufferMaxIndex > 0)
+                {
+                    for (int i = 0; i <= pass.colorBufferMaxIndex; ++i)
+                    {
+                        if (!colorBuffers[i].IsValid())
+                            throw new InvalidOperationException("MRT setup is invalid. Some indices are not used.");
+                        mrtArray[i] = m_Resources.GetTexture(colorBuffers[i]);
+                    }
+
+                    if (pass.depthBuffer.IsValid())
+                    {
+                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.renderingViewport, mrtArray, m_Resources.GetTexture(pass.depthBuffer));
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Setting MRTs without a depth buffer is not supported.");
+                    }
+                }
+                else
+                {
+                    if (pass.depthBuffer.IsValid())
+                    {
+                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.renderingViewport, m_Resources.GetTexture(pass.colorBuffers[0]), m_Resources.GetTexture(pass.depthBuffer));
+                    }
+                    else
+                    {
+                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.renderingViewport, m_Resources.GetTexture(pass.colorBuffers[0]));
+                    }
+
+                }
+            }
+        }
+
+        #region Internal Interface
+        void PreRenderPassExecute(int passIndex, in RenderPass pass, RenderGraphContext rgContext, RenderGraphGlobalParams parameters)
+        {
+            // TODO merge clear and setup here if possible
+            PreRenderPassCreateAndClearRenderTargets(passIndex, pass, rgContext, parameters);
+            PreRenderPassSetRenderTargets(pass, rgContext, parameters);
+        }
+
+        void PostRenderPassExecute(int passIndex, in RenderPass pass)
         {
             ReleasePassData(pass.passData);
             m_RenderGraphPool.ReleaseAllTempAlloc();

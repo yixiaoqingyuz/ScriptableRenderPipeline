@@ -84,13 +84,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     using (var builder = renderGraph.AddRenderPass<PrepassData>("Depth Prepass (forward)", out var passData, CustomSamplerId.DepthPrepass.GetSampler()))
                     {
                         passData.frameSettings = hdCamera.frameSettings;
-                        passData.renderingViewport = hdCamera.renderingViewport;
                         passData.msaaEnabled = msaa;
 
-                        passData.depthBuffer = builder.WriteTexture(depthBuffer);
-                        passData.normalBuffer = builder.WriteTexture(normalBuffer);
+                        passData.depthBuffer = builder.UseDepthBuffer(depthBuffer);
+                        passData.normalBuffer = builder.UseColorBuffer(normalBuffer, 0);
                         if (msaa)
-                            passData.depthAsColorBuffer = builder.WriteTexture(depthAsColorMSAA);
+                            passData.depthAsColorBuffer = builder.UseColorBuffer(depthAsColorMSAA, 1);
 
                         // Full forward: Output normal buffer for both forward and forwardOnly
                         // Exclude object that render velocity (if motion vector are enabled)
@@ -106,16 +105,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
                         {
                             PrepassData prepassData = (PrepassData)data;
-
-                            var mrt = RenderGraphUtils.GetMRTArray(prepassData.msaaEnabled ? 2 : 1);
-                            mrt[0] = renderGraphContext.resources.GetTexture(prepassData.normalBuffer);
-                            if (prepassData.msaaEnabled)
-                                mrt[1] = renderGraphContext.resources.GetTexture(prepassData.depthAsColorBuffer);
-
-                            HDUtils.SetRenderTarget(renderGraphContext.cmd, prepassData.renderingViewport, mrt, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
-                            // XRTODO: wait for XR SDK integration and implement custom version in HDUtils with dynamic resolution support
-                            //XRUtils.DrawOcclusionMesh(cmd, hdCamera.camera, hdCamera.camera.stereoEnabled);
-
                             DrawOpaqueRendererList(prepassData.frameSettings, renderGraphContext.resources.GetRendererList(prepassData.rendererList1), renderGraphContext.renderContext, renderGraphContext.cmd);
                         });
                     }

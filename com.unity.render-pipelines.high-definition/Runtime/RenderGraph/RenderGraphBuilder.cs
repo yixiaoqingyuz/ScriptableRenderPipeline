@@ -8,7 +8,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 
         RenderGraph                         m_RenderGraph;
         RenderGraphResourceRegistry         m_RenderGraphResources;
-        RenderGraph.RenderPassDescriptor    m_RenderPass;
+        RenderGraph.RenderPass              m_RenderPass;
         bool                                m_Disposed;
 
         #region Public Interface
@@ -23,6 +23,24 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
                 throw new ArgumentException("Trying to write to a resource that is not a texture.");
             // TODO: Manage resource "version" for debugging purpose
             m_RenderPass.resourceWriteList.Add(input);
+            return input;
+        }
+
+        public RenderGraphMutableResource UseColorBuffer(in RenderGraphMutableResource input, int index)
+        {
+            if (input.type != RenderGraphResourceType.Texture)
+                throw new ArgumentException("Trying to write to a resource that is not a texture.");
+
+            m_RenderPass.SetColorBuffer(input, index);
+            return input;
+        }
+
+        public RenderGraphMutableResource UseDepthBuffer(in RenderGraphMutableResource input)
+        {
+            if (input.type != RenderGraphResourceType.Texture)
+                throw new ArgumentException("Trying to write to a resource that is not a texture.");
+
+            m_RenderPass.SetDepthBuffer(input);
             return input;
         }
 
@@ -64,7 +82,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         #endregion
 
         #region Internal Interface
-        internal RenderGraphBuilder(RenderGraph renderGraph, RenderGraphResourceRegistry resources, RenderGraph.RenderPassDescriptor renderPass)
+        internal RenderGraphBuilder(RenderGraph renderGraph, RenderGraphResourceRegistry resources, RenderGraph.RenderPass renderPass)
         {
             m_RenderPass = renderPass;
             m_Disposed = false;

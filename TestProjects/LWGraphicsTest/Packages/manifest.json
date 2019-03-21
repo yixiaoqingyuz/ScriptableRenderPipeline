@@ -50,5 +50,6 @@
     "com.unity.render-pipelines.lightweight",
     "com.unity.shadergraph",
     "com.unity.testframework.graphics"
-  ]
+  ],
+  "disableProjectUpdate": true
 }

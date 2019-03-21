@@ -1,9 +1,9 @@
 using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering.RenderGraphModule;
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
     using RTHandle = RTHandleSystem.RTHandle;
-    using TextureDesc = RenderGraphResourceRegistry.TextureDesc;
 
     public partial class HDRenderPipeline
     {
@@ -92,7 +92,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return result;
         }
 
-        class AOPassData : RenderGraph.RenderPassData
+        class AOPassData : RenderPassData
         {
             public Vector2 viewport;
             public bool msaaEnabled;
@@ -190,17 +190,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 CreateTransientResources(builder, renderPassData, renderPassData.msaaEnabled);
 
                 builder.SetRenderFunc(
-                (RenderGraph.RenderPassData data, RenderGraph.RenderGraphGlobalParams globalParams, RenderGraph.RenderGraphContext renderGraphContext) =>
+                (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
                 {
                     AOPassData passData = (AOPassData)data;
                     var cmd = renderGraphContext.cmd;
                     var resources = renderGraphContext.resources;
-                    var tempPool = renderGraphContext.tempPool;
+                    var renderGraphPool = renderGraphContext.renderGraphPool;
 
                     // Share alloc between all render commands
-                    float[] sampleWeightTable = tempPool.GetTempArray<float>(12);
-                    float[] sampleThickness = tempPool.GetTempArray<float>(12);
-                    float[] invThicknessTable = tempPool.GetTempArray<float>(12);
+                    float[] sampleWeightTable = renderGraphPool.GetTempArray<float>(12);
+                    float[] sampleThickness = renderGraphPool.GetTempArray<float>(12);
+                    float[] invThicknessTable = renderGraphPool.GetTempArray<float>(12);
 
                     int* widths = stackalloc int[7];
                     int* heights = stackalloc int[7];
@@ -410,7 +410,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.DispatchCompute(cs, kernel, xcount, ycount, XRGraphics.computePassCount);
         }
 
-        class AOPostPassData : RenderGraph.RenderPassData
+        class AOPostPassData : RenderPassData
         {
             public bool enableMSAA;
             public bool isActive; // Temporary
@@ -445,17 +445,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
 
                 builder.SetRenderFunc(
-                (RenderGraph.RenderPassData data, RenderGraph.RenderGraphGlobalParams globalParams, RenderGraph.RenderGraphContext renderGraphContext) =>
+                (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
                 {
                     AOPostPassData passData = (AOPostPassData)data;
                     var cmd = renderGraphContext.cmd;
-                    var tempPool = renderGraphContext.tempPool;
+                    var renderGraphPool = renderGraphContext.renderGraphPool;
                     var resources = renderGraphContext.resources;
 
                     // MSAA Resolve
                     if (passData.enableMSAA)
                     {
-                        MaterialPropertyBlock mpb = tempPool.GetTempMaterialPropertyBlock();
+                        MaterialPropertyBlock mpb = renderGraphPool.GetTempMaterialPropertyBlock();
                         HDUtils.SetRenderTarget(cmd, passData.camera, resources.GetTexture(passData.output));
                         mpb.SetTexture(HDShaderIDs._DepthValuesTexture, resources.GetTexture(passData.inputDepth));
                         mpb.SetTexture(HDShaderIDs._MultiAmbientOcclusionTexture, resources.GetTexture(passData.inputAO));

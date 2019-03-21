@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using UnityEngine.Experimental.GlobalIllumination;
-using UnityEngine;
+using UnityEngine.Experimental.Rendering.RenderGraphModule;
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {

@@ -1,19 +1,36 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
-namespace UnityEngine.Experimental.Rendering
+namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 {
-    public sealed class RenderGraphTempPool
+    public sealed class RenderGraphObjectPool
     {
+        class SharedObjectPool<T> where T : new()
+        {
+            Stack<T> m_Pool = new Stack<T>();
+
+            public T Get()
+            {
+                var result = m_Pool.Count == 0 ? new T() : m_Pool.Pop();
+                return result;
+            }
+
+            public void Release(T value)
+            {
+                m_Pool.Push(value);
+            }
+
+            static readonly Lazy<SharedObjectPool<T>> s_Instance = new Lazy<SharedObjectPool<T>>();
+            public static SharedObjectPool<T> sharedPool => s_Instance.Value;
+        }
+
         Dictionary<(Type, int), Stack<object>>  m_ArrayPool = new Dictionary<(Type, int), Stack<object>>();
         List<(object, (Type, int))>             m_AllocatedArrays = new List<(object, (Type, int))>();
-
-        Stack<MaterialPropertyBlock>            m_MaterialPropertyBlockPool = new Stack<MaterialPropertyBlock>();
         List<MaterialPropertyBlock>             m_AllocatedMaterialPropertyBlocks = new List<MaterialPropertyBlock>();
 
-        internal RenderGraphTempPool() { }
+        internal RenderGraphObjectPool() { }
 
+        // APIs for automatically released temporary object allocation
         public T[] GetTempArray<T>(int size)
         {
             if (!m_ArrayPool.TryGetValue((typeof(T), size), out var stack))
@@ -29,7 +46,7 @@ namespace UnityEngine.Experimental.Rendering
 
         public MaterialPropertyBlock GetTempMaterialPropertyBlock()
         {
-            var result = m_MaterialPropertyBlockPool.Pop() ?? new MaterialPropertyBlock();
+            var result = SharedObjectPool<MaterialPropertyBlock>.sharedPool.Get();
             result.Clear();
             m_AllocatedMaterialPropertyBlocks.Add(result);
             return result;
@@ -48,10 +65,23 @@ namespace UnityEngine.Experimental.Rendering
 
             foreach(var mpb in m_AllocatedMaterialPropertyBlocks)
             {
-                m_MaterialPropertyBlockPool.Push(mpb);
+                SharedObjectPool<MaterialPropertyBlock>.sharedPool.Release(mpb);
             }
 
             m_AllocatedMaterialPropertyBlocks.Clear();
+        }
+
+        // Regular pooling API
+        public T Get<T>() where T : new()
+        {
+            var toto = SharedObjectPool<T>.sharedPool;
+            return toto.Get();
+        }
+
+        public void Release<T>(T value) where T : new()
+        {
+            var toto = SharedObjectPool<T>.sharedPool;
+            toto.Release(value);
         }
     }
 }

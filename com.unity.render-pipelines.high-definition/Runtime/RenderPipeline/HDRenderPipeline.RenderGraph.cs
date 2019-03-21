@@ -1,10 +1,9 @@
 using System;
 using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering.RenderGraphModule;
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
-    using TextureDesc = RenderGraphResourceRegistry.TextureDesc;
-
     public partial class HDRenderPipeline
     {
         void ExecuteWithRenderGraph(RenderRequest renderRequest, ScriptableRenderContext renderContext, CommandBuffer cmd, DensityVolumeList densityVolumes)
@@ -25,27 +24,24 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             StartStereoRendering(cmd, renderContext, camera);
             RenderDepthPrepass(m_RenderGraph, cullingResults, hdCamera, depthBuffer, normalBuffer, depthAsColorMSAABuffer);
 
-            RenderGraph.RenderGraphGlobalParams renderGraphParams = new RenderGraph.RenderGraphGlobalParams();
+            RenderGraphGlobalParams renderGraphParams = new RenderGraphGlobalParams();
             renderGraphParams.renderingViewport = hdCamera.renderingViewport;
 
             m_RenderGraph.Execute(renderContext, cmd, renderGraphParams);
         }
 
-        class PrepassData : RenderGraph.RenderPassData
+        class PrepassData : RenderPassData
         {
-            public HDCamera hdCamera;
+            public FrameSettings frameSettings;
             public Rect renderingViewport;
-            public CullingResults cullResult;
-            public bool excludeMotion;
             public bool msaaEnabled;
-            public ShaderTagId[] firstPassNames;
-            public RenderQueueRange firstPassRenderQueue;
-            public ShaderTagId[] secondPassNames;
-            public RenderQueueRange secondPassRenderQueue;
 
             public RenderGraphMutableResource depthBuffer;
             public RenderGraphMutableResource depthAsColorBuffer;
             public RenderGraphMutableResource normalBuffer;
+
+            public RenderGraphResource rendererList1;
+            public RenderGraphResource rendererList2;
         }
 
         // RenderDepthPrepass render both opaque and opaque alpha tested based on engine configuration.
@@ -85,95 +81,104 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             switch (hdCamera.frameSettings.litShaderMode)
             {
                 case LitShaderMode.Forward:
+                    using (var builder = renderGraph.AddRenderPass<PrepassData>("Depth Prepass (forward)", out var passData, CustomSamplerId.DepthPrepass.GetSampler()))
                     {
-                        using (var builder = renderGraph.AddRenderPass<PrepassData>("Depth Prepass (forward)", out var passData, CustomSamplerId.DepthPrepass.GetSampler()))
-                        {
-                            passData.hdCamera = hdCamera;
-                            passData.renderingViewport = hdCamera.renderingViewport;
-                            passData.cullResult = cull;
-                            passData.excludeMotion = objectMotionEnabled;
-                            passData.msaaEnabled = msaa;
-                            passData.firstPassNames = m_DepthOnlyAndDepthForwardOnlyPassNames;
-                            passData.firstPassRenderQueue = HDRenderQueue.k_RenderQueue_AllOpaque;
+                        passData.frameSettings = hdCamera.frameSettings;
+                        passData.renderingViewport = hdCamera.renderingViewport;
+                        passData.msaaEnabled = msaa;
 
-                            passData.depthBuffer = builder.WriteTexture(depthBuffer);
-                            passData.normalBuffer = builder.WriteTexture(normalBuffer);
-                            if (msaa)
-                                passData.depthAsColorBuffer = builder.WriteTexture(depthAsColorMSAA);
+                        passData.depthBuffer = builder.WriteTexture(depthBuffer);
+                        passData.normalBuffer = builder.WriteTexture(normalBuffer);
+                        if (msaa)
+                            passData.depthAsColorBuffer = builder.WriteTexture(depthAsColorMSAA);
 
-                            builder.SetRenderFunc(
-                            (RenderGraph.RenderPassData data, RenderGraph.RenderGraphGlobalParams globalParams, RenderGraph.RenderGraphContext renderGraphContext) =>
+                        // Full forward: Output normal buffer for both forward and forwardOnly
+                        // Exclude object that render velocity (if motion vector are enabled)
+                        passData.rendererList1 = builder.UseRendererList(
+                            builder.CreateRendererList(new RendererListDesc(m_DepthOnlyAndDepthForwardOnlyPassNames, cull, hdCamera.camera)
                             {
-                                PrepassData prepassData = (PrepassData)data;
+                                renderQueueRange = HDRenderQueue.k_RenderQueue_AllOpaque,
+                                sortingCriteria = SortingCriteria.CommonOpaque,
+                                excludeMotionVectors = objectMotionEnabled
+                            }));
 
-                                var mrt = RenderGraphUtils.GetMRTArray(prepassData.msaaEnabled ? 2 : 1);
-                                mrt[0] = renderGraphContext.resources.GetTexture(prepassData.normalBuffer);
-                                if (prepassData.msaaEnabled)
-                                    mrt[1] = renderGraphContext.resources.GetTexture(prepassData.depthAsColorBuffer);
+                        builder.SetRenderFunc(
+                        (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                        {
+                            PrepassData prepassData = (PrepassData)data;
 
-                                HDUtils.SetRenderTarget(renderGraphContext.cmd, prepassData.renderingViewport, mrt, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
-                                // XRTODO: wait for XR SDK integration and implement custom version in HDUtils with dynamic resolution support
-                                //XRUtils.DrawOcclusionMesh(cmd, hdCamera.camera, hdCamera.camera.stereoEnabled);
+                            var mrt = RenderGraphUtils.GetMRTArray(prepassData.msaaEnabled ? 2 : 1);
+                            mrt[0] = renderGraphContext.resources.GetTexture(prepassData.normalBuffer);
+                            if (prepassData.msaaEnabled)
+                                mrt[1] = renderGraphContext.resources.GetTexture(prepassData.depthAsColorBuffer);
 
-                                // Full forward: Output normal buffer for both forward and forwardOnly
-                                // Exclude object that render velocity (if motion vector are enabled)
-                                RenderOpaqueRenderList(prepassData.cullResult, prepassData.hdCamera, renderGraphContext.renderContext, renderGraphContext.cmd, prepassData.firstPassNames, 0, prepassData.firstPassRenderQueue, excludeMotionVector: prepassData.excludeMotion);
-                            });
-                        }
+                            HDUtils.SetRenderTarget(renderGraphContext.cmd, prepassData.renderingViewport, mrt, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
+                            // XRTODO: wait for XR SDK integration and implement custom version in HDUtils with dynamic resolution support
+                            //XRUtils.DrawOcclusionMesh(cmd, hdCamera.camera, hdCamera.camera.stereoEnabled);
+
+                            DrawOpaqueRendererList(prepassData.frameSettings, renderGraphContext.resources.GetRendererList(prepassData.rendererList1), renderGraphContext.renderContext, renderGraphContext.cmd);
+                        });
                     }
                     break;
                 case LitShaderMode.Deferred:
+                    string passName = fullDeferredPrepass ? (m_DbufferManager.enableDecals ? "Depth Prepass (deferred) forced by Decals" : "Depth Prepass (deferred)") : "Depth Prepass (deferred incomplete)";
+                    bool excludeMotion = fullDeferredPrepass ? objectMotionEnabled : false;
+
+                    // First deferred alpha tested materials. Alpha tested object have always a prepass even if enableDepthPrepassWithDeferredRendering is disabled
+                    var partialPrepassRenderQueueRange = new RenderQueueRange { lowerBound = (int)RenderQueue.AlphaTest, upperBound = (int)RenderQueue.GeometryLast - 1 };
+
+                    using (var builder = renderGraph.AddRenderPass<PrepassData>(passName, out var passData, CustomSamplerId.DepthPrepass.GetSampler()))
                     {
-                        string passName = fullDeferredPrepass ? (m_DbufferManager.enableDecals ? "Depth Prepass (deferred) forced by Decals" : "Depth Prepass (deferred)") : "Depth Prepass (deferred incomplete)";
-                        bool excludeMotion = fullDeferredPrepass ? objectMotionEnabled : false;
+                        passData.frameSettings = hdCamera.frameSettings;
+                        passData.renderingViewport = hdCamera.renderingViewport;
+                        passData.msaaEnabled = msaa;
 
-                        // First deferred alpha tested materials. Alpha tested object have always a prepass even if enableDepthPrepassWithDeferredRendering is disabled
-                        var partialPrepassRenderQueueRange = new RenderQueueRange { lowerBound = (int)RenderQueue.AlphaTest, upperBound = (int)RenderQueue.GeometryLast - 1 };
-
-                        using (var builder = renderGraph.AddRenderPass<PrepassData>(passName, out var passData, CustomSamplerId.DepthPrepass.GetSampler()))
-                        {
-                            passData.hdCamera = hdCamera;
-                            passData.renderingViewport = hdCamera.renderingViewport;
-                            passData.cullResult = cull;
-                            passData.excludeMotion = excludeMotion;
-                            passData.msaaEnabled = msaa;
-                            passData.firstPassNames = m_DepthOnlyPassNames;
-                            passData.firstPassRenderQueue = fullDeferredPrepass ? HDRenderQueue.k_RenderQueue_AllOpaque : partialPrepassRenderQueueRange;
-                            passData.secondPassNames = m_DepthForwardOnlyPassNames;
-                            passData.secondPassRenderQueue = HDRenderQueue.k_RenderQueue_AllOpaque;
-
-                            passData.depthBuffer = builder.WriteTexture(depthBuffer);
-                            passData.normalBuffer = builder.WriteTexture(normalBuffer);
-                            if (msaa)
-                                passData.depthAsColorBuffer = builder.WriteTexture(depthAsColorMSAA);
-
-                            builder.SetRenderFunc(
-                            (RenderGraph.RenderPassData data, RenderGraph.RenderGraphGlobalParams globalParams, RenderGraph.RenderGraphContext renderGraphContext) =>
+                        // First deferred material
+                        passData.rendererList1 = builder.UseRendererList(
+                            builder.CreateRendererList(new RendererListDesc(m_DepthOnlyPassNames, cull, hdCamera.camera)
                             {
-                                PrepassData prepassData = (PrepassData)data;
+                                renderQueueRange = fullDeferredPrepass ? HDRenderQueue.k_RenderQueue_AllOpaque : partialPrepassRenderQueueRange,
+                                sortingCriteria = SortingCriteria.CommonOpaque,
+                                excludeMotionVectors = excludeMotion
+                            }));
 
-                                // First deferred material
-                                HDUtils.SetRenderTarget(renderGraphContext.cmd, prepassData.renderingViewport, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
-                                // XRTODO: wait for XR SDK integration and implement custom version in HDUtils with dynamic resolution support
-                                //XRUtils.DrawOcclusionMesh(cmd, hdCamera.camera, hdCamera.camera.stereoEnabled);
-                                RenderOpaqueRenderList(prepassData.cullResult, prepassData.hdCamera, renderGraphContext.renderContext, renderGraphContext.cmd, prepassData.firstPassNames, 0, prepassData.firstPassRenderQueue, excludeMotionVector: prepassData.excludeMotion);
+                        // Then forward only material that output normal buffer
+                        passData.rendererList2 = builder.UseRendererList(
+                            builder.CreateRendererList(new RendererListDesc(m_DepthForwardOnlyPassNames, cull, hdCamera.camera)
+                            {
+                                renderQueueRange = HDRenderQueue.k_RenderQueue_AllOpaque,
+                                sortingCriteria = SortingCriteria.CommonOpaque,
+                                excludeMotionVectors = excludeMotion
+                            }));
 
-                                // Then forward only material that output normal buffer
-                                var mrt = RenderGraphUtils.GetMRTArray(prepassData.msaaEnabled ? 2 : 1);
-                                mrt[0] = renderGraphContext.resources.GetTexture(prepassData.normalBuffer);
-                                if (prepassData.msaaEnabled)
-                                    mrt[1] = renderGraphContext.resources.GetTexture(prepassData.depthAsColorBuffer);
+                        passData.depthBuffer = builder.WriteTexture(depthBuffer);
+                        passData.normalBuffer = builder.WriteTexture(normalBuffer);
+                        if (msaa)
+                            passData.depthAsColorBuffer = builder.WriteTexture(depthAsColorMSAA);
 
-                                HDUtils.SetRenderTarget(renderGraphContext.cmd, prepassData.renderingViewport, mrt, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
-                                RenderOpaqueRenderList(prepassData.cullResult, prepassData.hdCamera, renderGraphContext.renderContext, renderGraphContext.cmd, prepassData.secondPassNames, 0, prepassData.secondPassRenderQueue, excludeMotionVector: prepassData.excludeMotion);
-                            });
-                        }
+                        builder.SetRenderFunc(
+                        (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                        {
+                            PrepassData prepassData = (PrepassData)data;
+
+                            HDUtils.SetRenderTarget(renderGraphContext.cmd, prepassData.renderingViewport, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
+                            // XRTODO: wait for XR SDK integration and implement custom version in HDUtils with dynamic resolution support
+                            //XRUtils.DrawOcclusionMesh(cmd, hdCamera.camera, hdCamera.camera.stereoEnabled);
+                            DrawOpaqueRendererList(prepassData.frameSettings, renderGraphContext.resources.GetRendererList(prepassData.rendererList1), renderGraphContext.renderContext, renderGraphContext.cmd);
+
+                            var mrt = RenderGraphUtils.GetMRTArray(prepassData.msaaEnabled ? 2 : 1);
+                            mrt[0] = renderGraphContext.resources.GetTexture(prepassData.normalBuffer);
+                            if (prepassData.msaaEnabled)
+                                mrt[1] = renderGraphContext.resources.GetTexture(prepassData.depthAsColorBuffer);
+
+                            HDUtils.SetRenderTarget(renderGraphContext.cmd, prepassData.renderingViewport, mrt, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
+                            DrawOpaqueRendererList(prepassData.frameSettings, renderGraphContext.resources.GetRendererList(prepassData.rendererList2), renderGraphContext.renderContext, renderGraphContext.cmd);
+                        });
                     }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("Unknown ShaderLitMode");
             }
-            //});
 
     #if ENABLE_RAYTRACING
                 // If there is a ray-tracing environment and the feature is enabled we want to push these objects to the prepass
@@ -184,6 +189,40 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     #endif
 
             return shouldRenderMotionVectorAfterGBuffer;
+        }
+
+        static void DrawRendererList(RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
+        {
+            if (!rendererList.isValid)
+                throw new ArgumentException("Invalid renderer list provided to DrawOpaqueRendererList");
+
+            // This is done here because DrawRenderers API lives outside command buffers so we need to make call this before doing any DrawRenders
+            renderContext.ExecuteCommandBuffer(cmd);
+            cmd.Clear();
+
+            if (rendererList.stateBlock == null)
+                renderContext.DrawRenderers(rendererList.cullingResult, ref rendererList.drawSettings, ref rendererList.filteringSettings);
+            else
+            {
+                var renderStateBlock = rendererList.stateBlock.Value;
+                renderContext.DrawRenderers(rendererList.cullingResult, ref rendererList.drawSettings, ref rendererList.filteringSettings, ref renderStateBlock);
+            }
+        }
+
+        static void DrawOpaqueRendererList(in FrameSettings frameSettings, RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
+        {
+            if (!frameSettings.IsEnabled(FrameSettingsField.OpaqueObjects))
+                return;
+
+            DrawRendererList(rendererList, renderContext, cmd);
+        }
+
+        static void DrawTransparentRendererList(in FrameSettings frameSettings, RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
+        {
+            if (!frameSettings.IsEnabled(FrameSettingsField.TransparentObjects))
+                return;
+
+            DrawRendererList(rendererList, renderContext, cmd);
         }
 
         bool NeedClearColorBuffer(HDCamera hdCamera)

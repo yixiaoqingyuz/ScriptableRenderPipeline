@@ -1,12 +1,8 @@
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.Rendering;
-using System.Linq;
 
-namespace UnityEngine.Experimental.Rendering
+namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 {
-    using RTHandle = RTHandleSystem.RTHandle;
-
     public static class RenderGraphUtils
     {
 

@@ -3,46 +3,58 @@ using System.Collections.Generic;
 using UnityEngine.Rendering;
 using UnityEngine.Profiling;
 
-namespace UnityEngine.Experimental.Rendering
+namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 {
     using RTHandle = RTHandleSystem.RTHandle;
 
+    public ref struct RenderGraphContext
+    {
+        public ScriptableRenderContext renderContext;
+        public CommandBuffer cmd;
+        public RenderGraphObjectPool renderGraphPool;
+        public RenderGraphResourceRegistry resources;
+    }
+
+    public ref struct RenderGraphGlobalParams
+    {
+        public Rect renderingViewport;
+    }
+
+    public class RenderPassData { }
+    public delegate void RenderFunc(RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext);
+
     public class RenderGraph
     {
-        struct RenderPassDescriptor
+        internal class RenderPassDescriptor
         {
             public string                           passName;
             public RenderFunc                       renderFunc;
             public RenderPassData                   passData;
             public CustomSampler                    customSampler;
-            public List<RenderGraphResource>        resourceReadList;
-            public List<RenderGraphMutableResource> resourceWriteList;
+            public List<RenderGraphResource>        resourceReadList = new List<RenderGraphResource>();
+            public List<RenderGraphMutableResource> resourceWriteList = new List<RenderGraphMutableResource>();
+            public List<RenderGraphResource>        usedRendererListList = new List<RenderGraphResource>();
             public bool                             enableAsyncCompute;
+
+            internal void Clear()
+            {
+                passName = "";
+                passData = null;
+                renderFunc = null;
+                resourceReadList.Clear();
+                resourceWriteList.Clear();
+                usedRendererListList.Clear();
+                enableAsyncCompute = false;
+            }
         }
 
-        RenderGraphResourceRegistry                     m_Resources = new RenderGraphResourceRegistry();
-        RenderGraphTempPool                             m_TemporaryPool = new RenderGraphTempPool();
-        List<RenderPassDescriptor>                      m_RenderPasses = new List<RenderPassDescriptor>();
-        Dictionary<Type, Queue<RenderPassData>>         m_RenderPassDataPool = new Dictionary<Type, Queue<RenderPassData>>();
-        ObjectPool<List<RenderGraphResource>>           m_ResourceReadListPool = new ObjectPool<List<RenderGraphResource>>(null, null);
-        ObjectPool<List<RenderGraphMutableResource>>    m_ResourceWriteListPool = new ObjectPool<List<RenderGraphMutableResource>>(null, null);
+        RenderGraphResourceRegistry             m_Resources = new RenderGraphResourceRegistry();
+        RenderGraphObjectPool                   m_RenderGraphPool = new RenderGraphObjectPool();
+        List<RenderPassDescriptor>              m_RenderPasses = new List<RenderPassDescriptor>();
+        List<RenderGraphResource>               m_RendererLists = new List<RenderGraphResource>();
+        Dictionary<Type, Queue<RenderPassData>> m_RenderPassDataPool = new Dictionary<Type, Queue<RenderPassData>>();
 
         #region Public Interface
-        public ref struct RenderGraphContext
-        {
-            public ScriptableRenderContext     renderContext;
-            public CommandBuffer               cmd;
-            public RenderGraphTempPool         tempPool;
-            public RenderGraphResourceRegistry resources;
-        }
-
-        public ref struct RenderGraphGlobalParams
-        {
-            public Rect renderingViewport;
-        }
-
-        public class RenderPassData { }
-        public delegate void RenderFunc(RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext);
 
         public void Cleanup()
         {
@@ -55,7 +67,7 @@ namespace UnityEngine.Experimental.Rendering
             return m_Resources.ImportTexture(rt);
         }
 
-        public RenderGraphMutableResource CreateTexture(in RenderGraphResourceRegistry.TextureDesc desc)
+        public RenderGraphMutableResource CreateTexture(in TextureDesc desc)
         {
             return m_Resources.CreateTexture(desc);
         }
@@ -65,19 +77,16 @@ namespace UnityEngine.Experimental.Rendering
             // WARNING: Currently pooling won't re-init the data inside PassData... this could lead to problems if users don't fill all the members properly (like having stale resource handles for example)
             passData = AllocatePassData<PassData>();
 
-            m_RenderPasses.Add(new RenderPassDescriptor
-            {
-                passName = passName,
-                renderFunc = null,
-                passData = passData,
-                customSampler = customSampler
-            });
+            var renderPass = m_RenderGraphPool.Get<RenderPassDescriptor>();
+            renderPass.Clear();
+            renderPass.passName = passName;
+            renderPass.renderFunc = null;
+            renderPass.passData = passData;
+            renderPass.customSampler = customSampler;
 
-            var resourceReadList = m_ResourceReadListPool.Get();
-            resourceReadList.Clear();
-            var resourceWriteList = m_ResourceWriteListPool.Get();
-            resourceWriteList.Clear();
-            return new RenderGraphBuilder(this, m_Resources, resourceReadList, resourceWriteList);
+            m_RenderPasses.Add(renderPass);
+
+            return new RenderGraphBuilder(this, m_Resources, renderPass);
         }
 
         public void Execute(ScriptableRenderContext renderContext, CommandBuffer cmd, RenderGraphGlobalParams parameters)
@@ -88,24 +97,30 @@ namespace UnityEngine.Experimental.Rendering
                 var pass = m_RenderPasses[passIndex];
                 foreach (var resourceWrite in pass.resourceWriteList)
                 {
-                    ref var res = ref m_Resources.GetResource(resourceWrite);
+                    ref var res = ref m_Resources.GetTexturetResource(resourceWrite);
                     res.firstWritePassIndex = Math.Min(passIndex, res.firstWritePassIndex);
                 }
 
                 foreach (var resourceRead in pass.resourceReadList)
                 {
-                    ref var res = ref m_Resources.GetResource(resourceRead);
+                    ref var res = ref m_Resources.GetTexturetResource(resourceRead);
                     res.lastReadPassIndex = Math.Max(passIndex, res.lastReadPassIndex);
                 }
+
+                // Gather all renderer lists
+                m_RendererLists.AddRange(pass.usedRendererListList);
             }
 
+            // Creates all renderer lists
+            m_Resources.CreateRendererLists(m_RendererLists);
+
+            // Second pass, execution
             RenderGraphContext rgContext = new RenderGraphContext();
             rgContext.cmd = cmd;
             rgContext.renderContext = renderContext;
-            rgContext.tempPool = m_TemporaryPool;
+            rgContext.renderGraphPool = m_RenderGraphPool;
             rgContext.resources = m_Resources;
 
-            // Second pass, execution
             try
             {
                 for (int passIndex = 0; passIndex < m_RenderPasses.Count; ++passIndex)
@@ -128,6 +143,7 @@ namespace UnityEngine.Experimental.Rendering
             {
                 ClearRenderPasses();
                 m_Resources.Clear();
+                m_RendererLists.Clear();
             }
         }
         #endregion
@@ -137,10 +153,10 @@ namespace UnityEngine.Experimental.Rendering
         {
             foreach (var resource in pass.resourceWriteList)
             {
-                ref var resourceDesc = ref m_Resources.GetResource(resource);
+                ref var resourceDesc = ref m_Resources.GetTexturetResource(resource);
                 if (!resourceDesc.imported && resourceDesc.firstWritePassIndex == passIndex)
                 {
-                    m_Resources.CreateResourceForPass(resource);
+                    m_Resources.CreateTextureForPass(resource);
 
                     if (resourceDesc.desc.clearBuffer)
                     {
@@ -158,14 +174,14 @@ namespace UnityEngine.Experimental.Rendering
         void PostRenderPassExecute(int passIndex, in RenderPassDescriptor pass)
         {
             ReleasePassData(pass.passData);
-            m_TemporaryPool.ReleaseAllTempAlloc();
+            m_RenderGraphPool.ReleaseAllTempAlloc();
 
             foreach (var resource in pass.resourceReadList)
             {
-                ref var resourceDesc = ref m_Resources.GetResource(resource);
+                ref var resourceDesc = ref m_Resources.GetTexturetResource(resource);
                 if (!resourceDesc.imported && resourceDesc.lastReadPassIndex == passIndex)
                 {
-                    m_Resources.ReleaseResourceForPass(resource);
+                    m_Resources.ReleaseTextureForPass(resource);
                 }
             }
 
@@ -173,37 +189,19 @@ namespace UnityEngine.Experimental.Rendering
             // So here we test resources written, if they have the initial lastReadPassIndex value of zero, it means that no subsequent pass will read it so we can release it
             foreach (var resource in pass.resourceWriteList)
             {
-                ref var resourceDesc = ref m_Resources.GetResource(resource);
+                ref var resourceDesc = ref m_Resources.GetTexturetResource(resource);
                 if (!resourceDesc.imported && resourceDesc.lastReadPassIndex == 0)
                 {
-                    m_Resources.ReleaseResourceForPass(resource);
+                    m_Resources.ReleaseTextureForPass(resource);
                 }
             }
-        }
-
-        internal void FinalizeRenderPassBuild(RenderFunc renderFunc, List<RenderGraphResource> resourceReadList, List<RenderGraphMutableResource> resourceWriteList, bool enableAsyncCompute)
-        {
-            if (renderFunc == null)
-            {
-                Debug.LogError("AddRenderPass was not provided with an execute function.");
-                m_RenderPasses.RemoveRange(m_RenderPasses.Count - 1, 1); // remove pass being currently added.
-                return;
-            }
-
-            var desc = m_RenderPasses[m_RenderPasses.Count - 1];
-            desc.renderFunc = renderFunc;
-            desc.resourceReadList = resourceReadList;
-            desc.resourceWriteList = resourceWriteList;
-            desc.enableAsyncCompute = enableAsyncCompute;
-            m_RenderPasses[m_RenderPasses.Count - 1] = desc;
         }
 
         void ClearRenderPasses()
         {
             foreach(var pass in m_RenderPasses)
             {
-                m_ResourceReadListPool.Release(pass.resourceReadList);
-                m_ResourceWriteListPool.Release(pass.resourceWriteList);
+                m_RenderGraphPool.Release(pass);
             }
             m_RenderPasses.Clear();
         }
@@ -233,6 +231,8 @@ namespace UnityEngine.Experimental.Rendering
 
             pool.Enqueue(data);
         }
+
+
         #endregion
     }
 }

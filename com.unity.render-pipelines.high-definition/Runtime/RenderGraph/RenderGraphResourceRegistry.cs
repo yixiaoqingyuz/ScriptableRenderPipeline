@@ -2,135 +2,173 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Rendering;
 
-namespace UnityEngine.Experimental.Rendering
+namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 {
     using RTHandle = RTHandleSystem.RTHandle;
 
-    public class RenderGraphResourceRegistry
+    #region Resource Descriptors
+    public enum TextureSizeMode
     {
-        public enum TextureSizeMode
+        Explicit,
+        Scale,
+        Functor
+    }
+
+    public struct TextureDesc
+    {
+        public TextureSizeMode sizeMode;
+        public int width;
+        public int height;
+        public int slices;
+        public Vector2 scale;
+        public ScaleFunc func;
+        public DepthBits depthBufferBits;
+        public GraphicsFormat colorFormat;
+        public FilterMode filterMode;
+        public TextureWrapMode wrapMode;
+        public TextureDimension dimension;
+        public bool enableRandomWrite;
+        public bool useMipMap;
+        public bool autoGenerateMips;
+        public bool isShadowMap;
+        public int anisoLevel;
+        public float mipMapBias;
+        public bool enableMSAA; // Only supported for Scale and Functor size mode
+        public MSAASamples msaaSamples; // Only supported for Explicit size mode
+        public bool bindTextureMS;
+        public bool useDynamicScale;
+        public bool xrInstancing;
+        public RenderTextureMemoryless memoryless;
+        public string name;
+
+        // Initial state. Those should not be used in the hash
+        public bool clearBuffer;
+        public Color clearColor;
+
+        public TextureDesc(int width, int height)
+            : this()
         {
-            Explicit,
-            Scale,
-            Functor
+            // Size related init
+            sizeMode = TextureSizeMode.Explicit;
+            this.width = width;
+            this.height = height;
+            // Important default values not handled by zero construction in this()
+            slices = 1;
+            msaaSamples = MSAASamples.None;
+            dimension = TextureDimension.Tex2D;
         }
 
-        public struct TextureDesc
+        public TextureDesc(Vector2 scale)
+            : this()
         {
-            public TextureSizeMode sizeMode;
-            public int width;
-            public int height;
-            public int slices;
-            public Vector2 scale;
-            public ScaleFunc func;
-            public DepthBits depthBufferBits;
-            public GraphicsFormat colorFormat;
-            public FilterMode filterMode;
-            public TextureWrapMode wrapMode;
-            public TextureDimension dimension;
-            public bool enableRandomWrite;
-            public bool useMipMap;
-            public bool autoGenerateMips;
-            public bool isShadowMap;
-            public int anisoLevel;
-            public float mipMapBias;
-            public bool enableMSAA; // Only supported for Scale and Functor size mode
-            public MSAASamples msaaSamples; // Only supported for Explicit size mode
-            public bool bindTextureMS;
-            public bool useDynamicScale;
-            public bool xrInstancing;
-            public RenderTextureMemoryless memoryless;
-            public string name;
+            // Size related init
+            sizeMode = TextureSizeMode.Scale;
+            this.scale = scale;
+            // Important default values not handled by zero construction in this()
+            slices = 1;
+            msaaSamples = MSAASamples.None;
+            dimension = TextureDimension.Tex2D;
+        }
 
-            // Initial state. Those should not be used in the hash
-            public bool clearBuffer;
-            //public float clearDepthValue;
-            public Color clearColor;
+        public TextureDesc(ScaleFunc func)
+            : this()
+        {
+            // Size related init
+            sizeMode = TextureSizeMode.Functor;
+            this.func = func;
+            // Important default values not handled by zero construction in this()
+            slices = 1;
+            msaaSamples = MSAASamples.None;
+            dimension = TextureDimension.Tex2D;
+        }
 
-            public TextureDesc(int width, int height)
-                : this()
+        public override int GetHashCode()
+        {
+            int hashCode = 17;
+
+            unchecked
             {
-                // Size related init
-                sizeMode = TextureSizeMode.Explicit;
-                this.width = width;
-                this.height = height;
-                // Important default values not handled by zero construction in this()
-                slices = 1;
-                msaaSamples = MSAASamples.None;
-                dimension = TextureDimension.Tex2D;
-            }
-
-            public TextureDesc(Vector2 scale)
-                : this()
-            {
-                // Size related init
-                sizeMode = TextureSizeMode.Scale;
-                this.scale = scale;
-                // Important default values not handled by zero construction in this()
-                slices = 1;
-                msaaSamples = MSAASamples.None;
-                dimension = TextureDimension.Tex2D;
-            }
-
-            public TextureDesc(ScaleFunc func)
-                : this()
-            {
-                // Size related init
-                sizeMode = TextureSizeMode.Functor;
-                this.func = func;
-                // Important default values not handled by zero construction in this()
-                slices = 1;
-                msaaSamples = MSAASamples.None;
-                dimension = TextureDimension.Tex2D;
-            }
-
-            public override int GetHashCode()
-            {
-                int hashCode = 17;
-
-                unchecked
+                switch (sizeMode)
                 {
-                    switch (sizeMode)
-                    {
-                        case TextureSizeMode.Explicit:
-                            hashCode = hashCode * 23 + width;
-                            hashCode = hashCode * 23 + height;
-                            hashCode = hashCode * 23 + (int)msaaSamples;
-                            break;
-                        case TextureSizeMode.Functor:
-                            if (func != null)
-                                hashCode = hashCode * 23 + func.GetHashCode();
-                            hashCode = hashCode * 23 + (enableMSAA ? 1 : 0);
-                            break;
-                        case TextureSizeMode.Scale:
-                            hashCode = hashCode * 23 + scale.x.GetHashCode();
-                            hashCode = hashCode * 23 + scale.y.GetHashCode();
-                            hashCode = hashCode * 23 + (enableMSAA ? 1 : 0);
-                            break;
-                    }
-
-                    hashCode = hashCode * 23 + mipMapBias.GetHashCode();
-                    hashCode = hashCode * 23 + slices;
-                    hashCode = hashCode * 23 + (int)depthBufferBits;
-                    hashCode = hashCode * 23 + (int)colorFormat;
-                    hashCode = hashCode * 23 + (int)filterMode;
-                    hashCode = hashCode * 23 + (int)wrapMode;
-                    hashCode = hashCode * 23 + (int)dimension;
-                    hashCode = hashCode * 23 + (int)memoryless;
-                    hashCode = hashCode * 23 + anisoLevel;
-                    hashCode = hashCode * 23 + (enableRandomWrite ? 1 : 0);
-                    hashCode = hashCode * 23 + (useMipMap ? 1 : 0);
-                    hashCode = hashCode * 23 + (autoGenerateMips ? 1 : 0);
-                    hashCode = hashCode * 23 + (isShadowMap ? 1 : 0);
-                    hashCode = hashCode * 23 + (bindTextureMS ? 1 : 0);
-                    hashCode = hashCode * 23 + (useDynamicScale ? 1 : 0);
-                    hashCode = hashCode * 23 + (xrInstancing ? 1 : 0);
+                    case TextureSizeMode.Explicit:
+                        hashCode = hashCode * 23 + width;
+                        hashCode = hashCode * 23 + height;
+                        hashCode = hashCode * 23 + (int)msaaSamples;
+                        break;
+                    case TextureSizeMode.Functor:
+                        if (func != null)
+                            hashCode = hashCode * 23 + func.GetHashCode();
+                        hashCode = hashCode * 23 + (enableMSAA ? 1 : 0);
+                        break;
+                    case TextureSizeMode.Scale:
+                        hashCode = hashCode * 23 + scale.x.GetHashCode();
+                        hashCode = hashCode * 23 + scale.y.GetHashCode();
+                        hashCode = hashCode * 23 + (enableMSAA ? 1 : 0);
+                        break;
                 }
 
-                return hashCode;
+                hashCode = hashCode * 23 + mipMapBias.GetHashCode();
+                hashCode = hashCode * 23 + slices;
+                hashCode = hashCode * 23 + (int)depthBufferBits;
+                hashCode = hashCode * 23 + (int)colorFormat;
+                hashCode = hashCode * 23 + (int)filterMode;
+                hashCode = hashCode * 23 + (int)wrapMode;
+                hashCode = hashCode * 23 + (int)dimension;
+                hashCode = hashCode * 23 + (int)memoryless;
+                hashCode = hashCode * 23 + anisoLevel;
+                hashCode = hashCode * 23 + (enableRandomWrite ? 1 : 0);
+                hashCode = hashCode * 23 + (useMipMap ? 1 : 0);
+                hashCode = hashCode * 23 + (autoGenerateMips ? 1 : 0);
+                hashCode = hashCode * 23 + (isShadowMap ? 1 : 0);
+                hashCode = hashCode * 23 + (bindTextureMS ? 1 : 0);
+                hashCode = hashCode * 23 + (useDynamicScale ? 1 : 0);
+                hashCode = hashCode * 23 + (xrInstancing ? 1 : 0);
             }
+
+            return hashCode;
+        }
+    }
+
+    public struct RendererListDesc
+    {
+        public SortingCriteria      sortingCriteria;
+        public PerObjectData        rendererConfiguration;
+        public RenderQueueRange     renderQueueRange;
+        public RenderStateBlock?    stateBlock;
+        public Material             overrideMaterial;
+        public bool                 excludeMotionVectors;
+
+        // Mandatory parameters passed through constructors
+        public CullingResults       cullingResult { get; private set; }
+        public Camera               camera { get; private set; }
+        public ShaderTagId          passName { get; private set; }
+        public ShaderTagId[]        passNames { get; private set; }
+
+        public RendererListDesc(ShaderTagId passName, CullingResults cullingResult, Camera camera)
+            : this()
+        {
+            this.passName = passName;
+            this.passNames = null;
+            this.cullingResult = cullingResult;
+            this.camera = camera;
         }
 
+        public RendererListDesc(ShaderTagId[] passNames, CullingResults cullingResult, Camera camera)
+            : this()
+        {
+            this.passNames = passNames;
+            this.passName = ShaderTagId.none;
+            this.cullingResult = cullingResult;
+            this.camera = camera;
+        }
+    }
+    #endregion
+
+    public class RenderGraphResourceRegistry
+    {
+        static readonly ShaderTagId s_EmptyName = new ShaderTagId("");
+
+        #region Resources
         internal struct TextureResource
         {
             public TextureDesc  desc;
@@ -140,7 +178,7 @@ namespace UnityEngine.Experimental.Rendering
             public int          firstWritePassIndex;
             public int          lastReadPassIndex;
 
-            public TextureResource(RTHandle rt)
+            internal TextureResource(RTHandle rt)
                 : this()
             {
                 Reset();
@@ -149,7 +187,7 @@ namespace UnityEngine.Experimental.Rendering
                 imported = true;
             }
 
-            public TextureResource(in TextureDesc desc)
+            internal TextureResource(in TextureDesc desc)
                 : this()
             {
                 Reset();
@@ -167,60 +205,95 @@ namespace UnityEngine.Experimental.Rendering
             }
         }
 
-        // No List<> here because we want to be able to access and update elements by ref
-        // And we want to avoid allocation so TextureResource stays a struct
-        TextureResource[]                   m_TextureResources = new TextureResource[32];
-        int                                 m_TextureResourcesCount = 0;
+        internal struct RendererListResource
+        {
+            public RendererListDesc desc;
+            public RendererList     rendererList;
+
+            internal RendererListResource(in RendererListDesc desc)
+            {
+                this.desc = desc;
+                this.rendererList = new RendererList(); // Invalid by default
+            }
+        }
+        #endregion
+
+        #region Helpers
+        class ResourceArray<T>
+        {
+            // No List<> here because we want to be able to access and update elements by ref
+            // And we want to avoid allocation so TextureResource stays a struct
+            T[] m_ResourceArray = new T[32];
+            int m_ResourcesCount = 0;
+
+            public void Clear()
+            {
+                m_ResourcesCount = 0;
+            }
+
+            public int Add(T value)
+            {
+                int index = m_ResourcesCount;
+
+                // Grow array if needed;
+                if (index >= m_ResourceArray.Length)
+                {
+                    var newArray = new T[m_ResourceArray.Length * 2];
+                    Array.Copy(m_ResourceArray, newArray, m_ResourceArray.Length);
+                    m_ResourceArray = newArray;
+                }
+
+                m_ResourceArray[index] = value;
+                m_ResourcesCount++;
+                return index;
+            }
+
+            public ref T this[int index]
+            {
+                get
+                {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+                    if (index >= m_ResourcesCount)
+                        throw new IndexOutOfRangeException();
+#endif
+                    return ref m_ResourceArray[index];
+                }
+            }
+        }
+        #endregion
+
+        ResourceArray<TextureResource>      m_TextureResources = new ResourceArray<TextureResource>();
         Dictionary<int, Stack<RTHandle>>    m_TexturePool = new Dictionary<int, Stack<RTHandle>>();
+        ResourceArray<RendererListResource> m_RendererListResources = new ResourceArray<RendererListResource>();
 
         // Diagnostic only
         List<(int, RTHandle)>               m_AllocatedTextures = new List<(int, RTHandle)>();
 
         #region Public Interface
-        internal void Cleanup()
-        {
-            foreach (var value in m_TexturePool)
-            {
-                foreach (var rt in value.Value)
-                {
-                    RTHandles.Release(rt);
-                }
-            }
-        }
-
         public RTHandle GetTexture(in RenderGraphResource handle)
         {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-            if (handle.type == RenderGraphResourceType.Invalid || m_TextureResources[handle.handle].rt == null)
-                throw new InvalidOperationException("Trying to access a RenderGraphResource that has not been created or imported or that has been released.");
+            if (handle.type != RenderGraphResourceType.Texture || m_TextureResources[handle.handle].rt == null)
+                throw new InvalidOperationException("Trying to access a RenderGraphResource that is not a texture or is invalid.");
 #endif
             return m_TextureResources[handle.handle].rt;
+        }
+
+        public RendererList GetRendererList(in RenderGraphResource handle)
+        {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            if (handle.type != RenderGraphResourceType.RendererList || !m_RendererListResources[handle.handle].rendererList.isValid)
+                throw new InvalidOperationException("Trying to access a RenderGraphResource that is not a RendererList or is invalid.");
+#endif
+            return m_RendererListResources[handle.handle].rendererList;
         }
         #endregion
 
         #region Internal Interface
-
-        int AddTextureResource(TextureResource tex)
-        {
-            int index = m_TextureResourcesCount;
-
-            // Grow array if needed;
-            if(index >= m_TextureResources.Length)
-            {
-                var newArray = new TextureResource[m_TextureResources.Length * 2];
-                Array.Copy(m_TextureResources, newArray, m_TextureResources.Length);
-                m_TextureResources = newArray;
-            }
-
-            m_TextureResources[index] = tex;
-            m_TextureResourcesCount++;
-            return index;
-        }
-
         // Texture Creation/Import APIs are internal because creation should only go through RenderGraph (for globals, outside of render passes) and RenderGraphBuilder (for render passes)
         internal RenderGraphMutableResource ImportTexture(RTHandle rt)
         {
-            int newHandle = AddTextureResource(new TextureResource(rt));
+            int newHandle = m_TextureResources.Add(new TextureResource(rt));
             return new RenderGraphMutableResource(newHandle, RenderGraphResourceType.Texture);
         }
 
@@ -228,19 +301,29 @@ namespace UnityEngine.Experimental.Rendering
         {
             ValidateTextureDesc(desc);
 
-            int newHandle = AddTextureResource(new TextureResource(desc));
+            int newHandle = m_TextureResources.Add(new TextureResource(desc));
             return new RenderGraphMutableResource(newHandle, RenderGraphResourceType.Texture);
         }
 
         // Not sure about this... breaks encapsulation but it allows us to avoid having render graph execution code here
         // (lastRead/FirstWrite/ClearResource etc)
-        internal ref TextureResource GetResource(RenderGraphResource res)
+        internal ref TextureResource GetTexturetResource(RenderGraphResource res)
         {
             return ref m_TextureResources[res.handle];
         }
 
-        internal void CreateResourceForPass(RenderGraphResource res)
+        internal RenderGraphResource CreateRendererList(in RendererListDesc desc)
         {
+            ValidateRendererListDesc(desc);
+
+            int newHandle = m_RendererListResources.Add(new RendererListResource(desc));
+            return new RenderGraphResource(newHandle, RenderGraphResourceType.RendererList);
+        }
+
+        internal void CreateTextureForPass(RenderGraphResource res)
+        {
+            Debug.Assert(res.type == RenderGraphResourceType.Texture);
+
             ref var resource = ref m_TextureResources[res.handle];
             var desc = resource.desc;
             int hashCode = desc.GetHashCode();
@@ -277,8 +360,10 @@ namespace UnityEngine.Experimental.Rendering
             resource.cachedHash = hashCode;
         }
 
-        internal void ReleaseResourceForPass(RenderGraphResource res)
+        internal void ReleaseTextureForPass(RenderGraphResource res)
         {
+            Debug.Assert(res.type == RenderGraphResourceType.Texture);
+
             ref var resource = ref m_TextureResources[res.handle];
             ReleaseTextureResource(resource.cachedHash, resource.rt);
             resource.cachedHash = -1;
@@ -334,6 +419,28 @@ namespace UnityEngine.Experimental.Rendering
 #endif
         }
 
+        void ValidateRendererListDesc(in RendererListDesc desc)
+        {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+
+            if (desc.passName != ShaderTagId.none && desc.passNames != null
+                || desc.passName == ShaderTagId.none && desc.passNames == null)
+            {
+                throw new ArgumentException("Renderer List creation descriptor must contain either a single passName or an array of passNames.");
+            }
+
+            if (desc.renderQueueRange.lowerBound == 0 && desc.renderQueueRange.upperBound == 0)
+            {
+                throw new ArgumentException("Renderer List creation descriptor must have a valid RenderQueueRange.");
+            }
+
+            if (desc.camera == null)
+            {
+                throw new ArgumentException("Renderer List creation descriptor must have a valid Camera.");
+            }
+#endif
+        }
+
         bool TryGetRenderTarget(int hashCode, out RTHandle rt)
         {
             if (m_TexturePool.TryGetValue(hashCode, out var stack) && stack.Count > 0)
@@ -346,9 +453,65 @@ namespace UnityEngine.Experimental.Rendering
             return false;
         }
 
+        internal void CreateRendererLists(List<RenderGraphResource> rendererLists)
+        {
+            // For now we just create a simple structure
+            // but when the proper API is available in trunk we'll kick off renderer lists creation jobs here.
+            foreach(var rendererList in rendererLists)
+            {
+                Debug.Assert(rendererList.type == RenderGraphResourceType.RendererList);
+
+                ref var rendererListResource = ref m_RendererListResources[rendererList.handle];
+                ref var desc = ref rendererListResource.desc;
+                RendererList newRenderList = new RendererList();
+
+                var sortingSettings = new SortingSettings(desc.camera)
+                {
+                    criteria = desc.sortingCriteria
+                };
+
+                var drawSettings = new DrawingSettings(s_EmptyName, sortingSettings)
+                {
+                    perObjectData = desc.rendererConfiguration
+                };
+
+                if (desc.passName != ShaderTagId.none)
+                {
+                    Debug.Assert(desc.passNames == null);
+                    drawSettings.SetShaderPassName(0, desc.passName);
+                }
+                else
+                {
+                    for (int i = 0; i < desc.passNames.Length; ++i)
+                    {
+                        drawSettings.SetShaderPassName(i, desc.passNames[i]);
+                    }
+                }
+
+                if (desc.overrideMaterial != null)
+                {
+                    drawSettings.overrideMaterial = desc.overrideMaterial;
+                    drawSettings.overrideMaterialPassIndex = 0;
+                }
+
+                var filterSettings = new FilteringSettings(desc.renderQueueRange)
+                {
+                    excludeMotionVectorObjects = desc.excludeMotionVectors
+                };
+
+                newRenderList.isValid = true;
+                newRenderList.cullingResult = desc.cullingResult;
+                newRenderList.drawSettings = drawSettings;
+                newRenderList.filteringSettings = filterSettings;
+                newRenderList.stateBlock = desc.stateBlock;
+                rendererListResource.rendererList = newRenderList;
+            }
+        }
+
         internal void Clear()
         {
-            m_TextureResourcesCount = 0;
+            m_TextureResources.Clear();
+            m_RendererListResources.Clear();
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             if (m_AllocatedTextures.Count != 0)
@@ -361,6 +524,28 @@ namespace UnityEngine.Experimental.Rendering
             }
 #endif
         }
-#endregion
+
+        internal void Cleanup()
+        {
+            foreach (var value in m_TexturePool)
+            {
+                foreach (var rt in value.Value)
+                {
+                    RTHandles.Release(rt);
+                }
+            }
+        }
+        #endregion
+    }
+
+    // This is a temporary structure and this is why it's declared here.
+    // Plan is to define this correctly on the C++ side and expose it to C# later.
+    public struct RendererList
+    {
+        public bool                 isValid;
+        public CullingResults       cullingResult;
+        public DrawingSettings      drawSettings;
+        public FilteringSettings    filteringSettings;
+        public RenderStateBlock?    stateBlock;
     }
 }

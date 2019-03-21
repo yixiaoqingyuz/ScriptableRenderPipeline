@@ -1,9 +1,10 @@
-namespace UnityEngine.Experimental.Rendering
+namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 {
     internal enum RenderGraphResourceType
     {
         Invalid = 0, // Don't change this. We need this to be Zero otherwise default zero initialized RenderGraphResource would have a valid Type
-        Texture
+        Texture,
+        RendererList
     }
 
     public struct RenderGraphResource

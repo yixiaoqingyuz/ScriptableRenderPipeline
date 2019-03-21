@@ -2,38 +2,47 @@ using UnityEngine;
 
 namespace UnityEditor.Rendering.LookDev
 {
-    public struct LookDevContext
+    [System.Serializable]
+    public class LookDevContext : ScriptableObject
     {
-        public enum View { A, B };
-        public enum Display { FullA, FullB, HorizontalSplit, VerticalSplit, CustomSplit, CustomCircular }
+        [field: SerializeField]
+        public LayoutContext layout { get; private set; } = new LayoutContext();
+        [field: SerializeField]
+        public ViewContext viewA { get; private set; } = new ViewContext();
+        [field: SerializeField]
+        public ViewContext viewB { get; private set; } = new ViewContext();
+        [field: SerializeField]
+        public LookDevCameraState cameraA { get; private set; } = new LookDevCameraState();
+        [field: SerializeField]
+        public LookDevCameraState cameraB { get; private set; } = new LookDevCameraState();
+    }
+    
+    [System.Serializable]
+    public class LayoutContext
+    {
+        // /!\ WARNING: these value name are used as uss file too.
+        // if your rename here, rename in the uss too.
+        public enum Layout { FullA, FullB, HorizontalSplit, VerticalSplit, CustomSplit, CustomCircular }
 
-        public struct ViewContext
-        {
-            public readonly View view;
-            public ViewContext(View view) => this.view = view;
+        public Layout viewLayout;
+        public bool showEnvironmentPanel;
 
-            //[TODO: add object]
-            //[TODO: add object position]
-            //[TODO: add camera frustum]
-            //[TODO: add HDRI]
-        }
+        [SerializeField]
+        internal LookDevGizmoState gizmoState = new LookDevGizmoState();
 
-        public static LookDevContext @default = new LookDevContext
-        {
-            viewA = new ViewContext(View.A),
-            viewB = new ViewContext(View.B)
-        };
-
-        public Display displayLayout;
-
-        public ViewContext viewA { get; private set; }
-        public ViewContext viewB { get; private set; }
-
-        //[TODO: add tool position ?]
+        public bool isSimpleView => viewLayout == Layout.FullA || viewLayout == Layout.FullB;
+        public bool isMultiView => viewLayout == Layout.HorizontalSplit || viewLayout == Layout.VerticalSplit;
+        public bool isCombinedView => viewLayout == Layout.CustomSplit || viewLayout == Layout.CustomCircular;
     }
 
-    public class LookDevSave : ScriptableObject
+    [System.Serializable]
+    public class ViewContext
     {
-        public LookDevContext context;
+        //[TODO: add object]
+        //[TODO: add object position]
+        //[TODO: add camera frustum]
+        //[TODO: add HDRI]
+        //[TODO: manage shadow and lights]
     }
+    
 }

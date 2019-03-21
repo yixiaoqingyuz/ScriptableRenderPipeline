@@ -6,7 +6,7 @@ AnimatorController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Sphere_Reference
+  m_Name: 24_MotionVector_B
   serializedVersion: 5
   m_AnimatorParameters: []
   m_AnimatorLayers:

@@ -32,14 +32,14 @@ struct ps_input
 #define VFX_VARYING_VELOCITY_CPOS cPosNonJiterred
 #define VFX_VARYING_VELOCITY_CPOS_PREVIOUS cPosPrevious
 #endif
-
-${VFXInclude("Shaders/ParticleQuads/Pass.template")}
+			
+${VFXInclude("Shaders/ParticleMeshes/Pass.template")}	
 	
 #pragma fragment frag
 float4 frag(ps_input i) : SV_TARGET
 {
 	float alpha = VFXGetFragmentColor(i).a;
-	alpha *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;
+	alpha *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;		
 	VFXClipFragmentColor(alpha,i);
 	
 	#if IS_MOTION_VECTORS_PASS
@@ -49,4 +49,3 @@ float4 frag(ps_input i) : SV_TARGET
 		return (float4)0;
 	#endif
 }
-

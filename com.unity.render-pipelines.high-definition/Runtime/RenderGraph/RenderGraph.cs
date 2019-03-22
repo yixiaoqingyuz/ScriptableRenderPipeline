@@ -129,6 +129,11 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
                 {
                     ref var res = ref m_Resources.GetTexturetResource(resourceWrite);
                     res.firstWritePassIndex = Math.Min(passIndex, res.firstWritePassIndex);
+
+                    // We increment lastRead index here so that a resource used only for a single pass can be released at the end of said pass.
+                    // This will also keep the resource alive as long as it is written to.
+                    // Typical example is a depth buffer that may never be explicitly read from but is necessary all along
+                    res.lastReadPassIndex = Math.Max(passIndex, res.lastReadPassIndex);
                 }
 
                 foreach (var resourceRead in pass.resourceReadList)
@@ -263,15 +268,17 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             }
 
             // If a resource was created for only a single pass, we don't want users to have to declare explicitly the read operation.
-            // So here we test resources written, if they have the initial lastReadPassIndex value of zero, it means that no subsequent pass will read it so we can release it
+            // So to do that, we also update lastReadIndex on resource writes.
+            // This means that we need to check written resources for destruction too
             foreach (var resource in pass.resourceWriteList)
             {
                 ref var resourceDesc = ref m_Resources.GetTexturetResource(resource);
-                if (!resourceDesc.imported && resourceDesc.lastReadPassIndex == 0)
+                if (!resourceDesc.imported && resourceDesc.lastReadPassIndex == passIndex)
                 {
                     m_Resources.ReleaseTextureForPass(resource);
                 }
             }
+
         }
 
         void ClearRenderPasses()

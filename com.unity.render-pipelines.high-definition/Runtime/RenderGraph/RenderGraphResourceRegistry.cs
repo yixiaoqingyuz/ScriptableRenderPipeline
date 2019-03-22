@@ -82,6 +82,11 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             dimension = TextureDimension.Tex2D;
         }
 
+        public TextureDesc(TextureDesc input)
+        {
+            this = input;
+        }
+
         public override int GetHashCode()
         {
             int hashCode = 17;
@@ -517,7 +522,8 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             if (m_AllocatedTextures.Count != 0)
             {
                 Debug.LogWarning("RenderGraph: Not all textures were released.");
-                foreach (var value in m_AllocatedTextures)
+                List<(int, RTHandle)> tempList = new List<(int, RTHandle)>(m_AllocatedTextures);
+                foreach (var value in tempList)
                 {
                     ReleaseTextureResource(value.Item1, value.Item2);
                 }

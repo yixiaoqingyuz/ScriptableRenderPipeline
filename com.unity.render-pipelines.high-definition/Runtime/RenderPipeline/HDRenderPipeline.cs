@@ -241,7 +241,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // RENDER GRAPH
         RenderGraph m_RenderGraph = new RenderGraph();
-        bool m_UseRenderGraph = false;
+        bool        m_UseRenderGraph = false;
+        // MSAA resolve materials
+        Material m_DepthResolveMaterial = null;
+        Material m_ColorResolveMaterial = null;
+
 
         public HDRenderPipeline(HDRenderPipelineAsset asset)
         {
@@ -404,6 +408,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             // Render Graph
             InitializeAmbientOcclusion(m_Asset);
+            m_DepthResolveMaterial = CoreUtils.CreateEngineMaterial(asset.renderPipelineResources.shaders.depthValuesPS);
+            m_ColorResolveMaterial = CoreUtils.CreateEngineMaterial(asset.renderPipelineResources.shaders.colorResolvePS);
         }
 
         void UpgradeResourcesIfNeeded()
@@ -747,6 +753,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             // RenderGraph
             m_RenderGraph.Cleanup();
             CleanupAmbientOcclusion();
+            CoreUtils.Destroy(m_DepthResolveMaterial);
+            CoreUtils.Destroy(m_ColorResolveMaterial);
+
 
 #if UNITY_EDITOR
             SceneViewDrawMode.ResetDrawMode();

@@ -124,7 +124,8 @@ namespace UnityEditor.ShaderGraph
                 switch (sourceType)
                 {
                     case HlslSourceType.File:
-                        builder.AppendLine($"#include \"{functionSource}\"");
+                        string sourceIncludeDirective = $"#include \"{functionSource}\"";
+                        if (!builder.ToString().Contains(sourceIncludeDirective)) builder.AppendLine(sourceIncludeDirective);
                         break;
                     case HlslSourceType.String:
                         builder.AppendLine(GetFunctionHeader());

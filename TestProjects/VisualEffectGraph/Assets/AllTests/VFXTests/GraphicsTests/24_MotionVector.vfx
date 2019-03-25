@@ -242,7 +242,7 @@ MonoBehaviour:
     x: -118
     y: -190
     width: 6182
-    height: 3473
+    height: 3471
 --- !u!114 &114350483966674976
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -4388,10 +4388,8 @@ VisualEffectResource:
       \   float tmp_dg = tmp_ba / (float)16;\n\t\t\t\t    uint tmp_dh = (uint)tmp_dg;\n\t\t\t\t
       \   float tmp_di = (float)tmp_dh;\n\t\t\t\t    float tmp_dk = tmp_di * (float)0.2;\n\t\t\t\t
       \   float tmp_dl = (float)1 - tmp_dk;\n\t\t\t\t    float3 tmp_dm = float3(tmp_dl,
-      tmp_dl, tmp_dl);\n\t\t\t\t    float3 tmp_dn = tmp_df * tmp_dm;\n\t\t\t\t    float
-      tmp_do = tmp_dn[1];\n\t\t\t\t    float tmp_dp = tmp_dn[0];\n\t\t\t\t    float3
-      tmp_dr = float3(tmp_do, tmp_dp, (float)0);\n\t\t\t\t    SetAttribute_CAC29747(
-      /*inout */position, tmp_dr);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    float tmp_v
+      tmp_dl, tmp_dl);\n\t\t\t\t    float3 tmp_dn = tmp_df * tmp_dm;\n\t\t\t\t    SetAttribute_CAC29747(
+      /*inout */position, tmp_dn);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    float tmp_v
       = (float)particleId;\n\t\t\t\t    float tmp_w = uniform_b + tmp_v;\n\t\t\t\t
       \   float tmp_y = tmp_w / (float)80;\n\t\t\t\t    float tmp_z = frac(tmp_y);\n\t\t\t\t
       \   float tmp_ba = tmp_z * (float)80;\n\t\t\t\t    float tmp_bc = tmp_ba / (float)16;\n\t\t\t\t
@@ -7213,10 +7211,8 @@ VisualEffectResource:
       \   float tmp_dg = tmp_ba / (float)16;\n\t\t\t    uint tmp_dh = (uint)tmp_dg;\n\t\t\t
       \   float tmp_di = (float)tmp_dh;\n\t\t\t    float tmp_dk = tmp_di * (float)0.2;\n\t\t\t
       \   float tmp_dl = (float)1 - tmp_dk;\n\t\t\t    float3 tmp_dm = float3(tmp_dl,
-      tmp_dl, tmp_dl);\n\t\t\t    float3 tmp_dn = tmp_df * tmp_dm;\n\t\t\t    float
-      tmp_do = tmp_dn[1];\n\t\t\t    float tmp_dp = tmp_dn[0];\n\t\t\t    float3 tmp_dr
-      = float3(tmp_do, tmp_dp, (float)0);\n\t\t\t    SetAttribute_CAC29747( /*inout
-      */position, tmp_dr);\n\t\t\t}\n\t\t\t{\n\t\t\t    float tmp_v = (float)particleId;\n\t\t\t
+      tmp_dl, tmp_dl);\n\t\t\t    float3 tmp_dn = tmp_df * tmp_dm;\n\t\t\t    SetAttribute_CAC29747(
+      /*inout */position, tmp_dn);\n\t\t\t}\n\t\t\t{\n\t\t\t    float tmp_v = (float)particleId;\n\t\t\t
       \   float tmp_w = uniform_b + tmp_v;\n\t\t\t    float tmp_y = tmp_w / (float)80;\n\t\t\t
       \   float tmp_z = frac(tmp_y);\n\t\t\t    float tmp_ba = tmp_z * (float)80;\n\t\t\t
       \   float tmp_bc = tmp_ba / (float)16;\n\t\t\t    uint tmp_bd = (uint)tmp_bc;\n\t\t\t
@@ -7585,13 +7581,13 @@ VisualEffectResource:
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 1
+        data[3]: 6
       - op: 1
         valueIndex: 10
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 6
+        data[3]: 1
       - op: 1
         valueIndex: 11
         data[0]: -1
@@ -7616,18 +7612,18 @@ VisualEffectResource:
         data[1]: -1
         data[2]: -1
         data[3]: -1
-      - op: 1
-        valueIndex: 19
-        data[0]: -1
-        data[1]: -1
-        data[2]: -1
-        data[3]: 1
       - op: 62
-        valueIndex: 20
+        valueIndex: 19
         data[0]: 13
         data[1]: 14
         data[2]: -1
         data[3]: 6
+      - op: 1
+        valueIndex: 20
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
+        data[3]: 1
       - op: 1
         valueIndex: 21
         data[0]: -1
@@ -7651,37 +7647,37 @@ VisualEffectResource:
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 3
+        data[3]: 1
+      - op: 1
+        valueIndex: 25
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
+        data[3]: 1
+      - op: 29
+        valueIndex: 26
+        data[0]: 18
+        data[1]: 19
+        data[2]: -1
+        data[3]: 1
       - op: 1
         valueIndex: 27
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 1
+      - op: 26
         valueIndex: 28
-        data[0]: -1
-        data[1]: -1
-        data[2]: -1
-        data[3]: 1
-      - op: 29
-        valueIndex: 29
-        data[0]: 18
+        data[0]: 22
         data[1]: 21
         data[2]: -1
         data[3]: 1
       - op: 1
-        valueIndex: 30
+        valueIndex: 29
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 1
-      - op: 26
-        valueIndex: 31
-        data[0]: 23
-        data[1]: 22
-        data[2]: -1
-        data[3]: 1
+        data[3]: 3
       - op: 1
         valueIndex: 32
         data[0]: -1
@@ -7699,7 +7695,7 @@ VisualEffectResource:
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 13
+        data[3]: 1
       - op: 1
         valueIndex: 37
         data[0]: -1
@@ -7717,13 +7713,13 @@ VisualEffectResource:
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 13
+        data[3]: 1
       - op: 1
         valueIndex: 40
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 1
+        data[3]: 13
       - op: 1
         valueIndex: 41
         data[0]: -1
@@ -7736,18 +7732,18 @@ VisualEffectResource:
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 1
+      - op: 28
         valueIndex: 43
+        data[0]: 26
+        data[1]: 24
+        data[2]: -1
+        data[3]: 1
+      - op: 1
+        valueIndex: 44
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 1
-      - op: 28
-        valueIndex: 44
-        data[0]: 26
-        data[1]: 25
-        data[2]: -1
-        data[3]: 1
+        data[3]: 13
       - op: 1
         valueIndex: 45
         data[0]: -1
@@ -7784,30 +7780,30 @@ VisualEffectResource:
         data[1]: -1
         data[2]: -1
         data[3]: 7
-      - op: 1
+      - op: 56
         valueIndex: 55
-        data[0]: -1
-        data[1]: -1
-        data[2]: -1
-        data[3]: 3
-      - op: 56
-        valueIndex: 58
-        data[0]: 33
-        data[1]: -1
-        data[2]: -1
-        data[3]: 0
-      - op: 1
-        valueIndex: 62
-        data[0]: -1
-        data[1]: -1
-        data[2]: -1
-        data[3]: 3
-      - op: 56
-        valueIndex: 65
         data[0]: 29
         data[1]: -1
         data[2]: -1
+        data[3]: 0
+      - op: 56
+        valueIndex: 59
+        data[0]: 33
+        data[1]: -1
+        data[2]: -1
         data[3]: 1
+      - op: 1
+        valueIndex: 63
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
+        data[3]: 3
+      - op: 1
+        valueIndex: 66
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
+        data[3]: 3
       - op: 1
         valueIndex: 69
         data[0]: -1
@@ -7816,15 +7812,15 @@ VisualEffectResource:
         data[3]: 3
       - op: 56
         valueIndex: 72
-        data[0]: 28
+        data[0]: 32
         data[1]: -1
         data[2]: -1
         data[3]: 2
       - op: 3
         valueIndex: 76
-        data[0]: 17
-        data[1]: 36
-        data[2]: 17
+        data[0]: 20
+        data[1]: 35
+        data[2]: 20
         data[3]: -1
       - op: 1
         valueIndex: 79
@@ -7834,7 +7830,7 @@ VisualEffectResource:
         data[3]: 3
       - op: 56
         valueIndex: 82
-        data[0]: 31
+        data[0]: 37
         data[1]: -1
         data[2]: -1
         data[3]: 3
@@ -7984,7 +7980,7 @@ VisualEffectResource:
         data[3]: -1
       - op: 56
         valueIndex: 136
-        data[0]: 37
+        data[0]: 36
         data[1]: -1
         data[2]: -1
         data[3]: 5
@@ -7996,9 +7992,9 @@ VisualEffectResource:
         data[3]: 3
       - op: 3
         valueIndex: 143
-        data[0]: 35
+        data[0]: 34
         data[1]: 18
-        data[2]: 17
+        data[2]: 20
         data[3]: -1
       - op: 1
         valueIndex: 146
@@ -8008,9 +8004,9 @@ VisualEffectResource:
         data[3]: 1
       - op: 3
         valueIndex: 147
-        data[0]: 32
+        data[0]: 31
         data[1]: 18
-        data[2]: 17
+        data[2]: 20
         data[3]: -1
       - op: 1
         valueIndex: 150
@@ -8020,9 +8016,9 @@ VisualEffectResource:
         data[3]: 7
       - op: 3
         valueIndex: 151
-        data[0]: 32
+        data[0]: 31
         data[1]: 18
-        data[2]: 22
+        data[2]: 21
         data[3]: -1
       - op: 1
         valueIndex: 154
@@ -8060,34 +8056,34 @@ VisualEffectResource:
           m_Value: 80
         - m_ExpressionIndex: 6
           m_Value: 1
-        - m_ExpressionIndex: 9
+        - m_ExpressionIndex: 10
           m_Value: 6.2831855
-        - m_ExpressionIndex: 15
+        - m_ExpressionIndex: 16
           m_Value: 0.2
         - m_ExpressionIndex: 17
-          m_Value: 0
+          m_Value: 7
         - m_ExpressionIndex: 18
           m_Value: 3
         - m_ExpressionIndex: 19
-          m_Value: 7
-        - m_ExpressionIndex: 21
           m_Value: 3
-        - m_ExpressionIndex: 22
+        - m_ExpressionIndex: 20
+          m_Value: 0
+        - m_ExpressionIndex: 21
           m_Value: 0.5
-        - m_ExpressionIndex: 24
+        - m_ExpressionIndex: 23
           m_Value: -0.10000001
         - m_ExpressionIndex: 26
           m_Value: -0.25
-        - m_ExpressionIndex: 32
+        - m_ExpressionIndex: 28
+          m_Value: 0.15
+        - m_ExpressionIndex: 31
           m_Value: -0.75
         - m_ExpressionIndex: 34
-          m_Value: 0.15
-        - m_ExpressionIndex: 35
           m_Value: -1.25
         - m_ExpressionIndex: 39
-          m_Value: 2
-        - m_ExpressionIndex: 40
           m_Value: 0.6
+        - m_ExpressionIndex: 40
+          m_Value: 2
         - m_ExpressionIndex: 52
           m_Value: 1.6
         - m_ExpressionIndex: 54
@@ -8108,18 +8104,18 @@ VisualEffectResource:
           m_Value: {x: 0, y: 1, z: 0}
         - m_ExpressionIndex: 12
           m_Value: {x: -1, y: 0, z: 0}
-        - m_ExpressionIndex: 20
-          m_Value: {x: 0.75, y: 0.75, z: 0.75}
-        - m_ExpressionIndex: 27
+        - m_ExpressionIndex: 25
           m_Value: {x: 2, y: 0, z: 0}
+        - m_ExpressionIndex: 27
+          m_Value: {x: 0.75, y: 0.75, z: 0.75}
         - m_ExpressionIndex: 38
           m_Value: {x: 600, y: 600, z: 600}
         - m_ExpressionIndex: 41
           m_Value: {x: 4.5, y: 0, z: 0}
-        - m_ExpressionIndex: 43
-          m_Value: {x: 1.5, y: 0, z: 0}
         - m_ExpressionIndex: 45
           m_Value: {x: 3, y: 0, z: 0}
+        - m_ExpressionIndex: 46
+          m_Value: {x: 1.5, y: 0, z: 0}
         - m_ExpressionIndex: 47
           m_Value: {x: -3.5, y: 1, z: 0}
         - m_ExpressionIndex: 50
@@ -8162,7 +8158,7 @@ VisualEffectResource:
           m_Value: 16
         - m_ExpressionIndex: 8
           m_Value: 2
-        - m_ExpressionIndex: 10
+        - m_ExpressionIndex: 9
           m_Value: 8
         - m_ExpressionIndex: 13
           m_Value: 123
@@ -8174,49 +8170,6 @@ VisualEffectResource:
         m_Array: []
       m_AnimationCurve:
         m_Array:
-        - m_ExpressionIndex: 28
-          m_Value:
-            serializedVersion: 2
-            m_Curve:
-            - serializedVersion: 3
-              time: 0
-              value: 0.08782959
-              inSlope: 1.9408079
-              outSlope: 1.9408079
-              tangentMode: 34
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 0.19307914
-              value: 0.46255913
-              inSlope: 0.9759066
-              outSlope: 0.9759066
-              tangentMode: 34
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 0.6302938
-              value: 0.4673708
-              inSlope: -0.2699929
-              outSlope: -0.2699929
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 0.9987793
-              value: 0.000091552734
-              inSlope: -1.2681075
-              outSlope: -1.2681075
-              tangentMode: 34
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            m_PreInfinity: 2
-            m_PostInfinity: 2
-            m_RotationOrder: 4
         - m_ExpressionIndex: 29
           m_Value:
             serializedVersion: 2
@@ -8303,7 +8256,7 @@ VisualEffectResource:
             m_PreInfinity: 2
             m_PostInfinity: 2
             m_RotationOrder: 4
-        - m_ExpressionIndex: 31
+        - m_ExpressionIndex: 32
           m_Value:
             serializedVersion: 2
             m_Curve:
@@ -8389,7 +8342,7 @@ VisualEffectResource:
             m_PreInfinity: 2
             m_PostInfinity: 2
             m_RotationOrder: 4
-        - m_ExpressionIndex: 37
+        - m_ExpressionIndex: 36
           m_Value:
             serializedVersion: 2
             m_Curve:
@@ -8425,6 +8378,49 @@ VisualEffectResource:
               value: 0
               inSlope: -2.5520704
               outSlope: -2.5520704
+              tangentMode: 34
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            m_PreInfinity: 2
+            m_PostInfinity: 2
+            m_RotationOrder: 4
+        - m_ExpressionIndex: 37
+          m_Value:
+            serializedVersion: 2
+            m_Curve:
+            - serializedVersion: 3
+              time: 0
+              value: 0.08782959
+              inSlope: 1.9408079
+              outSlope: 1.9408079
+              tangentMode: 34
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 0.19307914
+              value: 0.46255913
+              inSlope: 0.9759066
+              outSlope: 0.9759066
+              tangentMode: 34
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 0.6302938
+              value: 0.4673708
+              inSlope: -0.2699929
+              outSlope: -0.2699929
+              tangentMode: 0
+              weightedMode: 0
+              inWeight: 0
+              outWeight: 0
+            - serializedVersion: 3
+              time: 0.9987793
+              value: 0.000091552734
+              inSlope: -1.2681075
+              outSlope: -1.2681075
               tangentMode: 34
               weightedMode: 0
               inWeight: 0
@@ -9985,7 +9981,7 @@ VisualEffectResource:
         perCameraBuffer: 1
       values:
       - nameId: Size_a
-        index: 46
+        index: 43
       - nameId: Position_c
         index: 49
       - nameId: currentFrameIndex
@@ -10079,7 +10075,7 @@ VisualEffectResource:
         perCameraBuffer: 1
       values:
       - nameId: Size_a
-        index: 46
+        index: 43
       - nameId: Position_c
         index: 49
       - nameId: currentFrameIndex
@@ -10149,7 +10145,7 @@ VisualEffectResource:
       temporaryBuffers: []
       values:
       - nameId: uniform_b
-        index: 16
+        index: 15
       params:
       - nameId: bounds_center
         index: 11
@@ -10513,7 +10509,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
   materialType: 0
   onlyAmbientLighting: 0
   diffusionProfileAsset: {fileID: 0}
@@ -11980,7 +11976,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
   materialType: 0
   onlyAmbientLighting: 0
   diffusionProfileAsset: {fileID: 0}
@@ -12989,7 +12985,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
   materialType: 0
   onlyAmbientLighting: 0
   diffusionProfileAsset: {fileID: 0}
@@ -13731,7 +13727,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
   materialType: 0
   onlyAmbientLighting: 0
   diffusionProfileAsset: {fileID: 0}
@@ -14215,7 +14211,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
   materialType: 0
   onlyAmbientLighting: 0
   diffusionProfileAsset: {fileID: 0}
@@ -15101,7 +15097,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
   useGeometryShader: 0
 --- !u!114 &8926484042661614879
 MonoBehaviour:
@@ -18223,6 +18219,7 @@ MonoBehaviour:
   m_Direction: 1
   m_LinkedSlots:
   - {fileID: 8926484042661614931}
+  - {fileID: 8926484042661615242}
 --- !u!114 &8926484042661615084
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18297,8 +18294,7 @@ MonoBehaviour:
         PublicKeyToken=b77a5c561934e089
     attributes: []
   m_Direction: 1
-  m_LinkedSlots:
-  - {fileID: 8926484042661615244}
+  m_LinkedSlots: []
 --- !u!114 &8926484042661615086
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18331,8 +18327,7 @@ MonoBehaviour:
         PublicKeyToken=b77a5c561934e089
     attributes: []
   m_Direction: 1
-  m_LinkedSlots:
-  - {fileID: 8926484042661615243}
+  m_LinkedSlots: []
 --- !u!114 &8926484042661615087
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20891,7 +20886,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
   useGeometryShader: 0
 --- !u!114 &8926484042661615238
 MonoBehaviour:
@@ -20989,7 +20984,8 @@ MonoBehaviour:
         Culture=neutral, PublicKeyToken=null
     attributes: []
   m_Direction: 0
-  m_LinkedSlots: []
+  m_LinkedSlots:
+  - {fileID: 8926484042661615083}
 --- !u!114 &8926484042661615243
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21022,8 +21018,7 @@ MonoBehaviour:
         PublicKeyToken=b77a5c561934e089
     attributes: []
   m_Direction: 0
-  m_LinkedSlots:
-  - {fileID: 8926484042661615086}
+  m_LinkedSlots: []
 --- !u!114 &8926484042661615244
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21056,8 +21051,7 @@ MonoBehaviour:
         PublicKeyToken=b77a5c561934e089
     attributes: []
   m_Direction: 0
-  m_LinkedSlots:
-  - {fileID: 8926484042661615085}
+  m_LinkedSlots: []
 --- !u!114 &8926484042661615245
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22956,7 +22950,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
   materialType: 0
   onlyAmbientLighting: 0
   diffusionProfileAsset: {fileID: 0}
@@ -23239,7 +23233,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
   materialType: 0
   onlyAmbientLighting: 0
   diffusionProfileAsset: {fileID: 0}
@@ -23643,7 +23637,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
   useGeometryShader: 0
 --- !u!114 &8926484042661615380
 MonoBehaviour:
@@ -23823,7 +23817,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
   useGeometryShader: 0
 --- !u!114 &8926484042661615386
 MonoBehaviour:
@@ -26253,7 +26247,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
 --- !u!114 &8926484042661615479
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -28074,7 +28068,7 @@ MonoBehaviour:
   indirectDraw: 0
   castShadows: 0
   preRefraction: 0
-  generateMotionVectors: 1
+  generateMotionVector: 1
 --- !u!114 &8926484042661615541
 MonoBehaviour:
   m_ObjectHideFlags: 0

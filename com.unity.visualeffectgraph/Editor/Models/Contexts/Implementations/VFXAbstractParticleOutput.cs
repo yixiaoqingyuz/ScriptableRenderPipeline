@@ -95,12 +95,12 @@ namespace UnityEditor.VFX
         protected bool preRefraction = false;
 
         [VFXSetting(VFXSettingAttribute.VisibleFlags.InInspector), SerializeField]
-        protected bool generateMotionVectors = false;
+        protected bool generateMotionVector = false;
 
         // IVFXSubRenderer interface
         public virtual bool hasShadowCasting { get { return castShadows; } }
 
-        public virtual bool hasMotionVector { get { return generateMotionVectors; } }
+        public virtual bool hasMotionVector { get { return supportsMotionVector && generateMotionVector; } }
 
         public bool HasIndirectDraw()   { return indirectDraw || HasSorting(); }
         public bool HasSorting()        { return sort == SortMode.On || (sort == SortMode.Auto && (blendMode == BlendMode.Alpha || blendMode == BlendMode.AlphaPremultiplied)); }
@@ -124,6 +124,8 @@ namespace UnityEditor.VFX
         public override bool codeGeneratorCompute { get { return false; } }
 
         public virtual bool supportsUV { get { return false; } }
+
+        public virtual bool supportsMotionVector { get { return false; } }
 
         public virtual CullMode defaultCullMode { get { return CullMode.Off; } }
         public virtual ZTestMode defaultZTestMode { get { return ZTestMode.LEqual; } }
@@ -172,7 +174,7 @@ namespace UnityEditor.VFX
             {
                 var gpuMapper = VFXExpressionMapper.FromBlocks(activeChildrenWithImplicit);
                 gpuMapper.AddExpressions(CollectGPUExpressions(GetExpressionsFromSlots(this)), -1);
-                if (generateMotionVectors)
+                if (generateMotionVector)
                     gpuMapper.AddExpression(VFXBuiltInExpression.FrameIndex, "currentFrameIndex", -1);
                 mapper = gpuMapper;
             }
@@ -278,6 +280,9 @@ namespace UnityEditor.VFX
             {
                 if (!supportsUV)
                     yield return "uvMode";
+
+                if (!supportsMotionVector)
+                    yield return "generateMotionVector";
 
                 if (isBlendModeOpaque)
                 {

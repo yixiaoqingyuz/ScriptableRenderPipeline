@@ -17,33 +17,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             StartStereoRendering(cmd, renderContext, camera);
 
-            bool renderMotionVectorAfterGBuffer = RenderDepthPrepass(m_RenderGraph, cullingResults, hdCamera);
-
-            if (!renderMotionVectorAfterGBuffer)
-            {
-                // If objects velocity if enabled, this will render the objects with motion vector into the target buffers (in addition to the depth)
-                // Note: An object with motion vector must not be render in the prepass otherwise we can have motion vector write that should have been rejected
-                RenderObjectsVelocityPass(m_RenderGraph, cullingResults, hdCamera);
-            }
-
-            // At this point in forward all objects have been rendered to the prepass (depth/normal/velocity) so we can resolve them
-            RenderGraphResource depthValuesMSAA = ResolvePrepassBuffers(m_RenderGraph, hdCamera);
-
-            /*
-            // This will bind the depth buffer if needed for DBuffer)
-            RenderDBuffer(hdCamera, cmd, renderContext, cullingResults);
-            // We can call DBufferNormalPatch after RenderDBuffer as it only affect forward material and isn't affected by RenderGBuffer
-            // This reduce lifteime of stencil bit
-            DBufferNormalPatch(hdCamera, cmd, renderContext, cullingResults);
-
-#if ENABLE_RAYTRACING
-            bool raytracedIndirectDiffuse = m_RaytracingIndirectDiffuse.RenderIndirectDiffuse(hdCamera, cmd, renderContext, m_FrameCount);
-            PushFullScreenDebugTexture(hdCamera, cmd, m_RaytracingIndirectDiffuse.GetIndirectDiffuseTexture(), FullScreenDebugMode.IndirectDiffuse);
-            cmd.SetGlobalInt(HDShaderIDs._RaytracedIndirectDiffuse, raytracedIndirectDiffuse ? 1 : 0);
-#endif
-*/
-
-            RenderGBuffer(m_RenderGraph, cullingResults, hdCamera);
+            var prepassOutput = RenderPrepass(m_RenderGraph, cullingResults, hdCamera);
 
             RenderGraphGlobalParams renderGraphParams = new RenderGraphGlobalParams();
             renderGraphParams.renderingViewport = hdCamera.renderingViewport;

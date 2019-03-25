@@ -407,8 +407,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             testPanel.children.Add(list.ToArray());
 
             // Render Graph
+            InitializeSharedResources(m_Asset);
             InitializeAmbientOcclusion(m_Asset);
-            m_DepthResolveMaterial = CoreUtils.CreateEngineMaterial(asset.renderPipelineResources.shaders.depthValuesPS);
+            InitializePrepass(m_Asset);
             m_ColorResolveMaterial = CoreUtils.CreateEngineMaterial(asset.renderPipelineResources.shaders.colorResolvePS);
         }
 
@@ -752,8 +753,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             // RenderGraph
             m_RenderGraph.Cleanup();
+            CleanupSharedResources();
             CleanupAmbientOcclusion();
-            CoreUtils.Destroy(m_DepthResolveMaterial);
+            CleanupPrepass();
             CoreUtils.Destroy(m_ColorResolveMaterial);
 
 
@@ -3196,7 +3198,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             // unless the scale is 1 (and it will not be 1 if the texture was resized
             // and is of greater size compared to the viewport).
             cmd.SetGlobalTexture(HDShaderIDs._ColorPyramidTexture, currentColorPyramid);
-            cmd.SetGlobalVector(HDShaderIDs._ColorPyramidSize, m_PyramidSizeV4F);
             cmd.SetGlobalVector(HDShaderIDs._ColorPyramidScale, m_PyramidScaleLod);
             PushFullScreenDebugTextureMip(hdCamera, cmd, currentColorPyramid, lodCount, m_PyramidScale, isPreRefraction ? FullScreenDebugMode.PreRefractionColorPyramid : FullScreenDebugMode.FinalColorPyramid);
         }
@@ -3218,7 +3219,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_PyramidScaleLod.Set(scaleX, scaleY, mipCount, 0.0f);
             m_PyramidScale.Set(scaleX, scaleY, 0f, 0f);
             cmd.SetGlobalTexture(HDShaderIDs._DepthPyramidTexture, m_SharedRTManager.GetDepthTexture());
-            cmd.SetGlobalVector(HDShaderIDs._DepthPyramidSize, m_PyramidSizeV4F);
             cmd.SetGlobalVector(HDShaderIDs._DepthPyramidScale, m_PyramidScaleLod);
             PushFullScreenDebugTextureMip(hdCamera, cmd, m_SharedRTManager.GetDepthTexture(), mipCount, m_PyramidScale, debugMode);
         }

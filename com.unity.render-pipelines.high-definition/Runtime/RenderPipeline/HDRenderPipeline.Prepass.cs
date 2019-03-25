@@ -6,6 +6,66 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
     public partial class HDRenderPipeline
     {
+        public void InitializePrepass(HDRenderPipelineAsset hdAsset)
+        {
+            m_DepthResolveMaterial = CoreUtils.CreateEngineMaterial(asset.renderPipelineResources.shaders.depthValuesPS);
+        }
+
+        public void CleanupPrepass()
+        {
+            CoreUtils.Destroy(m_DepthResolveMaterial);
+        }
+
+        struct PrepassOutput
+        {
+            public GBufferOutput       gbuffer;
+            public RenderGraphResource depthValuesMSAA;
+        }
+
+        PrepassOutput RenderPrepass(RenderGraph renderGraph, CullingResults cullingResults, HDCamera hdCamera)
+        {
+            var result = new PrepassOutput();
+
+            bool renderMotionVectorAfterGBuffer = RenderDepthPrepass(m_RenderGraph, cullingResults, hdCamera);
+
+            if (!renderMotionVectorAfterGBuffer)
+            {
+                // If objects velocity if enabled, this will render the objects with motion vector into the target buffers (in addition to the depth)
+                // Note: An object with motion vector must not be render in the prepass otherwise we can have motion vector write that should have been rejected
+                RenderObjectsVelocityPass(m_RenderGraph, cullingResults, hdCamera);
+            }
+
+            // At this point in forward all objects have been rendered to the prepass (depth/normal/velocity) so we can resolve them
+            result.depthValuesMSAA = ResolvePrepassBuffers(m_RenderGraph, hdCamera);
+
+            /*
+            // This will bind the depth buffer if needed for DBuffer)
+            RenderDBuffer(hdCamera, cmd, renderContext, cullingResults);
+            // We can call DBufferNormalPatch after RenderDBuffer as it only affect forward material and isn't affected by RenderGBuffer
+            // This reduce lifteime of stencil bit
+            DBufferNormalPatch(hdCamera, cmd, renderContext, cullingResults);
+
+#if ENABLE_RAYTRACING
+            bool raytracedIndirectDiffuse = m_RaytracingIndirectDiffuse.RenderIndirectDiffuse(hdCamera, cmd, renderContext, m_FrameCount);
+            PushFullScreenDebugTexture(hdCamera, cmd, m_RaytracingIndirectDiffuse.GetIndirectDiffuseTexture(), FullScreenDebugMode.IndirectDiffuse);
+            cmd.SetGlobalInt(HDShaderIDs._RaytracedIndirectDiffuse, raytracedIndirectDiffuse ? 1 : 0);
+#endif
+*/
+
+            result.gbuffer = RenderGBuffer(m_RenderGraph, cullingResults, hdCamera);
+
+            // In both forward and deferred, everything opaque should have been rendered at this point so we can safely copy the depth buffer for later processing.
+            GenerateDepthPyramid(renderGraph, hdCamera, FullScreenDebugMode.DepthPyramid);
+
+            if (renderMotionVectorAfterGBuffer)
+            {
+                // See the call RenderObjectsVelocity() above and comment
+                RenderObjectsVelocityPass(m_RenderGraph, cullingResults, hdCamera);
+            }
+
+            return result;
+        }
+
         class DepthPrepassData : RenderPassData
         {
             public FrameSettings frameSettings;
@@ -207,46 +267,60 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public RenderGraphMutableResource   depthBuffer;
         }
 
-        void SetupGBufferTargets(GBufferPassData passData, FrameSettings frameSettings, RenderGraphBuilder builder)
+        struct GBufferOutput
+        {
+            public RenderGraphResource[] gbuffer;
+        }
+
+        void SetupGBufferTargets(GBufferPassData passData, ref GBufferOutput output, FrameSettings frameSettings, RenderGraphBuilder builder)
         {
             bool clearGBuffer = NeedClearGBuffer();
+            bool lightLayers = frameSettings.IsEnabled(FrameSettingsField.LightLayers);
+            bool shadowMasks = frameSettings.IsEnabled(FrameSettingsField.ShadowMask);
 
             passData.depthBuffer = builder.UseDepthBuffer(GetDepthStencilBuffer());
             passData.gbufferRT[0] = builder.UseColorBuffer(builder.CreateTexture(
-                new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R8G8B8A8_SRGB, xrInstancing = true, useDynamicScale = true, clearBuffer = clearGBuffer, clearColor = Color.clear,  name = "GBuffer0" }, HDShaderIDs._GBufferTexture[0]), 0);
+                new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R8G8B8A8_SRGB, xrInstancing = true, useDynamicScale = true, clearBuffer = clearGBuffer, clearColor = Color.clear, name = "GBuffer0" }, HDShaderIDs._GBufferTexture[0]), 0);
             passData.gbufferRT[1] = builder.UseColorBuffer(GetNormalBuffer(), 1);
             passData.gbufferRT[2] = builder.UseColorBuffer(builder.CreateTexture(
                 new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R8G8B8A8_UNorm, xrInstancing = true, useDynamicScale = true, clearBuffer = clearGBuffer, clearColor = Color.clear, name = "GBuffer2" }, HDShaderIDs._GBufferTexture[2]), 2);
             passData.gbufferRT[3] = builder.UseColorBuffer(builder.CreateTexture(
                 new TextureDesc(Vector2.one) { colorFormat = Builtin.GetLightingBufferFormat(), xrInstancing = true, useDynamicScale = true, clearBuffer = clearGBuffer, clearColor = Color.clear, name = "GBuffer3" }, HDShaderIDs._GBufferTexture[3]), 3);
+
             int currentIndex = 4;
-            if (frameSettings.IsEnabled(FrameSettingsField.LightLayers))
+            if (lightLayers)
             {
                 passData.gbufferRT[currentIndex] = builder.UseColorBuffer(builder.CreateTexture(
                     new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R8G8B8A8_UNorm, xrInstancing = true, useDynamicScale = true, clearBuffer = clearGBuffer, clearColor = Color.clear, name = "LightLayers" }, HDShaderIDs._LightLayersTexture), currentIndex);
                 currentIndex++;
             }
-            if (frameSettings.IsEnabled(FrameSettingsField.ShadowMask))
+            if (shadowMasks)
             {
                 passData.gbufferRT[currentIndex] = builder.UseColorBuffer(builder.CreateTexture(
                     new TextureDesc(Vector2.one) { colorFormat = Builtin.GetShadowMaskBufferFormat(), xrInstancing = true, useDynamicScale = true, clearBuffer = clearGBuffer, clearColor = Color.clear, name = "ShadowMasks" }, HDShaderIDs._ShadowMaskTexture), currentIndex);
                 currentIndex++;
             }
+
+            output.gbuffer = new RenderGraphResource[currentIndex];
+            for (int i = 0; i < currentIndex; ++i)
+                output.gbuffer[i] = passData.gbufferRT[i];
         }
 
         // RenderGBuffer do the gbuffer pass. This is only called with deferred. If we use a depth prepass, then the depth prepass will perform the alpha testing for opaque alpha tested and we don't need to do it anymore
         // during Gbuffer pass. This is handled in the shader and the depth test (equal and no depth write) is done here.
-        void RenderGBuffer(RenderGraph renderGraph, CullingResults cull, HDCamera hdCamera)
+        GBufferOutput RenderGBuffer(RenderGraph renderGraph, CullingResults cull, HDCamera hdCamera)
         {
+            var output = new GBufferOutput();
+
             if (hdCamera.frameSettings.litShaderMode != LitShaderMode.Deferred)
-                return;
+                return output;
 
             using (var builder = renderGraph.AddRenderPass<GBufferPassData>("GBuffer", out var passData, CustomSamplerId.GBuffer.GetSampler()))
             {
                 FrameSettings frameSettings = hdCamera.frameSettings;
 
                 passData.frameSettings = frameSettings;
-                SetupGBufferTargets(passData, frameSettings, builder);
+                SetupGBufferTargets(passData, ref output, frameSettings, builder);
                 passData.rendererList = builder.UseRendererList(
                     builder.CreateRendererList(new RendererListDesc(HDShaderPassNames.s_GBufferName, cull, hdCamera.camera)
                     {
@@ -262,6 +336,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     DrawOpaqueRendererList(gbufferPassData.frameSettings, renderGraphContext.resources.GetRendererList(gbufferPassData.rendererList), renderGraphContext.renderContext, renderGraphContext.cmd);
                 });
             }
+
+            return output;
         }
 
         class ResolvePrepassData : RenderPassData
@@ -305,6 +381,85 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                 return depthValuesBuffer;
             }
+        }
+
+        class CopyDepthPassData : RenderPassData
+        {
+            public RenderGraphResource          inputDepth;
+            public RenderGraphMutableResource   outputDepth;
+            public GPUCopy                      GPUCopy;
+            public int                          width;
+            public int                          height;
+        }
+
+        void CopyDepthBufferIfNeeded(RenderGraph renderGraph, HDCamera hdCamera)
+        {
+            if (!m_IsDepthBufferCopyValid)
+            {
+                using (var builder = renderGraph.AddRenderPass<CopyDepthPassData>("Copy depth buffer", out var passData, CustomSamplerId.CopyDepthBuffer.GetSampler()))
+                {
+                    passData.inputDepth = builder.ReadTexture(GetDepthStencilBuffer());
+                    passData.outputDepth = builder.WriteTexture(GetDepthTexture());
+                    passData.GPUCopy = m_GPUCopy;
+                    passData.width = hdCamera.actualWidth;
+                    passData.height = hdCamera.actualHeight;
+
+                    builder.SetRenderFunc(
+                    (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                    {
+                        CopyDepthPassData copyDepthPassData = (CopyDepthPassData)data;
+                        RenderGraphResourceRegistry resources = renderGraphContext.resources;
+                        // TODO: maybe we don't actually need the top MIP level?
+                        // That way we could avoid making the copy, and build the MIP hierarchy directly.
+                        // The downside is that our SSR tracing accuracy would decrease a little bit.
+                        // But since we never render SSR at full resolution, this may be acceptable.
+
+                        // TODO: reading the depth buffer with a compute shader will cause it to decompress in place.
+                        // On console, to preserve the depth test performance, we must NOT decompress the 'm_CameraDepthStencilBuffer' in place.
+                        // We should call decompressDepthSurfaceToCopy() and decompress it to 'm_CameraDepthBufferMipChain'.
+                        m_GPUCopy.SampleCopyChannel_xyzw2x(renderGraphContext.cmd, resources.GetTexture(copyDepthPassData.inputDepth), resources.GetTexture(copyDepthPassData.outputDepth), new RectInt(0, 0, copyDepthPassData.width, copyDepthPassData.height));
+                    });
+                }
+
+                m_IsDepthBufferCopyValid = true;
+            }
+        }
+
+        class GenerateDepthPyramidPassData : RenderPassData
+        {
+            public RenderGraphMutableResource depthTexture;
+            public HDUtils.PackedMipChainInfo mipInfo;
+        }
+
+        void GenerateDepthPyramid(RenderGraph renderGraph, HDCamera hdCamera, FullScreenDebugMode debugMode)
+        {
+            // If the depth buffer hasn't been already copied by the decal pass, then we do the copy here.
+            CopyDepthBufferIfNeeded(renderGraph, hdCamera);
+
+            using (var builder = renderGraph.AddRenderPass<GenerateDepthPyramidPassData>("Generate Depth Buffer MIP Chain", out var passData, CustomSamplerId.DepthPyramid.GetSampler()))
+            {
+                passData.depthTexture = builder.WriteTexture(GetDepthTexture());
+                passData.mipInfo = GetDepthBufferMipChainInfo();
+
+                builder.SetRenderFunc(
+                (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                {
+                    var depthPyramidData = (GenerateDepthPyramidPassData)data;
+                    m_MipGenerator.RenderMinDepthPyramid(renderGraphContext.cmd, renderGraphContext.resources.GetTexture(depthPyramidData.depthTexture), depthPyramidData.mipInfo);
+                });
+            }
+
+            //int mipCount = GetDepthBufferMipChainInfo().mipLevelCount;
+
+            //float scaleX = hdCamera.actualWidth / (float)m_SharedRTManager.GetDepthTexture().rt.width;
+            //float scaleY = hdCamera.actualHeight / (float)m_SharedRTManager.GetDepthTexture().rt.height;
+            //m_PyramidSizeV4F.Set(hdCamera.actualWidth, hdCamera.actualHeight, 1f / hdCamera.actualWidth, 1f / hdCamera.actualHeight);
+            //m_PyramidScaleLod.Set(scaleX, scaleY, mipCount, 0.0f);
+            //m_PyramidScale.Set(scaleX, scaleY, 0f, 0f);
+            //cmd.SetGlobalTexture(HDShaderIDs._DepthPyramidTexture, m_SharedRTManager.GetDepthTexture());
+            //cmd.SetGlobalVector(HDShaderIDs._DepthPyramidScale, m_PyramidScaleLod);
+
+            //PushFullScreenDebugTextureMip(hdCamera, cmd, m_SharedRTManager.GetDepthTexture(), mipCount, m_PyramidScale, debugMode);
         }
     }
 }

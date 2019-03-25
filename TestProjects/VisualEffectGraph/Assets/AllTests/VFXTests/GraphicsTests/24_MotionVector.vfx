@@ -6938,17 +6938,17 @@ VisualEffectResource:
       *= scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z
       *= scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tfloat3x3 rot
       = GetEulerMatrix(radians(float3(angleX,angleY,angleZ)));\n\t\t\t\tfloat4x4 elementToVFX
-      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\tfloat3
-      vPos = mul(elementToVFX,float4(offsets,1.0f)).xyz;\n\t\t\t\tfloat3 vPosWS =
-      TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
+      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\n\t\t\t\tfloat3
+      vertexPosition = offsets;\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(vertexPosition,1.0f)).xyz;\n\t\t\t\tfloat3
+      vPosWS = TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
       = vPosWS;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_OFFSETS\n\t\t\t\to.VFX_VARYING_OFFSETS
       = offsets * 2.0f;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_FACEID\n\t\t\t\to.VFX_VARYING_FACEID
       = (id & 7) % 5;\n\t\t\t#endif\n\t\t\t#if defined(VFX_VARYING_ROTX) && defined(VFX_VARYING_ROTY)\n\t\t\t\trot
       = mul(transpose(float3x3(axisX,axisY,axisZ)),rot);\n\t\t\t#ifdef VFX_LOCAL_SPACE
       \n\t\t\t\trot = mul((float3x3)VFXGetObjectToWorldMatrix(),rot);\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_ROTX
       = rot[0];\n\t\t\t\to.VFX_VARYING_ROTY = rot[1];\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_POSCS
-      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\tfloat3 vertexPosition
-      = vPos;\n\t\t\t\t\n\t\t\t\t\t\t#if defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
+      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
+      defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
       previousElementToVFX = (float4x4)0;\n\t\t\t\t\t\tpreviousElementToVFX[3] = float4(0,0,0,1);\n\t\t\t\t\t\t\n\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\tfor
       (int itIndexMatrixRow = 0; itIndexMatrixRow < 3; ++itIndexMatrixRow)\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\t\tfor
       (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tuint
@@ -7075,17 +7075,17 @@ VisualEffectResource:
       *= scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z
       *= scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tfloat3x3 rot
       = GetEulerMatrix(radians(float3(angleX,angleY,angleZ)));\n\t\t\t\tfloat4x4 elementToVFX
-      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\tfloat3
-      vPos = mul(elementToVFX,float4(offsets,1.0f)).xyz;\n\t\t\t\tfloat3 vPosWS =
-      TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
+      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\n\t\t\t\tfloat3
+      vertexPosition = offsets;\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(vertexPosition,1.0f)).xyz;\n\t\t\t\tfloat3
+      vPosWS = TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
       = vPosWS;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_OFFSETS\n\t\t\t\to.VFX_VARYING_OFFSETS
       = offsets * 2.0f;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_FACEID\n\t\t\t\to.VFX_VARYING_FACEID
       = (id & 7) % 5;\n\t\t\t#endif\n\t\t\t#if defined(VFX_VARYING_ROTX) && defined(VFX_VARYING_ROTY)\n\t\t\t\trot
       = mul(transpose(float3x3(axisX,axisY,axisZ)),rot);\n\t\t\t#ifdef VFX_LOCAL_SPACE
       \n\t\t\t\trot = mul((float3x3)VFXGetObjectToWorldMatrix(),rot);\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_ROTX
       = rot[0];\n\t\t\t\to.VFX_VARYING_ROTY = rot[1];\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_POSCS
-      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\tfloat3 vertexPosition
-      = vPos;\n\t\t\t\t\n\t\t\t\t\t\t#if defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
+      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
+      defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
       previousElementToVFX = (float4x4)0;\n\t\t\t\t\t\tpreviousElementToVFX[3] = float4(0,0,0,1);\n\t\t\t\t\t\t\n\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\tfor
       (int itIndexMatrixRow = 0; itIndexMatrixRow < 3; ++itIndexMatrixRow)\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\t\tfor
       (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tuint
@@ -7236,17 +7236,17 @@ VisualEffectResource:
       *= scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z
       *= scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tfloat3x3 rot
       = GetEulerMatrix(radians(float3(angleX,angleY,angleZ)));\n\t\t\t\tfloat4x4 elementToVFX
-      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\tfloat3
-      vPos = mul(elementToVFX,float4(offsets,1.0f)).xyz;\n\t\t\t\tfloat3 vPosWS =
-      TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
+      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\n\t\t\t\tfloat3
+      vertexPosition = offsets;\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(vertexPosition,1.0f)).xyz;\n\t\t\t\tfloat3
+      vPosWS = TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
       = vPosWS;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_OFFSETS\n\t\t\t\to.VFX_VARYING_OFFSETS
       = offsets * 2.0f;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_FACEID\n\t\t\t\to.VFX_VARYING_FACEID
       = (id & 7) % 5;\n\t\t\t#endif\n\t\t\t#if defined(VFX_VARYING_ROTX) && defined(VFX_VARYING_ROTY)\n\t\t\t\trot
       = mul(transpose(float3x3(axisX,axisY,axisZ)),rot);\n\t\t\t#ifdef VFX_LOCAL_SPACE
       \n\t\t\t\trot = mul((float3x3)VFXGetObjectToWorldMatrix(),rot);\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_ROTX
       = rot[0];\n\t\t\t\to.VFX_VARYING_ROTY = rot[1];\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_POSCS
-      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\tfloat3 vertexPosition
-      = vPos;\n\t\t\t\t\n\t\t\t\t\t\t#if defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
+      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
+      defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
       previousElementToVFX = (float4x4)0;\n\t\t\t\t\t\tpreviousElementToVFX[3] = float4(0,0,0,1);\n\t\t\t\t\t\t\n\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\tfor
       (int itIndexMatrixRow = 0; itIndexMatrixRow < 3; ++itIndexMatrixRow)\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\t\tfor
       (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tuint
@@ -7672,17 +7672,17 @@ VisualEffectResource:
       *= scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z
       *= scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tfloat3x3 rot
       = GetEulerMatrix(radians(float3(angleX,angleY,angleZ)));\n\t\t\t\tfloat4x4 elementToVFX
-      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\tfloat3
-      vPos = mul(elementToVFX,float4(offsets,1.0f)).xyz;\n\t\t\t\tfloat3 vPosWS =
-      TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
+      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\n\t\t\t\tfloat3
+      vertexPosition = offsets;\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(vertexPosition,1.0f)).xyz;\n\t\t\t\tfloat3
+      vPosWS = TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
       = vPosWS;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_OFFSETS\n\t\t\t\to.VFX_VARYING_OFFSETS
       = offsets * 2.0f;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_FACEID\n\t\t\t\to.VFX_VARYING_FACEID
       = (id & 7) % 5;\n\t\t\t#endif\n\t\t\t#if defined(VFX_VARYING_ROTX) && defined(VFX_VARYING_ROTY)\n\t\t\t\trot
       = mul(transpose(float3x3(axisX,axisY,axisZ)),rot);\n\t\t\t#ifdef VFX_LOCAL_SPACE
       \n\t\t\t\trot = mul((float3x3)VFXGetObjectToWorldMatrix(),rot);\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_ROTX
       = rot[0];\n\t\t\t\to.VFX_VARYING_ROTY = rot[1];\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_POSCS
-      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\tfloat3 vertexPosition
-      = vPos;\n\t\t\t\t\n\t\t\t\t\t\t#if defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
+      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
+      defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
       previousElementToVFX = (float4x4)0;\n\t\t\t\t\t\tpreviousElementToVFX[3] = float4(0,0,0,1);\n\t\t\t\t\t\t\n\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\tfor
       (int itIndexMatrixRow = 0; itIndexMatrixRow < 3; ++itIndexMatrixRow)\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\t\tfor
       (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tuint
@@ -7836,17 +7836,17 @@ VisualEffectResource:
       *= scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z
       *= scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tfloat3x3 rot
       = GetEulerMatrix(radians(float3(angleX,angleY,angleZ)));\n\t\t\t\tfloat4x4 elementToVFX
-      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\tfloat3
-      vPos = mul(elementToVFX,float4(offsets,1.0f)).xyz;\n\t\t\t\tfloat3 vPosWS =
-      TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
+      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\n\t\t\t\tfloat3
+      vertexPosition = offsets;\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(vertexPosition,1.0f)).xyz;\n\t\t\t\tfloat3
+      vPosWS = TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
       = vPosWS;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_OFFSETS\n\t\t\t\to.VFX_VARYING_OFFSETS
       = offsets * 2.0f;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_FACEID\n\t\t\t\to.VFX_VARYING_FACEID
       = (id & 7) % 5;\n\t\t\t#endif\n\t\t\t#if defined(VFX_VARYING_ROTX) && defined(VFX_VARYING_ROTY)\n\t\t\t\trot
       = mul(transpose(float3x3(axisX,axisY,axisZ)),rot);\n\t\t\t#ifdef VFX_LOCAL_SPACE
       \n\t\t\t\trot = mul((float3x3)VFXGetObjectToWorldMatrix(),rot);\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_ROTX
       = rot[0];\n\t\t\t\to.VFX_VARYING_ROTY = rot[1];\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_POSCS
-      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\tfloat3 vertexPosition
-      = vPos;\n\t\t\t\t\n\t\t\t\t\t\t#if defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
+      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
+      defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
       previousElementToVFX = (float4x4)0;\n\t\t\t\t\t\tpreviousElementToVFX[3] = float4(0,0,0,1);\n\t\t\t\t\t\t\n\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\tfor
       (int itIndexMatrixRow = 0; itIndexMatrixRow < 3; ++itIndexMatrixRow)\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\t\tfor
       (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tuint
@@ -7973,17 +7973,17 @@ VisualEffectResource:
       *= scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z
       *= scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tfloat3x3 rot
       = GetEulerMatrix(radians(float3(angleX,angleY,angleZ)));\n\t\t\t\tfloat4x4 elementToVFX
-      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\tfloat3
-      vPos = mul(elementToVFX,float4(offsets,1.0f)).xyz;\n\t\t\t\tfloat3 vPosWS =
-      TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
+      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\n\t\t\t\tfloat3
+      vertexPosition = offsets;\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(vertexPosition,1.0f)).xyz;\n\t\t\t\tfloat3
+      vPosWS = TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
       = vPosWS;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_OFFSETS\n\t\t\t\to.VFX_VARYING_OFFSETS
       = offsets * 2.0f;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_FACEID\n\t\t\t\to.VFX_VARYING_FACEID
       = (id & 7) % 5;\n\t\t\t#endif\n\t\t\t#if defined(VFX_VARYING_ROTX) && defined(VFX_VARYING_ROTY)\n\t\t\t\trot
       = mul(transpose(float3x3(axisX,axisY,axisZ)),rot);\n\t\t\t#ifdef VFX_LOCAL_SPACE
       \n\t\t\t\trot = mul((float3x3)VFXGetObjectToWorldMatrix(),rot);\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_ROTX
       = rot[0];\n\t\t\t\to.VFX_VARYING_ROTY = rot[1];\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_POSCS
-      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\tfloat3 vertexPosition
-      = vPos;\n\t\t\t\t\n\t\t\t\t\t\t#if defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
+      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
+      defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
       previousElementToVFX = (float4x4)0;\n\t\t\t\t\t\tpreviousElementToVFX[3] = float4(0,0,0,1);\n\t\t\t\t\t\t\n\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\tfor
       (int itIndexMatrixRow = 0; itIndexMatrixRow < 3; ++itIndexMatrixRow)\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\t\tfor
       (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tuint
@@ -8117,17 +8117,17 @@ VisualEffectResource:
       *= scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z
       *= scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tfloat3x3 rot
       = GetEulerMatrix(radians(float3(angleX,angleY,angleZ)));\n\t\t\t\tfloat4x4 elementToVFX
-      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\t\n\t\t\t\tfloat3
-      vPos = mul(elementToVFX,float4(offsets,1.0f)).xyz;\n\t\t\t\tfloat3 vPosWS =
-      TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
+      = GetElementToVFXMatrix(axisX,axisY,axisZ,rot,float3(pivotX,pivotY,pivotZ),size3,position);\n\t\t\t\n\t\t\t\tfloat3
+      vertexPosition = offsets;\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(vertexPosition,1.0f)).xyz;\n\t\t\t\tfloat3
+      vPosWS = TransformPositionVFXToWorld(vPos);\n\t\t\t\t\n\t\t\t#ifdef VFX_VARYING_POSWS\n\t\t\t\to.VFX_VARYING_POSWS
       = vPosWS;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_OFFSETS\n\t\t\t\to.VFX_VARYING_OFFSETS
       = offsets * 2.0f;\n\t\t\t#endif\n\t\t\t#ifdef VFX_VARYING_FACEID\n\t\t\t\to.VFX_VARYING_FACEID
       = (id & 7) % 5;\n\t\t\t#endif\n\t\t\t#if defined(VFX_VARYING_ROTX) && defined(VFX_VARYING_ROTY)\n\t\t\t\trot
       = mul(transpose(float3x3(axisX,axisY,axisZ)),rot);\n\t\t\t#ifdef VFX_LOCAL_SPACE
       \n\t\t\t\trot = mul((float3x3)VFXGetObjectToWorldMatrix(),rot);\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_ROTX
       = rot[0];\n\t\t\t\to.VFX_VARYING_ROTY = rot[1];\n\t\t\t#endif\n\t\t\t\to.VFX_VARYING_POSCS
-      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\tfloat3 vertexPosition
-      = vPos;\n\t\t\t\t\n\t\t\t\t\t\t#if defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
+      = VFXTransformPositionWorldToClip(vPosWS);\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
+      defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
       previousElementToVFX = (float4x4)0;\n\t\t\t\t\t\tpreviousElementToVFX[3] = float4(0,0,0,1);\n\t\t\t\t\t\t\n\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\tfor
       (int itIndexMatrixRow = 0; itIndexMatrixRow < 3; ++itIndexMatrixRow)\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\t\tfor
       (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\tuint

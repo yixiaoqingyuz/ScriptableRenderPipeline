@@ -26,8 +26,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 RenderObjectsVelocityPass(m_RenderGraph, cullingResults, hdCamera);
             }
 
-            // At this point in forward all objects have been rendererd to the prepass (depth/normal/velocity) so we can resolve them
-            ResolvePrepassBuffers(m_RenderGraph, hdCamera);
+            // At this point in forward all objects have been rendered to the prepass (depth/normal/velocity) so we can resolve them
+            RenderGraphResource depthValuesMSAA = ResolvePrepassBuffers(m_RenderGraph, hdCamera);
 
             RenderGraphGlobalParams renderGraphParams = new RenderGraphGlobalParams();
             renderGraphParams.renderingViewport = hdCamera.renderingViewport;

@@ -92,14 +92,14 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         }
 
         // Global resource management (functions to create or import resources outside of render passes)
-        public RenderGraphMutableResource ImportTexture(RTHandle rt)
+        public RenderGraphMutableResource ImportTexture(RTHandle rt, int shaderProperty = 0)
         {
-            return m_Resources.ImportTexture(rt);
+            return m_Resources.ImportTexture(rt, shaderProperty);
         }
 
-        public RenderGraphMutableResource CreateTexture(in TextureDesc desc)
+        public RenderGraphMutableResource CreateTexture(in TextureDesc desc, int shaderProperty = 0)
         {
-            return m_Resources.CreateTexture(desc);
+            return m_Resources.CreateTexture(desc, shaderProperty);
         }
 
         public RenderGraphBuilder AddRenderPass<PassData>(string passName, out PassData passData, CustomSampler customSampler = null) where PassData : RenderPassData, new()
@@ -245,12 +245,25 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             }
         }
 
+        void PreRenderPassSetGlobalTextures(in RenderPass pass, RenderGraphContext rgContext)
+        {
+            foreach (var resource in pass.resourceReadList)
+            {
+                var resourceDesc = m_Resources.GetTexturetResource(resource);
+                if (resourceDesc.shaderProperty != 0)
+                {
+                    rgContext.cmd.SetGlobalTexture(resourceDesc.shaderProperty, resourceDesc.rt);
+                }
+            }
+        }
+
         #region Internal Interface
         void PreRenderPassExecute(int passIndex, in RenderPass pass, RenderGraphContext rgContext, RenderGraphGlobalParams parameters)
         {
             // TODO merge clear and setup here if possible
             PreRenderPassCreateAndClearRenderTargets(passIndex, pass, rgContext, parameters);
             PreRenderPassSetRenderTargets(pass, rgContext, parameters);
+            PreRenderPassSetGlobalTextures(pass, rgContext);
         }
 
         void PostRenderPassExecute(int passIndex, in RenderPass pass)

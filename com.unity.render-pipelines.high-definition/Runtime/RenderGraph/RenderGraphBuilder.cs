@@ -12,9 +12,9 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         bool                                m_Disposed;
 
         #region Public Interface
-        public RenderGraphMutableResource CreateTexture( in TextureDesc desc)
+        public RenderGraphMutableResource CreateTexture( in TextureDesc desc, int shaderProperty = 0)
         {
-            return m_RenderGraphResources.CreateTexture(desc);
+            return m_RenderGraphResources.CreateTexture(desc, shaderProperty);
         }
 
         public RenderGraphMutableResource WriteTexture(in RenderGraphMutableResource input)

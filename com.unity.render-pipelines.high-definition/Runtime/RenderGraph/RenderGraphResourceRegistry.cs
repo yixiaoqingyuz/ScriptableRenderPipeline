@@ -182,22 +182,25 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             public int          cachedHash;
             public int          firstWritePassIndex;
             public int          lastReadPassIndex;
+            public int          shaderProperty;
 
-            internal TextureResource(RTHandle rt)
+            internal TextureResource(RTHandle rt, int shaderProperty)
                 : this()
             {
                 Reset();
 
                 this.rt = rt;
                 imported = true;
+                this.shaderProperty = shaderProperty;
             }
 
-            internal TextureResource(in TextureDesc desc)
+            internal TextureResource(in TextureDesc desc, int shaderProperty)
                 : this()
             {
                 Reset();
 
                 this.desc = desc;
+                this.shaderProperty = shaderProperty;
             }
 
             void Reset()
@@ -296,17 +299,17 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 
         #region Internal Interface
         // Texture Creation/Import APIs are internal because creation should only go through RenderGraph (for globals, outside of render passes) and RenderGraphBuilder (for render passes)
-        internal RenderGraphMutableResource ImportTexture(RTHandle rt)
+        internal RenderGraphMutableResource ImportTexture(RTHandle rt, int shaderProperty = 0)
         {
-            int newHandle = m_TextureResources.Add(new TextureResource(rt));
+            int newHandle = m_TextureResources.Add(new TextureResource(rt, shaderProperty));
             return new RenderGraphMutableResource(newHandle, RenderGraphResourceType.Texture);
         }
 
-        internal RenderGraphMutableResource CreateTexture(in TextureDesc desc)
+        internal RenderGraphMutableResource CreateTexture(in TextureDesc desc, int shaderProperty = 0)
         {
             ValidateTextureDesc(desc);
 
-            int newHandle = m_TextureResources.Add(new TextureResource(desc));
+            int newHandle = m_TextureResources.Add(new TextureResource(desc, shaderProperty));
             return new RenderGraphMutableResource(newHandle, RenderGraphResourceType.Texture);
         }
 

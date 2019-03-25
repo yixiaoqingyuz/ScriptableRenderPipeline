@@ -367,14 +367,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             m_DepthBuffer = renderGraph.CreateTexture(depthDesc);
             m_DepthBufferMSAA = renderGraph.CreateTexture(new TextureDesc(depthDesc) { bindTextureMS = true, enableMSAA = true, name = "CameraDepthStencilMSAA" });
-            m_DepthAsColorBufferMSAA = renderGraph.CreateTexture(new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R32_SFloat, clearBuffer = true, clearColor = Color.black, bindTextureMS = true, enableMSAA = true, xrInstancing = true, useDynamicScale = true, name = "DepthAsColorMSAA" });
+            m_DepthAsColorBufferMSAA = renderGraph.CreateTexture(new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R32_SFloat, clearBuffer = true, clearColor = Color.black, bindTextureMS = true, enableMSAA = true, xrInstancing = true, useDynamicScale = true, name = "DepthAsColorMSAA" }, HDShaderIDs._DepthTextureMS);
 
             TextureDesc normalDesc = new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R8G8B8A8_UNorm, clearBuffer = debugDisplaySettings.IsDebugDisplayEnabled(), clearColor = Color.black, xrInstancing = true, useDynamicScale = true, enableRandomWrite = true, name = "NormalBuffer" };
-            m_NormalBuffer = renderGraph.CreateTexture(normalDesc);
-            m_NormalBufferMSAA = renderGraph.CreateTexture(new TextureDesc(normalDesc) { bindTextureMS = true, enableMSAA = true, enableRandomWrite = false, name = "NormalBufferMSAA" });
+            m_NormalBuffer = renderGraph.CreateTexture(normalDesc, HDShaderIDs._NormalBufferTexture);
+            m_NormalBufferMSAA = renderGraph.CreateTexture(new TextureDesc(normalDesc) { bindTextureMS = true, enableMSAA = true, enableRandomWrite = false, name = "NormalBufferMSAA" }, HDShaderIDs._NormalTextureMS);
 
             TextureDesc velocityDesc = new TextureDesc(Vector2.one) { colorFormat = Builtin.GetVelocityBufferFormat(), xrInstancing = true, useDynamicScale = true, name = "Velocity" };
-            m_VelocityBuffer = renderGraph.CreateTexture(velocityDesc);
+            m_VelocityBuffer = renderGraph.CreateTexture(velocityDesc, HDShaderIDs._CameraMotionVectorsTexture);
             m_VelocityBufferMSAA = renderGraph.CreateTexture(new TextureDesc(velocityDesc) { bindTextureMS = true, enableMSAA = true, name = "VelocityMSAA" });
         }
 

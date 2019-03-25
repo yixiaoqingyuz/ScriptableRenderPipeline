@@ -49,6 +49,9 @@ VFX_VARYING_PS_INPUTS vert(uint id : SV_VertexID, uint instanceID : SV_InstanceI
 	o.VFX_VARYING_ROTY = rot[1];
 #endif
 	o.VFX_VARYING_POSCS = VFXTransformPositionWorldToClip(vPosWS);
+	
+	float3 vertexPosition = vPos;
+	${VFXVertexComputeCurrentAndPreviousClipPos}
 
 	${VFXVertexCommonProcess}
 	

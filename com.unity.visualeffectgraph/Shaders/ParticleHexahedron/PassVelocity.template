@@ -1,13 +1,14 @@
-// Depth pass
 Pass
 {		
-	Tags { "LightMode"=${VFXPassDepth} }
+	Tags { "LightMode"=${VFXPassVelocity} }
+	
+	${VFXStencilMotionVector}
 
 	ZWrite On
 	Blend Off
 	
 	HLSLPROGRAM
-	#define IS_MOTION_VECTORS_PASS 0
+	#define IS_MOTION_VECTORS_PASS 1
 	${VFXInclude("Shaders/ParticleHexahedron/PassDepthOrMV.template")}
 	ENDHLSL
 }

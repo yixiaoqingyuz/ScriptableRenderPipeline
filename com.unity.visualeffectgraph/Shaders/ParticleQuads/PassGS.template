@@ -39,8 +39,8 @@ void geom(point uint intStream[1] : TEXCOORD0,inout TriangleStream<VFX_VARYING_P
 		o.VFX_VARYING_UV.y = float(id & 1);
 						
 		const float2 vOffsets = o.VFX_VARYING_UV.xy - 0.5f;
-		float3 vertexPosition = float3(vOffsets, 0.0f);
-		const float3 vPos = mul(elementToVFX,float4(vertexPosition, 1.0f)).xyz;
+		float3 inputVertexPosition = float3(vOffsets, 0.0f);
+		const float3 vPos = mul(elementToVFX,float4(inputVertexPosition, 1.0f)).xyz;
 		o.VFX_VARYING_POSCS = TransformPositionVFXToClip(vPos);
 		
 		#ifdef VFX_VARYING_BENTFACTORS

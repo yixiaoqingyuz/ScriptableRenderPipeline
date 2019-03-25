@@ -31,9 +31,9 @@ VFX_VARYING_PS_INPUTS vert(vs_input i, uint instanceID : SV_InstanceID)
 	
 	${VFXLoadSize}
 	
-	float3 vertexPosition = i.pos;
+	float3 inputVertexPosition = i.pos;
 	float4x4 elementToVFX = GetElementToVFXMatrix(axisX,axisY,axisZ,float3(angleX,angleY,angleZ),float3(pivotX,pivotY,pivotZ),size3,position);
-	float3 vPos = mul(elementToVFX,float4(vertexPosition,1.0f)).xyz;
+	float3 vPos = mul(elementToVFX,float4(inputVertexPosition,1.0f)).xyz;
 	float4 csPos = TransformPositionVFXToClip(vPos);
 	o.VFX_VARYING_POSCS = csPos;
 	

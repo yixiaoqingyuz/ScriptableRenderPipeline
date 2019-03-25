@@ -98,7 +98,7 @@ uint previousFrameIndex = elementToVFXBufferPrevious.Load((index * 16 + 15) << 2
 o.VFX_VARYING_VELOCITY_CPOS = o.VFX_VARYING_VELOCITY_CPOS_PREVIOUS = float4(0.0f, 0.0f, 0.0f, 1.0f);
 if (asuint(currentFrameIndex) - previousFrameIndex == 1u)
 {
-	float3 oldvPos = mul(previousElementToVFX,float4(vertexPosition, 1.0f)).xyz;
+	float3 oldvPos = mul(previousElementToVFX,float4(inputVertexPosition, 1.0f)).xyz;
 	o.VFX_VARYING_VELOCITY_CPOS_PREVIOUS = TransformPositionVFXToPreviousClip(oldvPos);
 	o.VFX_VARYING_VELOCITY_CPOS = TransformPositionVFXToNonJitteredClip(vPos);
 }

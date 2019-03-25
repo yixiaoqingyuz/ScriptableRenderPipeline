@@ -2,14 +2,39 @@
 
 Texture2D _CameraDepthTexture;
 
+void VFXEncodeVelocity(float2 velocity, out float4 outBuffer)
+{
+	outBuffer = (float4)0.0f; //TODO
+}
+
 float4 VFXTransformPositionWorldToClip(float3 posWS)
 {
     return UnityWorldToClipPos(posWS);
 }
 
+float4 VFXTransformPositionWorldToNonJitteredClip(float3 posWS)
+{
+	return VFXTransformPositionWorldToClip(posWS); //TODO
+}
+
+float4 VFXTransformPositionWorldToPreviousClip(float3 posWS)
+{
+	return VFXTransformPositionWorldToClip(posWS); //TODO
+}
+
 float4 VFXTransformPositionObjectToClip(float3 posOS)
 {
     return UnityObjectToClipPos(posOS);
+}
+
+float4 VFXTransformPositionObjectToNonJitteredClip(float3 posOS)
+{
+	return VFXTransformPositionObjectToClip(posOS); //TODO
+}
+
+float4 VFXTransformPositionObjectToPreviousClip(float3 posOS)
+{
+	return VFXTransformPositionObjectToClip(posOS); //TODO
 }
 
 float3 VFXTransformPositionWorldToView(float3 posWS)

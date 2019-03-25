@@ -62,10 +62,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         passData.frameSettings = hdCamera.frameSettings;
                         passData.msaaEnabled = msaa;
 
-                        passData.depthBuffer = builder.UseDepthBuffer(m_SharedRTManager.GetDepthStencilBufferResource(msaa));
-                        passData.normalBuffer = builder.UseColorBuffer(m_SharedRTManager.GetNormalBufferResource(msaa), 0);
+                        passData.depthBuffer = builder.UseDepthBuffer(GetDepthStencilBuffer(msaa));
+                        passData.normalBuffer = builder.UseColorBuffer(GetNormalBuffer(msaa), 0);
                         if (msaa)
-                            passData.depthAsColorBuffer = builder.UseColorBuffer(m_SharedRTManager.GetDepthTextureResource(true), 1);
+                            passData.depthAsColorBuffer = builder.UseColorBuffer(GetDepthTexture(true), 1);
 
                         // Full forward: Output normal buffer for both forward and forwardOnly
                         // Exclude object that render velocity (if motion vector are enabled)
@@ -116,10 +116,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                                 excludeMotionVectors = excludeMotion
                             }));
 
-                        passData.depthBuffer = builder.WriteTexture(m_SharedRTManager.GetDepthStencilBufferResource(msaa));
-                        passData.normalBuffer = builder.WriteTexture(m_SharedRTManager.GetNormalBufferResource(msaa));
+                        passData.depthBuffer = builder.WriteTexture(GetDepthStencilBuffer(msaa));
+                        passData.normalBuffer = builder.WriteTexture(GetNormalBuffer(msaa));
                         if (msaa)
-                            passData.depthAsColorBuffer = builder.WriteTexture(m_SharedRTManager.GetDepthTextureResource(true));
+                            passData.depthAsColorBuffer = builder.WriteTexture(GetDepthTexture(true));
 
                         builder.SetRenderFunc(
                         (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
@@ -176,11 +176,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 bool msaa = hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA);
 
                 passData.frameSettings = hdCamera.frameSettings;
-                passData.depthBuffer = builder.UseDepthBuffer(m_SharedRTManager.GetDepthStencilBufferResource(msaa));
-                passData.velocityBuffer = builder.UseColorBuffer(m_SharedRTManager.GetVelocityBufferResource(msaa), 0);
-                passData.normalBuffer = builder.UseColorBuffer(m_SharedRTManager.GetNormalBufferResource(msaa), 1);
+                passData.depthBuffer = builder.UseDepthBuffer(GetDepthStencilBuffer(msaa));
+                passData.velocityBuffer = builder.UseColorBuffer(GetVelocityBuffer(msaa), 0);
+                passData.normalBuffer = builder.UseColorBuffer(GetNormalBuffer(msaa), 1);
                 if (msaa)
-                    passData.depthAsColorMSAABuffer = builder.UseColorBuffer(m_SharedRTManager.GetDepthTextureResource(msaa), 2);
+                    passData.depthAsColorMSAABuffer = builder.UseColorBuffer(GetDepthTexture(msaa), 2);
 
                 passData.rendererList = builder.UseRendererList(
                     builder.CreateRendererList(new RendererListDesc(HDShaderPassNames.s_MotionVectorsName, cull, hdCamera.camera)
@@ -195,6 +195,71 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 {
                     ObjectVelocityPassData prepassData = (ObjectVelocityPassData)data;
                     DrawOpaqueRendererList(prepassData.frameSettings, renderGraphContext.resources.GetRendererList(prepassData.rendererList), renderGraphContext.renderContext, renderGraphContext.cmd);
+                });
+            }
+        }
+
+        class GBufferPassData : RenderPassData
+        {
+            public FrameSettings                frameSettings;
+            public RenderGraphResource          rendererList;
+            public RenderGraphMutableResource[] gbufferRT = new RenderGraphMutableResource[RenderGraphUtils.kMaxMRTCount];
+            public RenderGraphMutableResource   depthBuffer;
+        }
+
+        void SetupGBufferTargets(GBufferPassData passData, FrameSettings frameSettings, RenderGraphBuilder builder)
+        {
+            bool clearGBuffer = NeedClearGBuffer();
+
+            passData.depthBuffer = builder.UseDepthBuffer(GetDepthStencilBuffer());
+            passData.gbufferRT[0] = builder.UseColorBuffer(builder.CreateTexture(
+                new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R8G8B8A8_SRGB, xrInstancing = true, useDynamicScale = true, clearBuffer = clearGBuffer, clearColor = Color.clear,  name = "GBuffer0" }, HDShaderIDs._GBufferTexture[0]), 0);
+            passData.gbufferRT[1] = builder.UseColorBuffer(GetNormalBuffer(), 1);
+            passData.gbufferRT[2] = builder.UseColorBuffer(builder.CreateTexture(
+                new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R8G8B8A8_UNorm, xrInstancing = true, useDynamicScale = true, clearBuffer = clearGBuffer, clearColor = Color.clear, name = "GBuffer2" }, HDShaderIDs._GBufferTexture[2]), 2);
+            passData.gbufferRT[3] = builder.UseColorBuffer(builder.CreateTexture(
+                new TextureDesc(Vector2.one) { colorFormat = Builtin.GetLightingBufferFormat(), xrInstancing = true, useDynamicScale = true, clearBuffer = clearGBuffer, clearColor = Color.clear, name = "GBuffer3" }, HDShaderIDs._GBufferTexture[3]), 3);
+            int currentIndex = 4;
+            if (frameSettings.IsEnabled(FrameSettingsField.LightLayers))
+            {
+                passData.gbufferRT[currentIndex] = builder.UseColorBuffer(builder.CreateTexture(
+                    new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R8G8B8A8_UNorm, xrInstancing = true, useDynamicScale = true, clearBuffer = clearGBuffer, clearColor = Color.clear, name = "LightLayers" }, HDShaderIDs._LightLayersTexture), currentIndex);
+                currentIndex++;
+            }
+            if (frameSettings.IsEnabled(FrameSettingsField.ShadowMask))
+            {
+                passData.gbufferRT[currentIndex] = builder.UseColorBuffer(builder.CreateTexture(
+                    new TextureDesc(Vector2.one) { colorFormat = Builtin.GetShadowMaskBufferFormat(), xrInstancing = true, useDynamicScale = true, clearBuffer = clearGBuffer, clearColor = Color.clear, name = "ShadowMasks" }, HDShaderIDs._ShadowMaskTexture), currentIndex);
+                currentIndex++;
+            }
+        }
+
+        // RenderGBuffer do the gbuffer pass. This is only called with deferred. If we use a depth prepass, then the depth prepass will perform the alpha testing for opaque alpha tested and we don't need to do it anymore
+        // during Gbuffer pass. This is handled in the shader and the depth test (equal and no depth write) is done here.
+        void RenderGBuffer(RenderGraph renderGraph, CullingResults cull, HDCamera hdCamera)
+        {
+            if (hdCamera.frameSettings.litShaderMode != LitShaderMode.Deferred)
+                return;
+
+            using (var builder = renderGraph.AddRenderPass<GBufferPassData>("GBuffer", out var passData, CustomSamplerId.GBuffer.GetSampler()))
+            {
+                FrameSettings frameSettings = hdCamera.frameSettings;
+
+                passData.frameSettings = frameSettings;
+                SetupGBufferTargets(passData, frameSettings, builder);
+                passData.rendererList = builder.UseRendererList(
+                    builder.CreateRendererList(new RendererListDesc(HDShaderPassNames.s_GBufferName, cull, hdCamera.camera)
+                    {
+                        renderQueueRange = HDRenderQueue.k_RenderQueue_AllOpaque,
+                        sortingCriteria = SortingCriteria.CommonOpaque,
+                        rendererConfiguration = m_currentRendererConfigurationBakedLighting
+                    }));
+
+                builder.SetRenderFunc(
+                (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                {
+                    GBufferPassData gbufferPassData = (GBufferPassData)data;
+                    DrawOpaqueRendererList(gbufferPassData.frameSettings, renderGraphContext.resources.GetRendererList(gbufferPassData.rendererList), renderGraphContext.renderContext, renderGraphContext.cmd);
                 });
             }
         }
@@ -223,13 +288,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 passData.depthResolveMaterial = m_DepthResolveMaterial;
                 passData.depthresolvePassIndex = SampleCountToPassIndex(m_MSAASamples);
 
-                passData.depthBuffer = builder.UseDepthBuffer(m_SharedRTManager.GetDepthStencilBufferResource(false));
-                //passData.velocityBuffer = builder.UseColorBuffer(m_SharedRTManager.GetVelocityBufferResource(msaa), 0);
+                passData.depthBuffer = builder.UseDepthBuffer(GetDepthStencilBuffer(false));
+                //passData.velocityBuffer = builder.UseColorBuffer(GetVelocityBufferResource(msaa), 0);
                 passData.depthValuesBuffer = builder.UseColorBuffer(depthValuesBuffer, 0);
-                passData.normalBuffer = builder.UseColorBuffer(m_SharedRTManager.GetNormalBufferResource(false), 1);
+                passData.normalBuffer = builder.UseColorBuffer(GetNormalBuffer(false), 1);
 
-                passData.normalBufferMSAA = builder.ReadTexture(m_SharedRTManager.GetNormalBufferResource(true));
-                passData.depthAsColorBufferMSAA = builder.ReadTexture(m_SharedRTManager.GetDepthTextureResource(true));
+                passData.normalBufferMSAA = builder.ReadTexture(GetNormalBuffer(true));
+                passData.depthAsColorBufferMSAA = builder.ReadTexture(GetDepthTexture(true));
 
                 builder.SetRenderFunc(
                 (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>

@@ -13,7 +13,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             var cullingResults = renderRequest.cullingResults.cullingResults;
             //var target = renderRequest.target;
 
-            m_SharedRTManager.CreateGlobalResources(m_RenderGraph, hdCamera, m_CurrentDebugDisplaySettings);
+            CreateSharedResources(m_RenderGraph, hdCamera, m_CurrentDebugDisplaySettings);
 
             StartStereoRendering(cmd, renderContext, camera);
 
@@ -28,6 +28,22 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             // At this point in forward all objects have been rendered to the prepass (depth/normal/velocity) so we can resolve them
             RenderGraphResource depthValuesMSAA = ResolvePrepassBuffers(m_RenderGraph, hdCamera);
+
+            /*
+            // This will bind the depth buffer if needed for DBuffer)
+            RenderDBuffer(hdCamera, cmd, renderContext, cullingResults);
+            // We can call DBufferNormalPatch after RenderDBuffer as it only affect forward material and isn't affected by RenderGBuffer
+            // This reduce lifteime of stencil bit
+            DBufferNormalPatch(hdCamera, cmd, renderContext, cullingResults);
+
+#if ENABLE_RAYTRACING
+            bool raytracedIndirectDiffuse = m_RaytracingIndirectDiffuse.RenderIndirectDiffuse(hdCamera, cmd, renderContext, m_FrameCount);
+            PushFullScreenDebugTexture(hdCamera, cmd, m_RaytracingIndirectDiffuse.GetIndirectDiffuseTexture(), FullScreenDebugMode.IndirectDiffuse);
+            cmd.SetGlobalInt(HDShaderIDs._RaytracedIndirectDiffuse, raytracedIndirectDiffuse ? 1 : 0);
+#endif
+*/
+
+            RenderGBuffer(m_RenderGraph, cullingResults, hdCamera);
 
             RenderGraphGlobalParams renderGraphParams = new RenderGraphGlobalParams();
             renderGraphParams.renderingViewport = hdCamera.renderingViewport;

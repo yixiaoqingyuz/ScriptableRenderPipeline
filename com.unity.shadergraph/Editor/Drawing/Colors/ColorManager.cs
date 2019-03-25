@@ -57,14 +57,14 @@ namespace UnityEditor.ShaderGraph.Drawing.Colors
         public CategoryColors()
         {
             typeColors = new Dictionary<string, Color>();
-            typeColors.Add("Artistic", Color.cyan);
-            typeColors.Add("Channel", Color.yellow);
-            typeColors.Add("Input", Color.green);
-            typeColors.Add("Master", Color.black);
-            typeColors.Add("Math", Color.red);
-            typeColors.Add("Procedural", Color.blue);
-            typeColors.Add("Utility", Color.white);
-            typeColors.Add("UV", Color.gray);
+            typeColors.Add("Artistic", new Color(0.0f, 0.3f, 0.3f));
+            typeColors.Add("Channel", new Color(0.237f, 0.3f, 0.12f));
+            typeColors.Add("Input", new Color(0.5f, 0.07499999f, 0.07499999f));
+            typeColors.Add("Master", new Color(0.2235294f, 0.2235294f, 0.2235294f)); // this should actually just stay the same grey we used to have
+            typeColors.Add("Math", new Color(0.1494118f, 0.265621f, 0.4980392f));
+            typeColors.Add("Procedural", new Color(0.4f, 0.2f, 0.3662921f));
+            typeColors.Add("Utility", new Color(0.1935937f, 0.1575f, 0.35f));
+            typeColors.Add("UV", new Color(0.04705882f, 0.2235294f, 0.04705882f));
             
 //            typeColors.Add("Artistic", new Color());
 //            typeColors.Add("Channel", new Color());

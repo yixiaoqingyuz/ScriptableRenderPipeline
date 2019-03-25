@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added "Delete Group and Contents" and removed "Ungroup All Nodes" from the context menu for groups.
 - You can now use Sub Graphs in other Sub Graphs.
 - Preview shaders now compile in the background, and only redraw when necessary.
+- Added hidden path namespace for subgraphs. This prevents certain subgraphs from populating the Create Node menu.
 
 ### Changed
 - Removed Blackboard fields, which had no effect on Sub Graph input ports, from the Sub Graph Blackboard.

@@ -21,6 +21,7 @@ namespace UnityEditor.ShaderGraph.Drawing
         public bool nodeNeedsRepositioning { get; set; }
         public SlotReference targetSlotReference { get; private set; }
         public Vector2 targetPosition { get; private set; }
+        private static string s_HiddenFolderName => "Hidden";
 
         public void Initialize(EditorWindow editorWindow, GraphData graph, GraphView graphView)
         {
@@ -88,9 +89,10 @@ namespace UnityEditor.ShaderGraph.Drawing
                 {
                     AddEntries(node, new string[1] { asset.name }, nodeEntries);
                 }
-                else
+                
+                var title = node.subGraphData.path.Split('/').ToList();
+                if (title[0] != s_HiddenFolderName)
                 {
-                    var title = node.subGraphData.path.Split('/').ToList();
                     title.Add(asset.name);
                     AddEntries(node, title.ToArray(), nodeEntries);
                 }

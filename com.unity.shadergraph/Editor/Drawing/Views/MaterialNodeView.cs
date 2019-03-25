@@ -9,6 +9,7 @@ using UnityEngine.Rendering;
 
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.Rendering;
+using UnityEditor.ShaderGraph.Drawing.Colors;
 using UnityEngine.UIElements;
 using Node = UnityEditor.Experimental.GraphView.Node;
 
@@ -18,6 +19,10 @@ namespace UnityEditor.ShaderGraph.Drawing
     {
         PreviewRenderData m_PreviewRenderData;
         Image m_PreviewImage;
+        // Remove this after updated to the correct API call has landed in trunk. ------------
+        VisualElement m_TitleContainer;
+        new VisualElement m_ButtonContainer;
+
         VisualElement m_PreviewContainer;
         VisualElement m_ControlItems;
         VisualElement m_PreviewFiller;
@@ -155,9 +160,6 @@ namespace UnityEditor.ShaderGraph.Drawing
 
             m_PortInputContainer.SendToBack();
 
-            // Remove this after updated to the correct API call has landed in trunk. ------------
-            VisualElement m_TitleContainer;
-            VisualElement m_ButtonContainer;
             m_TitleContainer = this.Q("title");
             // -----------------------------------------------------------------------------------
 
@@ -217,6 +219,11 @@ namespace UnityEditor.ShaderGraph.Drawing
                 badge.Detach();
                 badge.RemoveFromHierarchy();
             }
+        }
+
+        public void SetColor(Color color)
+        {
+            m_TitleContainer.style.backgroundColor = color;
         }
 
         void OnGeometryChanged(GeometryChangedEvent evt)

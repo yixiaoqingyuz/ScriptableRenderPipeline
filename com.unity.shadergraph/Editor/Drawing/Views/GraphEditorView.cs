@@ -8,6 +8,7 @@ using UnityEditor.ShaderGraph.Drawing.Inspector;
 using Object = UnityEngine.Object;
 
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.ShaderGraph.Drawing.Colors;
 using UnityEngine.UIElements;
 using Edge = UnityEditor.Experimental.GraphView.Edge;
 
@@ -40,6 +41,7 @@ namespace UnityEditor.ShaderGraph.Drawing
         SearchWindowProvider m_SearchWindowProvider;
         EdgeConnectorListener m_EdgeConnectorListener;
         BlackboardProvider m_BlackboardProvider;
+        ColorManager m_ColorManager;
 
         public BlackboardProvider blackboardProvider
         {
@@ -89,6 +91,7 @@ namespace UnityEditor.ShaderGraph.Drawing
             styleSheets.Add(Resources.Load<StyleSheet>("Styles/GraphEditorView"));
             previewManager = new PreviewManager(graph, messageManager);
             previewManager.onPrimaryMasterChanged = OnPrimaryMasterChanged;
+            m_ColorManager = new ColorManager(graph.colorProvider);
 
             string serializedToggle = EditorUserSettings.GetConfigValue(k_ToggleSettings);
             if (!string.IsNullOrEmpty(serializedToggle))
@@ -612,6 +615,7 @@ namespace UnityEditor.ShaderGraph.Drawing
                 var materialNodeView = new MaterialNodeView { userData = materialNode };
                 m_GraphView.AddElement(materialNodeView);
                 materialNodeView.Initialize(materialNode, m_PreviewManager, m_EdgeConnectorListener);
+                materialNodeView.SetColor(m_ColorManager.GetColor(materialNodeView.node));
                 nodeView = materialNodeView;
             }
 

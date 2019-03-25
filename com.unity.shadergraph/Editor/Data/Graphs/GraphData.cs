@@ -225,6 +225,15 @@ namespace UnityEditor.ShaderGraph
             }
         }
 
+        [SerializeField]
+        string m_ColorProvider;
+
+        public string colorProvider
+        {
+            get => m_ColorProvider;
+            set => m_ColorProvider = value;
+        }
+
         public MessageManager messageManager { get; set; }
         public bool isSubGraph { get; set; }
 

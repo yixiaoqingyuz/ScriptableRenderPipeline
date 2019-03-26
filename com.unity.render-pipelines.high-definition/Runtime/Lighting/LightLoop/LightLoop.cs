@@ -832,9 +832,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return 32 * (1 << k_Log2NumClusters);       // total footprint for all layers of the tile (measured in light index entries)
         }
 
-        public void AllocResolutionDependentBuffers(int width, int height, HDCamera hdCamera)
+        public void AllocResolutionDependentBuffers(int width, int height, int viewCount)
         {
-            m_MaxViewCount = Math.Max(hdCamera.viewCount, m_MaxViewCount);
+            m_MaxViewCount = Math.Max(viewCount, m_MaxViewCount);
             var nrTilesX = (width + LightDefinitions.s_TileSizeFptl - 1) / LightDefinitions.s_TileSizeFptl;
             var nrTilesY = (height + LightDefinitions.s_TileSizeFptl - 1) / LightDefinitions.s_TileSizeFptl;
             var nrTiles = nrTilesX * nrTilesY * m_MaxViewCount;
@@ -878,13 +878,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
 
             // The bounds and light volumes are view-dependent, and AABB is additionally projection dependent.
-            // The view and proj matrices are per eye in stereo. This means we have to double the size of these buffers.
-            // XRTODO: Maybe in stereo, we will only support half as many lights total, in order to minimize buffer size waste.
-            // Alternatively, we could re-size these buffers if any stereo camera is active, instead of unilaterally increasing buffer size.
             // TODO: I don't think k_MaxLightsOnScreen corresponds to the actual correct light count for cullable light types (punctual, area, env, decal)
             s_AABBBoundsBuffer = new ComputeBuffer(m_MaxViewCount * 2 * m_MaxLightsOnScreen, 4 * sizeof(float));
             s_ConvexBoundsBuffer = new ComputeBuffer(m_MaxViewCount * m_MaxLightsOnScreen, System.Runtime.InteropServices.Marshal.SizeOf(typeof(SFiniteLightBound)));
             s_LightVolumeDataBuffer = new ComputeBuffer(m_MaxViewCount * m_MaxLightsOnScreen, System.Runtime.InteropServices.Marshal.SizeOf(typeof(LightVolumeData)));
+
             // Need 3 ints for DispatchIndirect, but need 4 ints for DrawInstancedIndirect.
             s_DispatchIndirectBuffer = new ComputeBuffer(m_MaxViewCount * LightDefinitions.s_NumFeatureVariants * 4, sizeof(uint), ComputeBufferType.IndirectArguments);
         }

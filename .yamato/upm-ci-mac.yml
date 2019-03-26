@@ -4,7 +4,7 @@ platforms:
   - name: mac
     type: Unity::VM::osx
     image: buildfarm/mac:stable
-    flavor: b1.xlarge
+    flavor: m1.mac
 projects:
   - name: ShaderGraph
   #- name: VisualEffectGraph

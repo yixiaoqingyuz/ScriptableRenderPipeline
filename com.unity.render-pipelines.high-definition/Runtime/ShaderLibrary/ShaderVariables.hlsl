@@ -11,6 +11,7 @@
 // As I haven't change the variables name yet, I simply don't define anything, and I put the transform function at the end of the file outside the guard header.
 // This need to be fixed.
 
+#include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/Camera/HDCamera.cs.hlsl"
 #if defined(USING_STEREO_MATRICES)
     #define glstate_matrix_projection unity_StereoMatrixP[unity_StereoEyeIndex]
     #define unity_MatrixV unity_StereoMatrixV[unity_StereoEyeIndex]
@@ -21,9 +22,10 @@
     #define unity_CameraInvProjection unity_StereoCameraInvProjection[unity_StereoEyeIndex]
     #define unity_WorldToCamera unity_StereoWorldToCamera[unity_StereoEyeIndex]
     #define unity_CameraToWorld unity_StereoCameraToWorld[unity_StereoEyeIndex]
-    #define _WorldSpaceCameraPos _WorldSpaceCameraPosStereo[unity_StereoEyeIndex].xyz
-    #define _WorldSpaceCameraPosEyeOffset _WorldSpaceCameraPosStereoEyeOffset[unity_StereoEyeIndex].xyz
-    #define _PrevCamPosRWS _PrevCamPosRWSStereo[unity_StereoEyeIndex].xyz
+
+    #define _WorldSpaceCameraPos            _XRViewConstants[unity_StereoEyeIndex].worldSpaceCameraPos
+    #define _WorldSpaceCameraPosViewOffset  _XRViewConstants[unity_StereoEyeIndex].worldSpaceCameraPosViewOffset
+    #define _PrevCamPosRWS                  _XRViewConstants[unity_StereoEyeIndex].prevWorldSpaceCameraPos
 #endif
 
 #define UNITY_LIGHTMODEL_AMBIENT (glstate_lightmodel_ambient * 2)
@@ -300,16 +302,7 @@ CBUFFER_END
 #if defined(USING_STEREO_MATRICES)
 
 CBUFFER_START(UnityPerPassStereo)
-float4x4 _ViewMatrixStereo[2];
-float4x4 _ProjMatrixStereo[2];
-float4x4 _ViewProjMatrixStereo[2];
-float4x4 _InvViewMatrixStereo[2];
-float4x4 _InvProjMatrixStereo[2];
-float4x4 _InvViewProjMatrixStereo[2];
-float4x4 _PrevViewProjMatrixStereo[2];
-float4   _WorldSpaceCameraPosStereo[2];
-float4   _WorldSpaceCameraPosStereoEyeOffset[2];
-float4   _PrevCamPosRWSStereo[2];
+    StructuredBuffer<ViewConstants> _XRViewConstants;
 CBUFFER_END
 
 #endif // USING_STEREO_MATRICES

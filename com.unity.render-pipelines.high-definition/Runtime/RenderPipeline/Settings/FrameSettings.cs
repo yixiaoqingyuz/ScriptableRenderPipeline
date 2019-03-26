@@ -313,8 +313,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             bool reflection = camera.cameraType == CameraType.Reflection;
             bool preview = HDUtils.IsRegularPreviewCamera(camera);
             bool sceneViewFog = CoreUtils.IsSceneViewFogEnabled(camera);
-            bool stereo = camera.stereoEnabled;
-            bool stereoDoubleWide = stereo && (XRGraphics.stereoRenderingMode == XRGraphics.StereoRenderingMode.SinglePass);
+            // XRTODO: double-wide cleanup
+            bool stereoDoubleWide = camera.stereoEnabled && (XRGraphics.stereoRenderingMode == XRGraphics.StereoRenderingMode.SinglePass);
 
             // When rendering reflection probe we disable specular as it is view dependent
             sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.Reflection] = !reflection;

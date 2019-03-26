@@ -148,7 +148,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public static readonly int _EnvCubemapTextures = Shader.PropertyToID("_EnvCubemapTextures");
         public static readonly int _EnvSliceSize = Shader.PropertyToID("_EnvSliceSize");
         public static readonly int _CookieSizePOT = Shader.PropertyToID("_CookieSizePOT");
-        public static readonly int _Env2DTextures = Shader.PropertyToID("_Env2DTextures"); 
+        public static readonly int _Env2DTextures = Shader.PropertyToID("_Env2DTextures");
         public static readonly int _Env2DCaptureVP = Shader.PropertyToID("_Env2DCaptureVP");
         public static readonly int _Env2DCaptureForward = Shader.PropertyToID("_Env2DCaptureForward");
         public static readonly int _DirectionalLightDatas = Shader.PropertyToID("_DirectionalLightDatas");
@@ -448,6 +448,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public static readonly int _VBufferResolution              = Shader.PropertyToID("_VBufferResolution");
         public static readonly int _VBufferSliceCount              = Shader.PropertyToID("_VBufferSliceCount");
         public static readonly int _VBufferRcpSliceCount           = Shader.PropertyToID("_VBufferRcpSliceCount");
+        public static readonly int _VBufferRcpInstancedViewCount   = Shader.PropertyToID("_VBufferRcpInstancedViewCount");
         public static readonly int _VBufferUvScaleAndLimit         = Shader.PropertyToID("_VBufferUvScaleAndLimit");
         public static readonly int _VBufferDistanceEncodingParams  = Shader.PropertyToID("_VBufferDistanceEncodingParams");
         public static readonly int _VBufferDistanceDecodingParams  = Shader.PropertyToID("_VBufferDistanceDecodingParams");
@@ -471,7 +472,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public static readonly int _VolumeMaskAtlas                = Shader.PropertyToID("_VolumeMaskAtlas");
         public static readonly int _VolumeMaskDimensions           = Shader.PropertyToID("_VolumeMaskDimensions");
 
-        public static readonly int _EnableLightLayers              = Shader.PropertyToID("_EnableLightLayers"); 
+        public static readonly int _EnableLightLayers              = Shader.PropertyToID("_EnableLightLayers");
         public static readonly int _OffScreenRendering             = Shader.PropertyToID("_OffScreenRendering");
         public static readonly int _EnableSpecularLighting         = Shader.PropertyToID("_EnableSpecularLighting");
 
@@ -533,7 +534,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public static readonly int _RaytracedIndirectDiffuse        = Shader.PropertyToID("_RaytracedIndirectDiffuse");
         public static readonly int _IndirectDiffuseTexture          = Shader.PropertyToID("_IndirectDiffuseTexture");
         public static readonly int _IndirectDiffuseTextureRW        = Shader.PropertyToID("_IndirectDiffuseTextureRW");
-        
+
 #else
         public static readonly int _RaytracedAreaShadow             = Shader.PropertyToID("_RaytracedAreaShadow");
 #endif

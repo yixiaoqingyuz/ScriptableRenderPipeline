@@ -7,10 +7,10 @@ platforms:
     flavor: b1.xlarge
 projects:
   - name: ShaderGraph
-  - name: VisualEffectGraph
+  #- name: VisualEffectGraph
   - name: LWGraphicsTest
-  - name: HDRP_Tests
-  - name: PostProcessing
+  #- name: HDRP_Tests
+  -# name: PostProcessing
 testplatforms:
   - name: StandaloneOSX
     args: --suite=playmode --platform=StandaloneWindows64

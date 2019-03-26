@@ -13,7 +13,7 @@ projects:
   #- name: PostProcessing
 testplatforms:
   - name: StandaloneOSX
-    args: --suite=playmode --platform=StandaloneWindows64
+    args: --suite=playmode --platform=StandaloneOSX
   - name: playmode
     args: --suite=playmode
   - name: editmode

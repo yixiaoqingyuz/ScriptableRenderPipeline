@@ -6,11 +6,11 @@ platforms:
     image: sdet/gamecode_win10:latest
     flavor: m1.large
 projects:
-  #- name: ShaderGraph
-  #- name: VisualEffectGraph
+  - name: ShaderGraph
+  - name: VisualEffectGraph
   - name: LWGraphicsTest
-  #- name: HDRP_Tests
-  #- name: PostProcessing
+  - name: HDRP_Tests
+  - name: PostProcessing
 testplatforms:
   - name: StandaloneWindows64
     args: --suite=playmode --platform StandaloneWindows64
@@ -33,7 +33,8 @@ all_project_ci:
   {% for platform in platforms %}
   {% for project in projects %}
   {% for testplatform in testplatforms %}
-    - .yamato/upm-ci.yml#{{ project.name }}_{{ platform.name }}_{{ editor.version }}_{{ testplatform.name }}
+    - .yamato/upm-ci-win.yml#{{ project.name }}_{{ platform.name }}_{{ editor.version }}_{{ testplatform.name }}
+    #- .yamato/upm-ci-mac.yml#{{ project.name }}_{{ platform.name }}_{{ editor.version }}_{{ testplatform.name }}
   {% endfor %}
   {% endfor %}  
   {% endfor %}

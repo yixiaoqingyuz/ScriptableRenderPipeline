@@ -14,10 +14,10 @@ projects:
 testplatforms:
   - name: StandaloneWindows64
     args: --suite=playmode --platform=StandaloneWindows64
-  #- name: playmode
-  #  args: --suite=playmode
-  #- name: editmode
-  #  args: --suite=editor --platform=editmode
+  - name: playmode
+    args: --suite=playmode
+  - name: editmode
+    args: --suite=editor --platform=editmode
 ---
 {% for editor in editors %}
 {% for platform in platforms %}

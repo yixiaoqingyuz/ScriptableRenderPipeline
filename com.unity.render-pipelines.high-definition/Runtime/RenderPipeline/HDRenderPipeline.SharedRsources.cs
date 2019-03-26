@@ -108,7 +108,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         bool NeedClearGBuffer()
         {
             // TODO: Add an option to force clear
-            return true;// m_CurrentDebugDisplaySettings.IsDebugDisplayEnabled();
+            return m_CurrentDebugDisplaySettings.IsDebugDisplayEnabled();
         }
 
         HDUtils.PackedMipChainInfo GetDepthBufferMipChainInfo()

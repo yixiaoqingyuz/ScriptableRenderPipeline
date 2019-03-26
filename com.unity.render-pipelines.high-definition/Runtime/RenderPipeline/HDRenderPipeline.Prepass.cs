@@ -69,7 +69,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         class DepthPrepassData : RenderPassData
         {
             public FrameSettings frameSettings;
-            public Rect renderingViewport;
             public bool msaaEnabled;
 
             public RenderGraphMutableResource depthBuffer;
@@ -120,7 +119,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     using (var builder = renderGraph.AddRenderPass<DepthPrepassData>("Depth Prepass (forward)", out var passData, CustomSamplerId.DepthPrepass.GetSampler()))
                     {
                         passData.frameSettings = hdCamera.frameSettings;
-                        passData.msaaEnabled = msaa;
 
                         passData.depthBuffer = builder.UseDepthBuffer(GetDepthStencilBuffer(msaa));
                         passData.normalBuffer = builder.UseColorBuffer(GetNormalBuffer(msaa), 0);
@@ -155,7 +153,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     using (var builder = renderGraph.AddRenderPass<DepthPrepassData>(passName, out var passData, CustomSamplerId.DepthPrepass.GetSampler()))
                     {
                         passData.frameSettings = hdCamera.frameSettings;
-                        passData.renderingViewport = hdCamera.renderingViewport;
                         passData.msaaEnabled = msaa;
 
                         // First deferred material
@@ -186,7 +183,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         {
                             DepthPrepassData prepassData = (DepthPrepassData)data;
 
-                            HDUtils.SetRenderTarget(renderGraphContext.cmd, prepassData.renderingViewport, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
+                            HDUtils.SetRenderTarget(renderGraphContext.cmd, globalParams.rtHandleProperties, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
                             // XRTODO: wait for XR SDK integration and implement custom version in HDUtils with dynamic resolution support
                             //XRUtils.DrawOcclusionMesh(cmd, hdCamera.camera, hdCamera.camera.stereoEnabled);
                             DrawOpaqueRendererList(prepassData.frameSettings, renderGraphContext.resources.GetRendererList(prepassData.rendererList1), renderGraphContext.renderContext, renderGraphContext.cmd);
@@ -196,7 +193,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                             if (prepassData.msaaEnabled)
                                 mrt[1] = renderGraphContext.resources.GetTexture(prepassData.depthAsColorBuffer);
 
-                            HDUtils.SetRenderTarget(renderGraphContext.cmd, prepassData.renderingViewport, mrt, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
+                            HDUtils.SetRenderTarget(renderGraphContext.cmd, globalParams.rtHandleProperties, mrt, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
                             DrawOpaqueRendererList(prepassData.frameSettings, renderGraphContext.resources.GetRendererList(prepassData.rendererList2), renderGraphContext.renderContext, renderGraphContext.cmd);
                         });
                     }
@@ -348,7 +345,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public RenderGraphResource          depthAsColorBufferMSAA;
             public RenderGraphResource          normalBufferMSAA;
             public Material                     depthResolveMaterial;
-            public int                          depthresolvePassIndex;
+            public int                          depthResolvePassIndex;
         }
 
         RenderGraphResource ResolvePrepassBuffers(RenderGraph renderGraph, HDCamera hdCamera)
@@ -362,7 +359,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 RenderGraphMutableResource depthValuesBuffer = builder.CreateTexture(new TextureDesc(Vector2.one) { colorFormat = GraphicsFormat.R32G32B32A32_SFloat, xrInstancing = true, useDynamicScale = true, name = "DepthValuesBuffer" });
 
                 passData.depthResolveMaterial = m_DepthResolveMaterial;
-                passData.depthresolvePassIndex = SampleCountToPassIndex(m_MSAASamples);
+                passData.depthResolvePassIndex = SampleCountToPassIndex(m_MSAASamples);
 
                 passData.depthBuffer = builder.UseDepthBuffer(GetDepthStencilBuffer(false));
                 //passData.velocityBuffer = builder.UseColorBuffer(GetVelocityBufferResource(msaa), 0);
@@ -376,7 +373,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
                 {
                     ResolvePrepassData resolvePrepassData = (ResolvePrepassData)data;
-                    renderGraphContext.cmd.DrawProcedural(Matrix4x4.identity, resolvePrepassData.depthResolveMaterial, resolvePrepassData.depthresolvePassIndex, MeshTopology.Triangles, 3, 1);
+                    renderGraphContext.cmd.DrawProcedural(Matrix4x4.identity, resolvePrepassData.depthResolveMaterial, resolvePrepassData.depthResolvePassIndex, MeshTopology.Triangles, 3, 1);
                 });
 
                 return depthValuesBuffer;
@@ -460,6 +457,48 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             //cmd.SetGlobalVector(HDShaderIDs._DepthPyramidScale, m_PyramidScaleLod);
 
             //PushFullScreenDebugTextureMip(hdCamera, cmd, m_SharedRTManager.GetDepthTexture(), mipCount, m_PyramidScale, debugMode);
+        }
+
+        class CameraVelocityPassData : RenderPassData
+        {
+            public Material cameraMotionVectorMaterial;
+            public RenderGraphMutableResource velocityBuffer;
+            public RenderGraphMutableResource depthBuffer;
+        }
+
+        void RenderCameraVelocity(RenderGraph renderGraph, HDCamera hdCamera)
+        {
+            if (!hdCamera.frameSettings.IsEnabled(FrameSettingsField.MotionVectors))
+                return;
+
+            using (var builder = renderGraph.AddRenderPass<CameraVelocityPassData>("Camera Velocity", out var passData, CustomSamplerId.CameraVelocity.GetSampler()))
+            {
+                // These flags are still required in SRP or the engine won't compute previous model matrices...
+                // If the flag hasn't been set yet on this camera, motion vectors will skip a frame.
+                hdCamera.camera.depthTextureMode |= DepthTextureMode.MotionVectors | DepthTextureMode.Depth;
+
+                passData.cameraMotionVectorMaterial = m_CameraMotionVectorsMaterial;
+                passData.depthBuffer = builder.WriteTexture(GetDepthStencilBuffer());
+                passData.velocityBuffer = builder.WriteTexture(GetVelocityBuffer());
+
+                builder.SetRenderFunc(
+                (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                {
+                    var cameraVelocityData = (CameraVelocityPassData)data;
+                    var res = renderGraphContext.resources;
+                    HDUtils.DrawFullScreen(renderGraphContext.cmd, globalParams.rtHandleProperties, cameraVelocityData.cameraMotionVectorMaterial, res.GetTexture(cameraVelocityData.velocityBuffer), res.GetTexture(cameraVelocityData.depthBuffer), null, 0);
+                });
+            }
+
+            //            PushFullScreenDebugTexture(hdCamera, cmd, m_SharedRTManager.GetVelocityBuffer(), FullScreenDebugMode.MotionVectors);
+            //#if UNITY_EDITOR
+
+            //            // In scene view there is no motion vector, so we clear the RT to black
+            //            if (hdCamera.camera.cameraType == CameraType.SceneView && !CoreUtils.AreAnimatedMaterialsEnabled(hdCamera.camera))
+            //            {
+            //                HDUtils.SetRenderTarget(cmd, hdCamera, m_SharedRTManager.GetVelocityBuffer(), m_SharedRTManager.GetDepthStencilBuffer(), ClearFlag.Color, Color.clear);
+            //            }
+            //#endif
         }
     }
 }

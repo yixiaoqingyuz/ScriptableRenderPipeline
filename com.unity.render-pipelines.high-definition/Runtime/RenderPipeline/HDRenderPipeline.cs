@@ -381,6 +381,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             InitializeRenderStateBlocks();
 
             // Keep track of the original msaa sample value
+            // TODO : Bind this directly to the debug menu instead of having an intermediate value
             m_MSAASamples = m_Asset ? m_Asset.currentPlatformRenderPipelineSettings.msaaSampleCount : MSAASamples.None;
 
             // Propagate it to the debug menu

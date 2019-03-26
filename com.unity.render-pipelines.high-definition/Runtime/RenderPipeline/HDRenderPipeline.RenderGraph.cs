@@ -15,12 +15,20 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             CreateSharedResources(m_RenderGraph, hdCamera, m_CurrentDebugDisplaySettings);
 
-            StartStereoRendering(cmd, renderContext, camera);
+            StartStereoRendering(m_RenderGraph, hdCamera.camera);
 
             var prepassOutput = RenderPrepass(m_RenderGraph, cullingResults, hdCamera);
 
-            RenderGraphGlobalParams renderGraphParams = new RenderGraphGlobalParams();
-            renderGraphParams.renderingViewport = hdCamera.renderingViewport;
+            RenderCameraVelocity(m_RenderGraph, hdCamera);
+
+            StopStereoRendering(m_RenderGraph, hdCamera.camera);
+
+            var renderGraphParams = new RenderGraphExecuteParams()
+            {
+                renderingWidth = hdCamera.actualWidth,
+                renderingHeight = hdCamera.actualHeight,
+                msaaSamples = m_MSAASamples
+            };
 
             m_RenderGraph.Execute(renderContext, cmd, renderGraphParams);
         }
@@ -73,6 +81,54 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     return 3;
             };
             return 0;
+        }
+
+        // XR Specific
+        class StereoRenderingPassData : RenderPassData
+        {
+            public Camera camera;
+        }
+
+
+        void StartStereoRendering(RenderGraph renderGraph, Camera camera)
+        {
+            if (camera.stereoEnabled)
+            {
+                using (var builder = renderGraph.AddRenderPass<StereoRenderingPassData>("StartStereoRendering", out var passData))
+                {
+                    passData.camera = camera;
+                    builder.SetRenderFunc(
+                    (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                    {
+                        StereoRenderingPassData stereoPassData = (StereoRenderingPassData)data;
+                        // Reset scissor and viewport for C++ stereo code
+                        renderGraphContext.cmd.DisableScissorRect();
+                        renderGraphContext.cmd.SetViewport(stereoPassData.camera.pixelRect);
+                        renderGraphContext.renderContext.ExecuteCommandBuffer(renderGraphContext.cmd);
+                        renderGraphContext.cmd.Clear();
+                        renderGraphContext.renderContext.StartMultiEye(stereoPassData.camera);
+                    });
+                }
+            }
+        }
+
+        void StopStereoRendering(RenderGraph renderGraph, Camera camera)
+        {
+            if (camera.stereoEnabled)
+            {
+                using (var builder = renderGraph.AddRenderPass<StereoRenderingPassData>("StopStereoRendering", out var passData))
+                {
+                    passData.camera = camera;
+                    builder.SetRenderFunc(
+                    (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                    {
+                        StereoRenderingPassData stereoPassData = (StereoRenderingPassData)data;
+                        renderGraphContext.renderContext.ExecuteCommandBuffer(renderGraphContext.cmd);
+                        renderGraphContext.cmd.Clear();
+                        renderGraphContext.renderContext.StopMultiEye(stereoPassData.camera);
+                    });
+                }
+            }
         }
     }
 }

@@ -273,6 +273,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         ResourceArray<TextureResource>      m_TextureResources = new ResourceArray<TextureResource>();
         Dictionary<int, Stack<RTHandle>>    m_TexturePool = new Dictionary<int, Stack<RTHandle>>();
         ResourceArray<RendererListResource> m_RendererListResources = new ResourceArray<RendererListResource>();
+        RTHandleSystem                      m_RTHandleSystem = new RTHandleSystem();
 
         // Diagnostic only
         List<(int, RTHandle)>               m_AllocatedTextures = new List<(int, RTHandle)>();
@@ -298,6 +299,13 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         #endregion
 
         #region Internal Interface
+        internal void SetRTHandleReferenceSize(int width, int height, MSAASamples msaaSamples)
+        {
+            m_RTHandleSystem.SetReferenceSize(width, height, msaaSamples);
+        }
+
+        internal RTHandleProperties GetRTHandleProperties() { return m_RTHandleSystem.rtHandleProperties; }
+
         // Texture Creation/Import APIs are internal because creation should only go through RenderGraph (for globals, outside of render passes) and RenderGraphBuilder (for render passes)
         internal RenderGraphMutableResource ImportTexture(RTHandle rt, int shaderProperty = 0)
         {
@@ -344,15 +352,15 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
                 switch (desc.sizeMode)
                 {
                     case TextureSizeMode.Explicit:
-                        resource.rt = RTHandles.Alloc(desc.width, desc.height, desc.slices, desc.depthBufferBits, desc.colorFormat, desc.filterMode, desc.wrapMode, desc.dimension, desc.enableRandomWrite,
+                        resource.rt = m_RTHandleSystem.Alloc(desc.width, desc.height, desc.slices, desc.depthBufferBits, desc.colorFormat, desc.filterMode, desc.wrapMode, desc.dimension, desc.enableRandomWrite,
                         desc.useMipMap, desc.autoGenerateMips, desc.isShadowMap, desc.anisoLevel, desc.mipMapBias, desc.msaaSamples, desc.bindTextureMS, desc.useDynamicScale, desc.xrInstancing, desc.memoryless, desc.name);
                         break;
                     case TextureSizeMode.Scale:
-                        resource.rt = RTHandles.Alloc(desc.scale, desc.slices, desc.depthBufferBits, desc.colorFormat, desc.filterMode, desc.wrapMode, desc.dimension, desc.enableRandomWrite,
+                        resource.rt = m_RTHandleSystem.Alloc(desc.scale, desc.slices, desc.depthBufferBits, desc.colorFormat, desc.filterMode, desc.wrapMode, desc.dimension, desc.enableRandomWrite,
                         desc.useMipMap, desc.autoGenerateMips, desc.isShadowMap, desc.anisoLevel, desc.mipMapBias, desc.enableMSAA, desc.bindTextureMS, desc.useDynamicScale, desc.xrInstancing, desc.memoryless, desc.name);
                         break;
                     case TextureSizeMode.Functor:
-                        resource.rt = RTHandles.Alloc(desc.func, desc.slices, desc.depthBufferBits, desc.colorFormat, desc.filterMode, desc.wrapMode, desc.dimension, desc.enableRandomWrite,
+                        resource.rt = m_RTHandleSystem.Alloc(desc.func, desc.slices, desc.depthBufferBits, desc.colorFormat, desc.filterMode, desc.wrapMode, desc.dimension, desc.enableRandomWrite,
                         desc.useMipMap, desc.autoGenerateMips, desc.isShadowMap, desc.anisoLevel, desc.mipMapBias, desc.enableMSAA, desc.bindTextureMS, desc.useDynamicScale, desc.xrInstancing, desc.memoryless, desc.name);
                         break;
                 }
@@ -540,7 +548,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             {
                 foreach (var rt in value.Value)
                 {
-                    RTHandles.Release(rt);
+                    m_RTHandleSystem.Release(rt);
                 }
             }
         }

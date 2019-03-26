@@ -15,9 +15,16 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         public RenderGraphResourceRegistry resources;
     }
 
+    public struct RenderGraphExecuteParams
+    {
+        public int         renderingWidth;
+        public int         renderingHeight;
+        public MSAASamples msaaSamples;
+    }
+
     public ref struct RenderGraphGlobalParams
     {
-        public Rect renderingViewport;
+        public RTHandleProperties rtHandleProperties;
     }
 
     public class RenderPassData { }
@@ -119,8 +126,13 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             return new RenderGraphBuilder(this, m_Resources, renderPass);
         }
 
-        public void Execute(ScriptableRenderContext renderContext, CommandBuffer cmd, RenderGraphGlobalParams parameters)
+        public void Execute(ScriptableRenderContext renderContext, CommandBuffer cmd, RenderGraphExecuteParams parameters)
         {
+            // Update RTHandleSystem with size for this rendering pass.
+            m_Resources.SetRTHandleReferenceSize(parameters.renderingWidth, parameters.renderingHeight, parameters.msaaSamples);
+            RenderGraphGlobalParams globalParameters = new RenderGraphGlobalParams();
+            globalParameters.rtHandleProperties = m_Resources.GetRTHandleProperties();
+
             // First pass, traversal and pruning
             for (int passIndex = 0; passIndex < m_RenderPasses.Count; ++passIndex)
             {
@@ -163,8 +175,8 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
                     var pass = m_RenderPasses[passIndex];
                     using (new ProfilingSample(cmd, pass.passName, pass.customSampler))
                     {
-                        PreRenderPassExecute(passIndex, pass, rgContext, parameters);
-                        pass.renderFunc(pass.passData, parameters, rgContext);
+                        PreRenderPassExecute(passIndex, pass, rgContext, globalParameters);
+                        pass.renderFunc(pass.passData, globalParameters, rgContext);
                         PostRenderPassExecute(passIndex, pass);
                     }
                 }
@@ -183,6 +195,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         }
         #endregion
 
+        #region Internal Interface
         void PreRenderPassCreateAndClearRenderTargets(int passIndex, in RenderPass pass, RenderGraphContext rgContext, RenderGraphGlobalParams parameters)
         {
             foreach (var resource in pass.resourceWriteList)
@@ -198,7 +211,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
                         using (new ProfilingSample(rgContext.cmd, "RenderGraph: Clear Buffer"))
                         {
                             var clearFlag = resourceDesc.desc.depthBufferBits != DepthBits.None ? ClearFlag.Depth : ClearFlag.Color;
-                            HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.renderingViewport, m_Resources.GetTexture(resource), clearFlag, resourceDesc.desc.clearColor);
+                            HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.rtHandleProperties, m_Resources.GetTexture(resource), clearFlag, resourceDesc.desc.clearColor);
                         }
                     }
                 }
@@ -223,7 +236,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 
                     if (pass.depthBuffer.IsValid())
                     {
-                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.renderingViewport, mrtArray, m_Resources.GetTexture(pass.depthBuffer));
+                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.rtHandleProperties, mrtArray, m_Resources.GetTexture(pass.depthBuffer));
                     }
                     else
                     {
@@ -234,11 +247,11 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
                 {
                     if (pass.depthBuffer.IsValid())
                     {
-                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.renderingViewport, m_Resources.GetTexture(pass.colorBuffers[0]), m_Resources.GetTexture(pass.depthBuffer));
+                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.rtHandleProperties, m_Resources.GetTexture(pass.colorBuffers[0]), m_Resources.GetTexture(pass.depthBuffer));
                     }
                     else
                     {
-                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.renderingViewport, m_Resources.GetTexture(pass.colorBuffers[0]));
+                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.rtHandleProperties, m_Resources.GetTexture(pass.colorBuffers[0]));
                     }
 
                 }
@@ -257,7 +270,6 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             }
         }
 
-        #region Internal Interface
         void PreRenderPassExecute(int passIndex, in RenderPass pass, RenderGraphContext rgContext, RenderGraphGlobalParams parameters)
         {
             // TODO merge clear and setup here if possible

@@ -99,7 +99,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             {
                 UnlitMasterNode.PositionSlotId
             },
-            UseInPreview = true
+            UseInPreview = false
         };
 
         Pass m_PassDepthForwardOnly = new Pass()
@@ -220,6 +220,8 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 HDSubShaderUtilities.GetStencilStateForForwardUnlit(ref pass);
             }
         };
+
+        public int GetPreviewPassIndex() { return 0; }
 
         private static HashSet<string> GetActiveFieldsFromMasterNode(AbstractMaterialNode iMasterNode, Pass pass)
         {

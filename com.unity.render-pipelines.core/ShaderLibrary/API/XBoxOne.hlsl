@@ -32,7 +32,6 @@
 #define PLATFORM_SUPPORTS_EXPLICIT_BINDING 1
 #define PLATFORM_NEEDS_UNORM_UAV_SPECIFIER 1
 #define PLATFORM_LANE_COUNT 64
-#define PLATFORM_THREAD_GROUP_OPTIMAL_SIZE PLATFORM_LANE_COUNT       // 64 threads in a wafefront
 
 // Intrinsics
 #define SUPPORTS_WAVE_INTRINSICS
@@ -87,9 +86,12 @@ uint WaveGetLaneCount()
 }
 
 
+// There is a bug in the xbox compiler for Hull shader and __XB_Min3_/__XB_Max
+#ifndef SHADER_STAGE_HULL
 #define INTRINSIC_MINMAX3
 GENERATE_INTRINSIC_VARIANTS_3_ARGS(Min3, __XB_Min3_, a, b, c);
 GENERATE_INTRINSIC_VARIANTS_3_ARGS(Max3, __XB_Max3_, a, b, c);
+#endif
 
 #define INTRINSIC_WAVE_MINMAX
 GENERATE_INTRINSIC_VARIANTS_1_ARG(WaveActiveMin, __XB_WaveMin_, value);

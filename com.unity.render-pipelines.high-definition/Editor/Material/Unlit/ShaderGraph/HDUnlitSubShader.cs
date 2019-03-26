@@ -98,7 +98,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             {
                 HDUnlitMasterNode.PositionSlotId
             },
-            UseInPreview = true
+            UseInPreview = false
         };
 
         Pass m_PassDepthForwardOnly = new Pass()
@@ -199,6 +199,17 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             {
                 "#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/ShaderPass/ShaderPassDistortion.hlsl\"",
             },
+            StencilOverride = new List<string>()
+            {
+                "// Stencil setup",
+                "Stencil",
+                "{",
+                string.Format("   WriteMask {0}", (int)HDRenderPipeline.StencilBitMask.DistortionVectors),
+                string.Format("   Ref  {0}", (int)HDRenderPipeline.StencilBitMask.DistortionVectors),
+                "   Comp Always",
+                "   Pass Replace",
+                "}"
+            },
             PixelShaderSlots = new List<int>()
             {
                 HDUnlitMasterNode.AlphaSlotId,
@@ -275,6 +286,8 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 HDSubShaderUtilities.GetStencilStateForForwardUnlit(ref pass);
             }
         };
+
+        public int GetPreviewPassIndex() { return 0; }
 
         private static HashSet<string> GetActiveFieldsFromMasterNode(AbstractMaterialNode iMasterNode, Pass pass)
         {

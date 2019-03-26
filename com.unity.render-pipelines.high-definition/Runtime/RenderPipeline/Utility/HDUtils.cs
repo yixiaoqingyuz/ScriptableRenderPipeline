@@ -15,22 +15,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         static public HDAdditionalCameraData s_DefaultHDAdditionalCameraData { get { return ComponentSingleton<HDAdditionalCameraData>.instance; } }
         static public AdditionalShadowData s_DefaultAdditionalShadowData { get { return ComponentSingleton<AdditionalShadowData>.instance; } }
 
-        static Texture2D m_ClearTexture;
-        public static Texture2D clearTexture
-        {
-            get
-            {
-                if (m_ClearTexture == null)
-                {
-                    m_ClearTexture = new Texture2D(1, 1, TextureFormat.ARGB32, false) { name = "Clear Texture" };
-                    m_ClearTexture.SetPixel(0, 0, Color.clear);
-                    m_ClearTexture.Apply();
-                }
-
-                return m_ClearTexture;
-            }
-        }
-
         static Texture3D m_ClearTexture3D;
         public static Texture3D clearTexture3D
         {
@@ -47,12 +31,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        public static Material GetBlitMaterial()
+        public static Material GetBlitMaterial(TextureDimension dimension)
         {
             HDRenderPipeline hdPipeline = RenderPipelineManager.currentPipeline as HDRenderPipeline;
             if (hdPipeline != null)
             {
-                return hdPipeline.GetBlitMaterial();
+                return hdPipeline.GetBlitMaterial(dimension == TextureDimension.Tex2DArray);
             }
 
             return null;
@@ -67,7 +51,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 return hdPipelineAsset.currentPlatformRenderPipelineSettings;
             }
         }
-        public static int debugStep { get { return MousePositionDebug.instance.debugStep; } }
+        public static int debugStep => MousePositionDebug.instance.debugStep;
 
         static MaterialPropertyBlock s_PropertyBlock = new MaterialPropertyBlock();
 
@@ -108,11 +92,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // Helper to help to display debug info on screen
         static float s_OverlayLineHeight = -1.0f;
-        public static void ResetOverlay()
-        {
-            s_OverlayLineHeight = -1.0f;
-        }
-
+        public static void ResetOverlay() => s_OverlayLineHeight = -1.0f;
+        
         public static void NextOverlayCoord(ref float x, ref float y, float overlayWidth, float overlayHeight, HDCamera hdCamera)
         {
             x += overlayWidth;
@@ -198,10 +179,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
         public static void SetRenderTarget(CommandBuffer cmd, HDCamera camera, RTHandleSystem.RTHandle buffer, ClearFlag clearFlag = ClearFlag.None, int miplevel = 0, CubemapFace cubemapFace = CubemapFace.Unknown, int depthSlice = -1)
-        {
-            SetRenderTarget(cmd, camera, buffer, clearFlag, Color.clear, miplevel, cubemapFace, depthSlice);
-        }
-
+            => SetRenderTarget(cmd, camera, buffer, clearFlag, Color.clear, miplevel, cubemapFace, depthSlice);
+        
         public static void SetRenderTarget(CommandBuffer cmd, HDCamera camera, RTHandleSystem.RTHandle colorBuffer, RTHandleSystem.RTHandle depthBuffer, int miplevel = 0, CubemapFace cubemapFace = CubemapFace.Unknown, int depthSlice = -1)
         {
             int cw = colorBuffer.rt.width;
@@ -278,7 +257,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             s_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, scaleBiasTex);
             s_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBiasRt, scaleBiasRT);
             s_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, mipLevelTex);
-            cmd.DrawProcedural(Matrix4x4.identity, GetBlitMaterial(), bilinear ? 3 : 2, MeshTopology.Quads, 4, 1, s_PropertyBlock);
+            cmd.DrawProcedural(Matrix4x4.identity, GetBlitMaterial(source.dimension), bilinear ? 3 : 2, MeshTopology.Quads, 4, 1, s_PropertyBlock);
         }
 
         public static void BlitTexture(CommandBuffer cmd, RTHandleSystem.RTHandle source, RTHandleSystem.RTHandle destination, Vector4 scaleBias, float mipLevel, bool bilinear)
@@ -286,7 +265,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             s_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, source);
             s_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, scaleBias);
             s_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, mipLevel);
-            cmd.DrawProcedural(Matrix4x4.identity, GetBlitMaterial(), bilinear ? 1 : 0, MeshTopology.Triangles, 3, 1, s_PropertyBlock);
+            cmd.DrawProcedural(Matrix4x4.identity, GetBlitMaterial(source.rt.dimension), bilinear ? 1 : 0, MeshTopology.Triangles, 3, 1, s_PropertyBlock);
         }
 
         // In the context of HDRP, the internal render targets used during the render loop are the same for all cameras, no matter the size of the camera.
@@ -385,15 +364,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // We need these at runtime for RenderPipelineResources upgrade
         public static string GetHDRenderPipelinePath()
-        {
-            return "Packages/com.unity.render-pipelines.high-definition/";
-        }
+            => "Packages/com.unity.render-pipelines.high-definition/";
 
         public static string GetCorePath()
-        {
-            return "Packages/com.unity.render-pipelines.core/";
-        }
-
+            => "Packages/com.unity.render-pipelines.core/";
+        
         public struct PackedMipChainInfo
         {
             public Vector2Int textureSize;
@@ -472,10 +447,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        public static int DivRoundUp(int x, int y)
-        {
-            return (x + y - 1) / y;
-        }
+        public static int DivRoundUp(int x, int y) => (x + y - 1) / y;
 
         public static bool IsQuaternionValid(Quaternion q)
             => (q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]) > float.Epsilon;
@@ -657,6 +629,15 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
 
             return sb.ToString();
+        }
+
+        public static Color NormalizeColor(Color color)
+        {
+            Vector4 ldrColor = Vector4.Max(color, Vector4.one * 0.0001f);
+            color = (ldrColor / ColorUtils.Luminance(ldrColor));
+            color.a = 1;
+
+            return color;
         }
     }
 }

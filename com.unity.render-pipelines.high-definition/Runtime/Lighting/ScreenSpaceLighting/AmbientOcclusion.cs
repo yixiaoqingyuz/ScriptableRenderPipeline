@@ -8,13 +8,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     [Serializable, VolumeComponentMenu("Lighting/Ambient Occlusion")]
     public sealed class AmbientOcclusion : VolumeComponent
     {
-        [Tooltip("Degree of darkness added by ambient occlusion.")]
+        [Tooltip("Controls the strength of the ambient occlusion effect. Increase this value to produce darker areas.")]
         public ClampedFloatParameter intensity = new ClampedFloatParameter(0f, 0f, 4f);
 
-        [Tooltip("Modifies thickness of occluders. This increases dark areas but also introduces dark halo around objects.")]
+        [Tooltip("Controls the thickness of occluders. Increase this value to increase the size of dark areas.")]
         public ClampedFloatParameter thicknessModifier = new ClampedFloatParameter(1f, 1f, 10f);
 
-        [Tooltip("Defines how much of the occlusion should be affected by ambient lighting.")]
+        [Tooltip("Controls how much the ambient light affects occlusion.")]
         public ClampedFloatParameter directLightingStrength = new ClampedFloatParameter(0f, 0f, 1f);
 
         // Hidden parameters
@@ -218,7 +218,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
 #if ENABLE_RAYTRACING
             HDRaytracingEnvironment rtEnvironement = m_RayTracingManager.CurrentEnvironment();
-            if (m_Settings.supportRayTracing && rtEnvironement != null && rtEnvironement.raytracedAO)
+            if (rtEnvironement != null && rtEnvironement.raytracedAO)
                 m_RaytracingAmbientOcclusion.RenderAO(camera, cmd, m_AmbientOcclusionTex, renderContext, frameCount);
             else
 #endif
@@ -294,7 +294,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             if (!IsActive(camera, settings))
             {
                 // No AO applied - neutral is black, see the comment in the shaders
-                cmd.SetGlobalTexture(HDShaderIDs._AmbientOcclusionTexture, Texture2D.blackTexture);
+                cmd.SetGlobalTexture(HDShaderIDs._AmbientOcclusionTexture, TextureXR.GetBlackTexture());
                 cmd.SetGlobalVector(HDShaderIDs._AmbientOcclusionParam, Vector4.zero);
                 return;
             }
@@ -342,7 +342,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 dimension: TextureDimension.Tex2DArray,
                 colorFormat: format,
                 depthBufferBits: DepthBits.None,
-                slices: 16, // XRTODO: multiply by eyeCount and handle indexing in shader
+                slices: 16,
                 autoGenerateMips: false,
                 enableMSAA: false,
                 useDynamicScale: true,
@@ -383,7 +383,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.SetComputeTextureParam(cs, kernel, HDShaderIDs._DS4xAtlas, m_TiledDepth2Tex);
             cmd.SetComputeTextureParam(cs, kernel, HDShaderIDs._Depth, depthMap, 0);
 
-            cmd.DispatchCompute(cs, kernel, m_Widths[(int)MipLevel.L4], m_Heights[(int)MipLevel.L4], 1);
+            cmd.DispatchCompute(cs, kernel, m_Widths[(int)MipLevel.L4], m_Heights[(int)MipLevel.L4], XRGraphics.computePassCount);
 
             // 2nd downsampling pass.
             cs = m_Resources.shaders.aoDownsample2CS;
@@ -395,7 +395,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.SetComputeTextureParam(cs, kernel, HDShaderIDs._DS8xAtlas, m_TiledDepth3Tex);
             cmd.SetComputeTextureParam(cs, kernel, HDShaderIDs._DS16xAtlas, m_TiledDepth4Tex);
 
-            cmd.DispatchCompute(cs, kernel, m_Widths[(int)MipLevel.L6], m_Heights[(int)MipLevel.L6], 1);
+            cmd.DispatchCompute(cs, kernel, m_Widths[(int)MipLevel.L6], m_Heights[(int)MipLevel.L6], XRGraphics.computePassCount);
         }
 
         void PushRenderCommands(CommandBuffer cmd, in Vector4 viewport, RTHandle source, RTHandle destination, AmbientOcclusion settings, in Vector3 sourceSize, float tanHalfFovH, bool msaa)
@@ -480,7 +480,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 cs, kernel,
                 ((int)sourceSize.x + (int)xsize - 1) / (int)xsize,
                 ((int)sourceSize.y + (int)ysize - 1) / (int)ysize,
-                ((int)sourceSize.z + (int)zsize - 1) / (int)zsize
+                XRGraphics.computePassCount * ((int)sourceSize.z + (int)zsize - 1) / (int)zsize
             );
         }
 
@@ -512,7 +512,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             int xcount = ((int)highResDepthSize.x + 17) / 16;
             int ycount = ((int)highResDepthSize.y + 17) / 16;
-            cmd.DispatchCompute(cs, kernel, xcount, ycount, 1);
+            cmd.DispatchCompute(cs, kernel, xcount, ycount, XRGraphics.computePassCount);
         }
     }
 }

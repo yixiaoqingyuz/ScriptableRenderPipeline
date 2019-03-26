@@ -18,7 +18,8 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         public SerializedProperty increaseResolutionOfVolumetrics;
         public SerializedProperty supportLightLayers;
         public SerializedProperty supportedLitShaderMode;
-        
+        public SerializedProperty colorBufferFormat;
+
         public SerializedProperty supportDecals;
         public bool supportMSAA => MSAASampleCount.GetEnumValue<UnityEngine.Rendering.MSAASamples>() != UnityEngine.Rendering.MSAASamples.None;
         public SerializedProperty MSAASampleCount;
@@ -31,7 +32,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         public SerializedProperty supportTransparentDepthPrepass;
         public SerializedProperty supportTransparentDepthPostpass;
 
-        public SerializedProperty editorRaytracingFilterLayerMask;
 
         public SerializedGlobalLightLoopSettings lightLoopSettings;
         public SerializedHDShadowInitParameters hdShadowInitParams;
@@ -51,6 +51,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             supportVolumetrics              = root.Find((RenderPipelineSettings s) => s.supportVolumetrics);
             increaseResolutionOfVolumetrics = root.Find((RenderPipelineSettings s) => s.increaseResolutionOfVolumetrics);
             supportLightLayers              = root.Find((RenderPipelineSettings s) => s.supportLightLayers);
+            colorBufferFormat               = root.Find((RenderPipelineSettings s) => s.colorBufferFormat);
             supportedLitShaderMode          = root.Find((RenderPipelineSettings s) => s.supportedLitShaderMode);
             
             supportDecals                   = root.Find((RenderPipelineSettings s) => s.supportDecals);
@@ -64,7 +65,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             supportTransparentDepthPostpass = root.Find((RenderPipelineSettings s) => s.supportTransparentDepthPostpass);
 
             supportRayTracing               = root.Find((RenderPipelineSettings s) => s.supportRayTracing);
-            editorRaytracingFilterLayerMask = root.Find((RenderPipelineSettings s) => s.editorRaytracingFilterLayerMask);
 
             lightLoopSettings = new SerializedGlobalLightLoopSettings(root.Find((RenderPipelineSettings s) => s.lightLoopSettings));
             hdShadowInitParams = new SerializedHDShadowInitParameters(root.Find((RenderPipelineSettings s) => s.hdShadowInitParams));

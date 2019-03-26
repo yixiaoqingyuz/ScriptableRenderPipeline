@@ -51,7 +51,7 @@ struct AmbientOcclusionFactor
 // Get screen space ambient occlusion only:
 float GetScreenSpaceDiffuseOcclusion(float2 positionSS)
 {
-    #if SHADERPASS ==  SHADERPASS_RAYTRACING_REFLECTION
+    #if (SHADERPASS == SHADERPASS_RAYTRACING_INDIRECT) || (SHADERPASS == SHADERPASS_RAYTRACING_FORWARD)
         // When we are in raytracing mode, we do not want to take the screen space computed AO texture
         float indirectAmbientOcclusion = 1.0;
     #else
@@ -60,7 +60,7 @@ float GetScreenSpaceDiffuseOcclusion(float2 positionSS)
         // We store inverse AO so neutral is black. So either we sample inside or outside the texture it return 0 in case of neutral
         // Ambient occlusion use for indirect lighting (reflection probe, baked diffuse lighting)
         #ifndef _SURFACE_TYPE_TRANSPARENT
-        float indirectAmbientOcclusion = 1.0 - LOAD_TEXTURE2D(_AmbientOcclusionTexture, positionSS).x;
+        float indirectAmbientOcclusion = 1.0 - LOAD_TEXTURE2D_X(_AmbientOcclusionTexture, positionSS).x;
         #else
         float indirectAmbientOcclusion = 1.0;
         #endif

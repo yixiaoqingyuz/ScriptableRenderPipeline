@@ -113,8 +113,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             None,
             FastApproximateAntialiasing,
-            TemporalAntialiasing
+            TemporalAntialiasing,
+            SubpixelMorphologicalAntiAliasing
         }
+
+        public enum SMAAQualityLevel
+        {
+            Low,
+            Medium,
+            High
+        }
+
 
         public ClearColorMode clearColorMode = ClearColorMode.Sky;
         [ColorUsage(true, true)]
@@ -128,6 +137,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public Transform volumeAnchorOverride;
 
         public AntialiasingMode antialiasing = AntialiasingMode.None;
+        public SMAAQualityLevel SMAAQuality = SMAAQualityLevel.High;
         public bool dithering = false;
         public bool stopNaNs = false;
 
@@ -149,10 +159,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // Event used to override HDRP rendering for this particular camera.
         public event Action<ScriptableRenderContext, HDCamera> customRender;
         public bool hasCustomRender { get { return customRender != null; } }
-        
-        public FrameSettings renderingPathCustomFrameSettings = FrameSettings.defaultCamera;
+
+        [SerializeField, FormerlySerializedAs("renderingPathCustomFrameSettings")]
+        FrameSettings m_RenderingPathCustomFrameSettings = FrameSettings.defaultCamera;
         public FrameSettingsOverrideMask renderingPathCustomFrameSettingsOverrideMask;
         public FrameSettingsRenderType defaultFrameSettings;
+
+        public ref FrameSettings renderingPathCustomFrameSettings => ref m_RenderingPathCustomFrameSettings;
 
         // Use for debug windows
         // When camera name change we need to update the name in DebugWindows.

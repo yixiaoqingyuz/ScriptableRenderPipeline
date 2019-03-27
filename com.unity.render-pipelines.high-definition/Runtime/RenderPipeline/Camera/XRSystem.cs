@@ -19,11 +19,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
     public class XRSystem
     {
-        XRPass emptyPass = new XRPass();
-        List<XRPass> passList = new List<XRPass>();
+        readonly XRPass emptyPass = new XRPass();
+        readonly List<XRPass> passList = new List<XRPass>();
 
 #if USE_XR_SDK
-        List<XRDisplaySubsystem> displayList = new List<XRDisplaySubsystem>();
+        readonly List<XRDisplaySubsystem> displayList = new List<XRDisplaySubsystem>();
 #endif
 
         internal XRPass GetPass(int passId)

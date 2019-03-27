@@ -18,8 +18,8 @@ float4 VFXTransformPositionWorldToNonJitteredClip(float3 posWS)
 
 float4 VFXTransformPositionWorldToPreviousClip(float3 posWS)
 {
-#if VFX_WORLD_SPACE && (SHADEROPTIONS_CAMERA_RELATIVE_RENDERING != 0)
-    posWS -= _PrevCamPosRWS;
+#if VFX_WORLD_SPACE
+    posWS = GetCameraRelativePositionWS(posWS);
 #endif
     return mul(_PrevViewProjMatrix, float4(posWS, 1.0f));
 }

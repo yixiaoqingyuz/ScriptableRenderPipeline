@@ -25,6 +25,7 @@ namespace UnityEditor.VFX
             }
         }
         public override bool codeGeneratorCompute { get { return true; } }
+        public override bool doesIncludeCommonCompute { get { return false; } }
 
         public override VFXTaskType taskType { get { return VFXTaskType.Update; } }
 

@@ -454,12 +454,10 @@ namespace UnityEditor.VFX
 
             //< Final composition
             var renderPipePath = UnityEngine.Experimental.VFX.VFXManager.renderPipeSettingsPath;
-            string renderPipeCommon = "Packages/com.unity.visualeffectgraph/Shaders/Common/VFXCommonCompute.cginc";
+            string renderPipeCommon = context.doesIncludeCommonCompute ? "Packages/com.unity.visualeffectgraph/Shaders/Common/VFXCommonCompute.cginc" : renderPipePath + "/VFXCommon.cginc";
             string renderPipePasses = null;
-
             if (!context.codeGeneratorCompute && !string.IsNullOrEmpty(renderPipePath))
             {
-                renderPipeCommon = renderPipePath + "/VFXCommon.cginc";
                 renderPipePasses = renderPipePath + "/VFXPasses.template";
             }
 

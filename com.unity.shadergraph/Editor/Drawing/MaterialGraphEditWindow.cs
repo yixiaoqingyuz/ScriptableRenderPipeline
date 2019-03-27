@@ -125,8 +125,6 @@ namespace UnityEditor.ShaderGraph.Drawing
                     Close();
                     return;
                 }
-                
-                graphObject.HandleUndoRedo();
 
                 var materialGraph = graphObject.graph as GraphData;
                 if (materialGraph == null)
@@ -145,6 +143,13 @@ namespace UnityEditor.ShaderGraph.Drawing
                     m_ColorSpace = PlayerSettings.colorSpace;
                     m_RenderPipelineAsset = GraphicsSettings.renderPipelineAsset;
                     graphObject.Validate();
+                }
+
+                if (graphObject.wasUndoRedoPerformed)
+                {
+                    graphEditorView.HandleGraphChanges();
+                    graphObject.graph.ClearChanges();
+                    graphObject.HandleUndoRedo();
                 }
 
                 if (updatePreviewShaders)

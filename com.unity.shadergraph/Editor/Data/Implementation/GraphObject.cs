@@ -72,13 +72,13 @@ namespace UnityEditor.Graphing
             }
         }
 
+        public bool wasUndoRedoPerformed => m_DeserializedVersion != m_SerializedVersion;
+
         public void HandleUndoRedo()
         {
-            if (m_DeserializedVersion != m_SerializedVersion)
-            {
-                var deserializedGraph = DeserializeGraph();
-                m_Graph.ReplaceWith(deserializedGraph);
-            }
+            Debug.Assert(wasUndoRedoPerformed);
+            var deserializedGraph = DeserializeGraph();
+            m_Graph.ReplaceWith(deserializedGraph);
         }
 
         GraphData DeserializeGraph()

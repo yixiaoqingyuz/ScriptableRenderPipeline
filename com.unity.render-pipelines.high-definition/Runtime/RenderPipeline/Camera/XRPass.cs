@@ -48,7 +48,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 #endif
     }
 
-    // XRTODO: culling from XR SDK
     public class XRPass
     {
         private readonly List<XRView> views = new List<XRView>(2);
@@ -57,6 +56,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         internal bool xrSdkEnabled { get; private set; }
 
         internal int passId { get; private set; }
+        internal int cullingPassId  { get; private set; }
 
         // Ability to specify where to render the pass
         internal RenderTargetIdentifier  renderTarget     { get; private set; }
@@ -86,6 +86,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             XRPass passInfo = GenericPool<XRPass>.Get();
 
             passInfo.passId = passId;
+            passInfo.cullingPassId = -1;
             passInfo.views.Clear();
             passInfo.renderTarget = invalidRT;
             passInfo.renderTargetDesc = default;
@@ -106,6 +107,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             XRPass passInfo = GenericPool<XRPass>.Get();
 
             passInfo.passId = xrRenderPass.renderPassIndex;
+            passInfo.cullingPassId = xrRenderPass.cullingPassIndex;
             passInfo.views.Clear();
             passInfo.renderTarget = xrRenderPass.renderTarget;
             passInfo.renderTargetDesc = xrRenderPass.renderTargetDesc;

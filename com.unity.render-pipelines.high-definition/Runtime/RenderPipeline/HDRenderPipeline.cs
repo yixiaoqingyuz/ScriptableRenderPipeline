@@ -2147,16 +2147,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             if (hdCamera.xr.enabled)
             {
                 //cullingParams = hdCamera.xr.cullingParameters;
+
+                if (!m_XRSystem.GetCullingParameters(camera, hdCamera.xr, out cullingParams))
+                    return false;
             }
-
-            //if (multipassCamera.passInfo.xrDisplay != null)
-            //{
-            //    hdCamera.xrPassInfo.xrDisplay.GetRenderPass(hdCamera.xrPassInfo.renderPassIndex, out var renderPass);
-            //    hdCamera.xrPassInfo.xrDisplay.GetCullingParameters(camera, renderPass.cullingPassIndex, out cullingParams);
-
-            //    // should return false if invalid
-            //}
-            //else
+            else
             {
                 // XRTODO: remove stereo passdown?
                 if (!camera.TryGetCullingParameters(camera.stereoEnabled, out cullingParams))

@@ -24,6 +24,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
 #if USE_XR_SDK
         List<XRDisplaySubsystem> displayList = new List<XRDisplaySubsystem>();
+        XRDisplaySubsystem display = null;
 #endif
 
         internal XRPass GetPass(int passId)
@@ -40,12 +41,15 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             SubsystemManager.GetInstances(displayList);
 
             // XRTODO: bind cameras to XR displays (only display 0 is used for now)
-            XRDisplaySubsystem xrDisplay = null;
             if (displayList.Count > 0)
             {
-                xrDisplay = displayList[0];
-                xrDisplay.disableLegacyRenderer = true;
+                display = displayList[0];
+                display.disableLegacyRenderer = true;
                 xrSdkActive = true;
+            }
+            else
+            {
+                display = null;
             }
 #endif
 
@@ -67,9 +71,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 #if USE_XR_SDK
                 if (xrSdkActive)
                 {
-                    for (int renderPassIndex = 0; renderPassIndex < xrDisplay.GetRenderPassCount(); ++renderPassIndex)
+                    for (int renderPassIndex = 0; renderPassIndex < display.GetRenderPassCount(); ++renderPassIndex)
                     {
-                        xrDisplay.GetRenderPass(renderPassIndex, out var renderPass);
+                        display.GetRenderPass(renderPassIndex, out var renderPass);
 
                         if (CanUseInstancing(camera, renderPass))
                         {
@@ -117,6 +121,32 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
+        internal bool GetCullingParameters(Camera camera, XRPass xrPass, out ScriptableCullingParameters cullingParams)
+        {
+#if USE_XR_SDK
+            if (display != null)
+            {
+                display.GetCullingParameters(camera, xrPass.cullingPassId, out cullingParams);
+                // XRTODO: can fail ?
+            }
+            else
+#endif
+            {
+                if (!camera.TryGetCullingParameters(camera.stereoEnabled, out cullingParams))
+                    return false;
+            }
+
+            return true;
+        }
+
+        internal void ClearAll()
+        {
+            emptyPass = null;
+            passList = null;
+            displayList = null;
+            display = null;
+        }
+
         internal void ReleaseFrame()
         {
             foreach (var xrPass in passList)
@@ -125,22 +155,15 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             passList.Clear();
         }
 
-        internal void AddPassToFrame(XRPass passInfo, Camera camera, ref List<MultipassCamera> multipassCameras)
+        private void AddPassToFrame(XRPass passInfo, Camera camera, ref List<MultipassCamera> multipassCameras)
         {
             int passIndex = passList.Count;
             passList.Add(passInfo);
             multipassCameras.Add(new MultipassCamera(camera, passIndex));
         }
 
-        public void ClearAll()
-        {
-            emptyPass = null;
-            passList = null;
-            displayList = null;
-        }
-
 #if USE_XR_SDK
-        internal bool CanUseInstancing(Camera camera, XRDisplaySubsystem.XRRenderPass renderPass)
+        private bool CanUseInstancing(Camera camera, XRDisplaySubsystem.XRRenderPass renderPass)
         {
             // XRTODO: instanced views support with XR SDK
             return false;

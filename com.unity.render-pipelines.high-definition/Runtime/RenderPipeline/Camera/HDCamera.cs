@@ -210,10 +210,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public HDPhysicalCamera physicalParameters => m_AdditionalCameraData?.physicalParameters;
 
-        public IEnumerable<FramePassData> framePasses =>
+        public IEnumerable<AOVRequestData> framePasses =>
             m_AdditionalCameraData != null && !m_AdditionalCameraData.Equals(null)
-                ? m_AdditionalCameraData.framePasses
-                : Enumerable.Empty<FramePassData>();
+                ? m_AdditionalCameraData.aovRequests
+                : Enumerable.Empty<AOVRequestData>();
 
         public bool invertFaceCulling
             => m_AdditionalCameraData != null && m_AdditionalCameraData.invertFaceCulling;

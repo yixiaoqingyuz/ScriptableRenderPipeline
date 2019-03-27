@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         /// <summary>Render only specular.</summary>
         SpecularOnly = 1 << 1,
     }
-    
+
     /// <summary>Output a specific debug mode.</summary>
     public enum DebugFullScreen
     {
@@ -28,10 +28,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     }
 
     /// <summary>Frame pass settings.</summary>
-    public unsafe struct FramePassSettings
+    public unsafe struct AOVRequest
     {
         /// <summary>Default settings.</summary>
-        public static FramePassSettings @default = new FramePassSettings
+        public static AOVRequest @default = new AOVRequest
         {
             m_MaterialProperty = MaterialSharedProperty.None,
             m_LightingProperty = LightingProperty.None,
@@ -44,18 +44,18 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         DebugLightFilterMode m_LightFilterProperty;
         DebugFullScreen m_DebugFullScreen;
 
-        FramePassSettings* thisPtr
+        AOVRequest* thisPtr
         {
             get
             {
-                fixed (FramePassSettings* pThis = &this)
+                fixed (AOVRequest* pThis = &this)
                     return pThis;
             }
         }
 
         /// <summary>Create a new instance by copying values from <paramref name="other"/>.</summary>
         /// <param name="other"></param>
-        public FramePassSettings(FramePassSettings other)
+        public AOVRequest(AOVRequest other)
         {
             m_MaterialProperty = other.m_MaterialProperty;
             m_LightingProperty = other.m_LightingProperty;
@@ -64,35 +64,33 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
         /// <summary>State the property to render. In case of several SetFullscreenOutput chained call, only last will be used.</summary>
-        public ref FramePassSettings SetFullscreenOutput(MaterialSharedProperty materialProperty)
+        public ref AOVRequest SetFullscreenOutput(MaterialSharedProperty materialProperty)
         {
             m_MaterialProperty = materialProperty;
             return ref *thisPtr;
         }
 
         /// <summary>State the property to render. In case of several SetFullscreenOutput chained call, only last will be used.</summary>
-        public ref FramePassSettings SetFullscreenOutput(LightingProperty lightingProperty)
+        public ref AOVRequest SetFullscreenOutput(LightingProperty lightingProperty)
         {
             m_LightingProperty = lightingProperty;
             return ref *thisPtr;
         }
 
         /// <summary>State the property to render. In case of several SetFullscreenOutput chained call, only last will be used.</summary>
-        public ref FramePassSettings SetFullscreenOutput(DebugFullScreen debugFullScreen)
+        public ref AOVRequest SetFullscreenOutput(DebugFullScreen debugFullScreen)
         {
             m_DebugFullScreen = debugFullScreen;
             return ref *thisPtr;
         }
 
         /// <summary>Set the light filter to use.</summary>
-        public ref FramePassSettings SetLightFilter(DebugLightFilterMode filter)
+        public ref AOVRequest SetLightFilter(DebugLightFilterMode filter)
         {
             m_LightFilterProperty = filter;
             return ref *thisPtr;
         }
 
-        // Usage example:
-        // (new FramePassSettings(FramePassSettings.@default)).SetFullscreenOutput(prop).FillDebugData((RenderPipelineManager.currentPipeline as HDRenderPipeline).debugDisplaySettings.data);
         public void FillDebugData(DebugDisplaySettings debug)
         {
             debug.SetDebugViewCommonMaterialProperty(m_MaterialProperty);
@@ -106,7 +104,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     debug.SetDebugLightingMode(DebugLightingMode.SpecularLighting);
                     break;
                 default:
-        {
+                {
                     debug.SetDebugLightingMode(DebugLightingMode.None);
                     break;
                 }

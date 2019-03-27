@@ -8,47 +8,47 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     /// <summary>Called when the rendering has completed.</summary>
     /// <param name="cmd">A command buffer that can be used.</param>
     /// <param name="buffers">The buffers that has been requested.</param>
-    /// <param name="properties">Several properties that were computed for this frame.</param>
-    public delegate void FramePassCallback(CommandBuffer cmd, List<RTHandleSystem.RTHandle> buffers, FrameProperties properties);
-    public delegate RTHandleSystem.RTHandle FramePassBufferAllocator(Buffers bufferId);
+    /// <param name="outputProperties">Several properties that were computed for this frame.</param>
+    public delegate void FramePassCallback(CommandBuffer cmd, List<RTHandleSystem.RTHandle> buffers, RenderOutputProperties outputProperties);
+    public delegate RTHandleSystem.RTHandle FramePassBufferAllocator(AOVBuffers aovBufferId);
 
     /// <summary>Describes a frame pass.</summary>
-    public struct FramePassData
+    public struct AOVRequestData
     {
         /// <summary>Default frame pass settings.</summary>
-        public static readonly FramePassData @default = new FramePassData
+        public static readonly AOVRequestData @default = new AOVRequestData
         {
-            m_Settings = FramePassSettings.@default,
-            m_RequestedBuffers = new Buffers[] {},
+            m_Settings = AOVRequest.@default,
+            m_RequestedAOVBuffers = new AOVBuffers[] {},
             m_Callback = null
         };
 
-        private FramePassSettings m_Settings;
-        private Buffers[] m_RequestedBuffers;
+        private AOVRequest m_Settings;
+        private AOVBuffers[] m_RequestedAOVBuffers;
         private FramePassCallback m_Callback;
         private readonly FramePassBufferAllocator m_BufferAllocator;
         private List<GameObject> m_LightFilter;
 
         /// <summary>Whether this frame pass is valid.</summary>
-        public bool isValid => m_RequestedBuffers != null && m_Callback != null;
+        public bool isValid => m_RequestedAOVBuffers != null && m_Callback != null;
 
         /// <summary>Create a new frame pass.</summary>
         /// <param name="settings">Settings to use.</param>
         /// <param name="bufferAllocator">Buffer allocators to use.</param>
         /// <param name="lightFilter">If null, all light will be rendered, if not, only those light will be rendered.</param>
-        /// <param name="requestedBuffers">The requested buffers for the callback.</param>
+        /// <param name="requestedAOVBuffers">The requested buffers for the callback.</param>
         /// <param name="callback">The callback to execute.</param>
-        public FramePassData(
-            FramePassSettings settings,
+        public AOVRequestData(
+            AOVRequest settings,
             FramePassBufferAllocator bufferAllocator,
             List<GameObject> lightFilter,
-            Buffers[] requestedBuffers,
+            AOVBuffers[] requestedAOVBuffers,
             FramePassCallback callback
         )
         {
             m_Settings = settings;
             m_BufferAllocator = bufferAllocator;
-            m_RequestedBuffers = requestedBuffers;
+            m_RequestedAOVBuffers = requestedAOVBuffers;
             m_LightFilter = lightFilter;
             m_Callback = callback;
         }
@@ -60,23 +60,23 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             if (!isValid || textures == null)
                 return;
 
-            Assert.IsNotNull(m_RequestedBuffers);
+            Assert.IsNotNull(m_RequestedAOVBuffers);
 
             textures.Clear();
 
-            foreach (var bufferId in m_RequestedBuffers)
+            foreach (var bufferId in m_RequestedAOVBuffers)
                 textures.Add(m_BufferAllocator(bufferId));
         }
 
         /// <summary>Copy a camera sized texture into the texture buffers.</summary>
         /// <param name="cmd">the command buffer to use for the copy.</param>
-        /// <param name="bufferId">The id of the buffer to copy.</param>
+        /// <param name="aovBufferId">The id of the buffer to copy.</param>
         /// <param name="camera">The camera associated with the source texture.</param>
         /// <param name="source">The source texture to copy</param>
         /// <param name="targets">The target texture buffer.</param>
         public void PushCameraTexture(
             CommandBuffer cmd,
-            Buffers bufferId,
+            AOVBuffers aovBufferId,
             HDCamera camera,
             RTHandleSystem.RTHandle source,
             List<RTHandleSystem.RTHandle> targets
@@ -85,10 +85,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             if (!isValid)
                 return;
 
-            Assert.IsNotNull(m_RequestedBuffers);
+            Assert.IsNotNull(m_RequestedAOVBuffers);
             Assert.IsNotNull(targets);
 
-            var index = Array.IndexOf(m_RequestedBuffers, bufferId);
+            var index = Array.IndexOf(m_RequestedAOVBuffers, aovBufferId);
             if (index == -1)
                 return;
 
@@ -98,13 +98,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         /// <summary>Execute the frame pass callback. It assumes that the textures are properly initialized and filled.</summary>
         /// <param name="cmd">The command buffer to use.</param>
         /// <param name="framePassTextures">The textures to use.</param>
-        /// <param name="properties">The properties computed for this frame.</param>
-        public void Execute(CommandBuffer cmd, List<RTHandleSystem.RTHandle> framePassTextures, FrameProperties properties)
+        /// <param name="outputProperties">The properties computed for this frame.</param>
+        public void Execute(CommandBuffer cmd, List<RTHandleSystem.RTHandle> framePassTextures, RenderOutputProperties outputProperties)
         {
             if (!isValid)
                 return;
 
-            m_Callback(cmd, framePassTextures, properties);
+            m_Callback(cmd, framePassTextures, outputProperties);
         }
 
         /// <summary>Setup the display manager if necessary.</summary>

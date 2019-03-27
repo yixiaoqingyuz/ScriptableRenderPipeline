@@ -1,7 +1,7 @@
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
     /// <summary>Properties computed during a frame rendering.</summary>
-    public struct FrameProperties
+    public struct RenderOutputProperties
     {
         /// <summary>The size of the output in pixels.</summary>
         public readonly Vector2Int outputSize;
@@ -14,7 +14,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         /// <param name="outputSize"><see cref="outputSize"/></param>
         /// <param name="cameraToWorldMatrixRhs"><see cref="cameraToWorldMatrixRHS"/></param>
         /// <param name="projectionMatrix"><see cref="projectionMatrix"/></param>
-        public FrameProperties(Vector2Int outputSize, Matrix4x4 cameraToWorldMatrixRhs, Matrix4x4 projectionMatrix)
+        public RenderOutputProperties(Vector2Int outputSize, Matrix4x4 cameraToWorldMatrixRhs, Matrix4x4 projectionMatrix)
         {
             this.outputSize = outputSize;
             cameraToWorldMatrixRHS = cameraToWorldMatrixRhs;
@@ -23,8 +23,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         /// <summary>Creates a new FrameProperties from an <see cref="HDCamera"/>.</summary>
         /// <param name="hdCamera">The camera to use.</param>
-        public static FrameProperties From(HDCamera hdCamera)
-            => new FrameProperties(
+        public static RenderOutputProperties From(HDCamera hdCamera)
+            => new RenderOutputProperties(
                 new Vector2Int(hdCamera.actualWidth, hdCamera.actualHeight),
                 hdCamera.camera.cameraToWorldMatrix,
                 hdCamera.projMatrix

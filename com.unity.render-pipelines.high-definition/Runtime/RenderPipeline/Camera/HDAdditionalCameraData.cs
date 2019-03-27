@@ -168,10 +168,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public ref FrameSettings renderingPathCustomFrameSettings => ref m_RenderingPathCustomFrameSettings;
 
-        FramePassDataCollection m_FramePassDataCollection = new FramePassDataCollection(null);
+        AOVRequestDataCollection m_AOVRequestDataCollection = new AOVRequestDataCollection(null);
 
         /// <summary>Set frame passes to use.</summary>
-        /// <param name="framePasses">The frame passes to use</param>
+        /// <param name="aovRequests">Describes the requests to execute.</param>
         /// <example>
         /// <code>
         /// using System.Collections.Generic;
@@ -183,7 +183,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         /// [ExecuteAlways]
         /// [RequireComponent(typeof(Camera))]
         /// [RequireComponent(typeof(HDAdditionalCameraData))]
-        /// public class SetupFramePasses : MonoBehaviour
+        /// public class SetupAOVCallbacks : MonoBehaviour
         /// {
         ///     private static RTHandleSystem.RTHandle m_ColorRT;
         ///
@@ -192,26 +192,26 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         ///     [SerializeField] private DebugLightFilterMode m_DebugLightFilter;
         ///     [SerializeField] private MaterialSharedProperty m_MaterialSharedProperty;
         ///     [SerializeField] private LightingProperty m_LightingProperty;
-        ///     [SerializeField] private Buffers m_BuffersToCopy;
+        ///     [SerializeField] private AOVBuffers m_BuffersToCopy;
         ///     [SerializeField] private List<GameObject> m_IncludedLights;
         ///
         ///
         ///     void OnEnable()
         ///     {
-        ///         var framePass = new FramePassSettings(FramePassSettings.@default)
+        ///         var aovRequest = new AOVRequest(AOVRequest.@default)
         ///             .SetLightFilter(m_DebugLightFilter);
         ///         if (m_DebugFullScreen != DebugFullScreen.None)
-        ///             framePass = framePass.SetFullscreenOutput(m_DebugFullScreen);
+        ///             aovRequest = aovRequest.SetFullscreenOutput(m_DebugFullScreen);
         ///         if (m_MaterialSharedProperty != MaterialSharedProperty.None)
-        ///             framePass = framePass.SetFullscreenOutput(m_MaterialSharedProperty);
+        ///             aovRequest = aovRequest.SetFullscreenOutput(m_MaterialSharedProperty);
         ///         if (m_LightingProperty != LightingProperty.None)
-        ///             framePass = framePass.SetFullscreenOutput(m_LightingProperty);
+        ///             aovRequest = aovRequest.SetFullscreenOutput(m_LightingProperty);
         ///
         ///         var add = GetComponent<HDAdditionalCameraData>();
-        ///         add.SetFramePasses(
-        ///             new FramePassBuilder()
+        ///         add.SetAOVRequests(
+        ///             new AOVRequestBuilder()
         ///                 .Add(
-        ///                     framePass,
+        ///                     aovRequest,
         ///                     bufferId => m_ColorRT ?? (m_ColorRT = RTHandles.Alloc(512, 512)),
         ///                     m_IncludedLights.Count > 0 ? m_IncludedLights : null,
         ///                     new []{ m_BuffersToCopy },
@@ -232,7 +232,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         ///     void OnDisable()
         ///     {
         ///         var add = GetComponent<HDAdditionalCameraData>();
-        ///         add.SetFramePasses(null);
+        ///         add.SetAOVRequests(null);
         ///     }
         ///
         ///     void OnValidate()
@@ -243,10 +243,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         /// }
         /// </code>
         /// </example>
-        public void SetFramePasses(FramePassDataCollection framePasses)
-            => m_FramePassDataCollection = framePasses;
+        public void SetAOVRequests(AOVRequestDataCollection aovRequests)
+            => m_AOVRequestDataCollection = aovRequests;
 
-        public IEnumerable<FramePassData> framePasses => m_FramePassDataCollection;
+        public IEnumerable<AOVRequestData> aovRequests => m_AOVRequestDataCollection;
 
         // Use for debug windows
         // When camera name change we need to update the name in DebugWindows.

@@ -4,36 +4,36 @@ using System.Collections.Generic;
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
     /// <summary>Utility to build frame passes.</summary>
-    public class FramePassBuilder : IDisposable
+    public class AOVRequestBuilder : IDisposable
     {
         // Owned
-        private List<FramePassData> m_FramePassData;
+        private List<AOVRequestData> m_AOVRequestDataData;
 
         /// <summary>Add a frame pass.</summary>
         /// <param name="settings">Settings to use for this frame pass.</param>
         /// <param name="bufferAllocator">An allocator for each buffer.</param>
         /// <param name="includedLightList">If non null, only these lights will be rendered, if none, all lights will be rendered.</param>
-        /// <param name="buffers">A list of buffers to use.</param>
+        /// <param name="aovBuffers">A list of buffers to use.</param>
         /// <param name="callback">A callback that can use the requested buffers once the rendering has completed.</param>
         /// <returns></returns>
-        public FramePassBuilder Add(
-            FramePassSettings settings,
+        public AOVRequestBuilder Add(
+            AOVRequest settings,
             FramePassBufferAllocator bufferAllocator,
             List<GameObject> includedLightList,
-            Buffers[] buffers,
+            AOVBuffers[] aovBuffers,
             FramePassCallback callback
         )
         {
-            (m_FramePassData ?? (m_FramePassData = ListPool<FramePassData>.Get())).Add(
-                new FramePassData(settings, bufferAllocator, includedLightList, buffers, callback));
+            (m_AOVRequestDataData ?? (m_AOVRequestDataData = ListPool<AOVRequestData>.Get())).Add(
+                new AOVRequestData(settings, bufferAllocator, includedLightList, aovBuffers, callback));
             return this;
         }
 
         /// <summary>Build the frame passes. Allocated resources will be transferred to the returned value.</summary>
-        public FramePassDataCollection Build()
+        public AOVRequestDataCollection Build()
         {
-            var result = new FramePassDataCollection(m_FramePassData);
-            m_FramePassData = null;
+            var result = new AOVRequestDataCollection(m_AOVRequestDataData);
+            m_AOVRequestDataData = null;
             return result;
         }
 
@@ -44,9 +44,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         /// </summary>
         public void Dispose()
         {
-            if (m_FramePassData == null) return;
-            ListPool<FramePassData>.Release(m_FramePassData);
-            m_FramePassData = null;
+            if (m_AOVRequestDataData == null) return;
+            ListPool<AOVRequestData>.Release(m_AOVRequestDataData);
+            m_AOVRequestDataData = null;
         }
     }
 }

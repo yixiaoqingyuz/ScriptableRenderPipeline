@@ -449,6 +449,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_GbufferManager.DestroyBuffers();
             m_DbufferManager.DestroyBuffers();
             m_MipGenerator.Release();
+            m_XRSystem.ClearAll();
 
             RTHandles.Release(m_CameraColorBuffer);
             RTHandles.Release(m_CameraSssDiffuseLightingBuffer);
@@ -466,8 +467,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             RTHandles.Release(m_CameraColorMSAABuffer);
             RTHandles.Release(m_CameraSssDiffuseLightingMSAABuffer);
-
-            HDCamera.ClearAll();
         }
 
         bool SetRenderingFeatures()
@@ -1058,10 +1057,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     // Select render target
                     RenderTargetIdentifier targetId = camera.targetTexture ?? new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
 
-                    if (hdCamera.xr.enabled && hdCamera.xr.renderTargetValid)
-                    {
-                        targetId = hdCamera.xr.renderTarget;
-                    }
+                    // XRTODO(2019.3) : remove once XRE-445 is done, use hdCamera.xr.renderTarget directly
+                    if (hdCamera.xr.enabled && hdCamera.xr.tempRenderTexture != null)
+                        targetId = hdCamera.xr.tempRenderTexture;
 
                     // Add render request
                     var request = new RenderRequest
@@ -1930,16 +1928,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 hdCamera.xr.StopLegacyStereo(camera, cmd, renderContext);
             }
 
-            // XR SDK mirror view
-            // XRTODO: clean, use own shader? move to XRSystem
-            //if (hdCamera.xrPassInfo.xrDisplay != null && camera.targetTexture == null)
-            if (hdCamera.xr.xrSdkEnabled)
-            {
-                //if (hdCamera.xrPassInfo.renderPassIndex == m_CurrentDebugDisplaySettings.data.xrDebugSettings.mirrorPassIndex)
-                    BlitFinalCameraTexture(cmd, hdCamera, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
-            }
-
-            hdCamera.xr.EndCamera(camera, renderContext, cmd);
+            // XR mirror view and blit do device
+            hdCamera.xr.EndCamera(hdCamera, renderContext, cmd);
 
             // Send all required graphics buffer to client systems.
             SendGraphicsBuffers(cmd, hdCamera);
@@ -1984,7 +1974,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             // Here we can't use the viewport scale provided in hdCamera. The reason is that this scale is for internal rendering before post process with dynamic resolution factored in.
             // Here the input texture is already at the viewport size but may be smaller than the RT itself (because of the RTHandle system) so we compute the scale specifically here.
             var scaleBias = new Vector4((float)hdCamera.finalViewport.width / m_IntermediateAfterPostProcessBuffer.rt.width, (float)hdCamera.finalViewport.height / m_IntermediateAfterPostProcessBuffer.rt.height, 0.0f, 0.0f);
-            var offset = Vector2.zero;
 
             if (flip)
             {

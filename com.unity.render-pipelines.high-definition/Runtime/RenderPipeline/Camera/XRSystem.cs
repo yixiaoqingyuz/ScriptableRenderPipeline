@@ -19,11 +19,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
     public class XRSystem
     {
-        readonly XRPass emptyPass = new XRPass();
-        readonly List<XRPass> passList = new List<XRPass>();
+        XRPass emptyPass = new XRPass();
+        List<XRPass> passList = new List<XRPass>();
 
 #if USE_XR_SDK
-        readonly List<XRDisplaySubsystem> displayList = new List<XRDisplaySubsystem>();
+        List<XRDisplaySubsystem> displayList = new List<XRDisplaySubsystem>();
 #endif
 
         internal XRPass GetPass(int passId)
@@ -96,7 +96,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     {
                         for (int passIndex = 0; passIndex < 2; ++passIndex)
                         {
-                            var xrPass = XRPass.Create();
+                            var xrPass = XRPass.Create(passIndex);
                             xrPass.AddView(camera, (Camera.StereoscopicEye)passIndex);
                             
                             AddPassToFrame(xrPass, camera, ref multipassCameras);
@@ -104,7 +104,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     }
                     else
                     {
-                        var xrPass = XRPass.Create();
+                        var xrPass = XRPass.Create(passId: 0);
 
                         for (int viewIndex = 0; viewIndex < 2; ++viewIndex)
                         {
@@ -130,6 +130,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             int passIndex = passList.Count;
             passList.Add(passInfo);
             multipassCameras.Add(new MultipassCamera(camera, passIndex));
+        }
+
+        public void ClearAll()
+        {
+            emptyPass = null;
+            passList = null;
+            displayList = null;
         }
 
 #if USE_XR_SDK

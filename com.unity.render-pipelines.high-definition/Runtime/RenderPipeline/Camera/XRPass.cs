@@ -2,6 +2,7 @@
 // XRView contains the parameters required to render (proj and view matrices, viewport, etc)
 // XRPass holds the render target information and a list of XRView.
 // When a pass has 2+ views, hardware instancing will be active.
+// To avoid allocating every frame, XRView is a struct and XRPass is pooled.
 
 // XRTODO(2019.3) Deprecate legacy code
 // XRTODO(2020.1) Remove legacy code
@@ -55,6 +56,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         internal bool enabled { get => views.Count > 0; }
         internal bool xrSdkEnabled { get; private set; }
 
+        internal int passId { get; private set; }
+
         // Ability to specify where to render the pass
         internal RenderTargetIdentifier  renderTarget     { get; private set; }
         internal RenderTextureDescriptor renderTargetDesc { get; private set; }
@@ -70,18 +73,24 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         internal int viewCount { get => views.Count; }
         internal bool instancingEnabled { get => viewCount > 1; }
 
+        // XRTODO(2019.3) : remove once XRE-445 is done
+        // We need an intermediate target to render the mirror view
+        public RenderTexture tempRenderTexture { get; private set; } = null;
+
         // Legacy multipass support
         internal int  legacyMultipassEye      { get => (int)views[0].legacyStereoEye; }
         internal bool legacyMultipassEnabled  { get => enabled && !instancingEnabled && legacyMultipassEye >= 0; }
 
-        internal static XRPass Create()
+        internal static XRPass Create(int passId)
         {
             XRPass passInfo = GenericPool<XRPass>.Get();
 
+            passInfo.passId = passId;
             passInfo.views.Clear();
             passInfo.renderTarget = invalidRT;
             passInfo.renderTargetDesc = default;
             passInfo.xrSdkEnabled = false;
+            passInfo.tempRenderTexture = null;
 
             return passInfo;
         }
@@ -96,12 +105,41 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             XRPass passInfo = GenericPool<XRPass>.Get();
 
+            passInfo.passId = xrRenderPass.renderPassIndex;
             passInfo.views.Clear();
             passInfo.renderTarget = xrRenderPass.renderTarget;
             passInfo.renderTargetDesc = xrRenderPass.renderTargetDesc;
             passInfo.xrSdkEnabled = true;
 
+            Debug.Assert(passInfo.renderTargetValid, "Invalid render target from XRDisplaySubsystem!");
+
+            // XRTODO(2019.3) : remove once XRE-445 is done
+            {
+                // Local function to check if 2 descriptors are similar.
+                // Note: we can't use the base Equals because the flags are different (CreatedFromScript)
+                bool Equals(RenderTextureDescriptor descA, RenderTextureDescriptor descB)
+                {
+                    return descA.width == descB.width && descA.height == descB.height && descA.colorFormat == descB.colorFormat;
+                }
+
+                if (passInfo.tempRenderTexture == null || !Equals(passInfo.tempRenderTexture.descriptor, xrRenderPass.renderTargetDesc))
+                {
+                    if (passInfo.tempRenderTexture != null)
+                        passInfo.tempRenderTexture.Release();
+
+                    passInfo.tempRenderTexture = new RenderTexture(xrRenderPass.renderTargetDesc);
+                    passInfo.tempRenderTexture.Create();
+                }
+            }
+
             return passInfo;
+        }
+
+        // XRTODO(2019.3) : remove once XRE-445 is done
+        ~XRPass()
+        {
+            if (tempRenderTexture != null)
+                tempRenderTexture.Release();
         }
 
         internal void AddView(XRDisplaySubsystem.XRRenderParameter xrSdkRenderParameter)
@@ -150,14 +188,43 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        internal void EndCamera(Camera camera, ScriptableRenderContext renderContext, CommandBuffer cmd)
+        internal void EndCamera(HDCamera hdCamera, ScriptableRenderContext renderContext, CommandBuffer cmd)
         {
             if (!enabled)
                 return;
 
             if (xrSdkEnabled)
             {
-                // XRTODO: mirror view
+                // XRTODO(2019.3) : remove once XRE-445 is done
+                if (tempRenderTexture && hdCamera.camera.targetTexture == null)
+                {
+                    // Multipass only for now
+                    if (viewCount == 1)
+                    {
+                        // Blit to device
+                        cmd.SetRenderTarget(renderTarget);
+                        cmd.SetViewport(hdCamera.finalViewport);
+                        HDUtils.BlitQuad(cmd, tempRenderTexture, new Vector4(1, 1, 0, 0), new Vector4(1, 1, 0, 0), 0, false);
+
+                        // Mirror view (only works with stereo for now)
+                        if (passId < 2)
+                        {
+                            cmd.SetRenderTarget(new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
+                            cmd.SetViewport(hdCamera.camera.pixelRect);
+
+                            Vector4 scaleBiasRT = new Vector4(0.5f, 1, passId * 0.5f, 0);
+                            HDUtils.BlitQuad(cmd, tempRenderTexture, new Vector4(1, 1, 0, 0), scaleBiasRT, 0, true);
+                        }
+                        else
+                        {
+                            throw new NotImplementedException();
+                        }
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
             }
             else
             {
@@ -166,9 +233,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                 // Pushes to XR headset and/or display mirror
                 if (legacyMultipassEnabled)
-                    renderContext.StereoEndRender(camera, legacyMultipassEye, legacyMultipassEye == 1);
+                    renderContext.StereoEndRender(hdCamera.camera, legacyMultipassEye, legacyMultipassEye == 1);
                 else
-                    renderContext.StereoEndRender(camera);
+                    renderContext.StereoEndRender(hdCamera.camera);
             }
         }
     }

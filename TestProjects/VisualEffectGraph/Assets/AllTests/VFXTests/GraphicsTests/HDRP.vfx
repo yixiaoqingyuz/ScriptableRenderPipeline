@@ -955,13 +955,15 @@ VisualEffectResource:
       \   uint tmp_v = particleId / (uint)8;\n\t\t\t\t\t\t\t\t\t    uint tmp_w = tmp_v
       * (uint)8;\n\t\t\t\t\t\t\t\t\t    uint tmp_x = particleId - tmp_w;\n\t\t\t\t\t\t\t\t\t
       \   float tmp_y = (float)tmp_x;\n\t\t\t\t\t\t\t\t\t    float tmp_ba = tmp_y
-      / (float)8;\n\t\t\t\t\t\t\t\t\t    float tmp_bb = saturate(tmp_ba);\n\t\t\t\t\t\t\t\t\t
-      \   \n\t\t\t\t\t\t\t\t\t    smoothness = tmp_bb;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_SMOOTHNESS
+      / (float)8;\n\t\t\t\t\t\t\t\t\t    float tmp_bc = max(tmp_ba, (float)0);\n\t\t\t\t\t\t\t\t\t
+      \   float tmp_be = min(tmp_bc, (float)1);\n\t\t\t\t\t\t\t\t\t    \n\t\t\t\t\t\t\t\t\t
+      \   smoothness = tmp_be;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_SMOOTHNESS
       = smoothness;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#if HDRP_MATERIAL_TYPE_STANDARD\n\t\t\t\t\t\t\t\t\t#ifdef
       VFX_VARYING_METALLIC\n\t\t\t\t\t\t\t\t\tfloat metallic = (float)0;\n\t\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\t
       \   uint tmp_v = particleId / (uint)8;\n\t\t\t\t\t\t\t\t\t    float tmp_w =
-      (float)tmp_v;\n\t\t\t\t\t\t\t\t\t    float tmp_x = saturate(tmp_w);\n\t\t\t\t\t\t\t\t\t
-      \   \n\t\t\t\t\t\t\t\t\t    metallic = tmp_x;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_METALLIC
+      (float)tmp_v;\n\t\t\t\t\t\t\t\t\t    float tmp_y = max(tmp_w, (float)0);\n\t\t\t\t\t\t\t\t\t
+      \   float tmp_ba = min(tmp_y, (float)1);\n\t\t\t\t\t\t\t\t\t    \n\t\t\t\t\t\t\t\t\t
+      \   metallic = tmp_ba;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_METALLIC
       = metallic;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#elif HDRP_MATERIAL_TYPE_SPECULAR\n\t\t\t\t\t\t\t\t\t#ifdef
       VFX_VARYING_SPECULAR\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_SPECULAR
       = specularColor;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#elif HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\t\t\t\t\t\t#ifdef
@@ -1155,13 +1157,15 @@ VisualEffectResource:
       \   uint tmp_v = particleId / (uint)8;\n\t\t\t\t\t\t\t\t\t    uint tmp_w = tmp_v
       * (uint)8;\n\t\t\t\t\t\t\t\t\t    uint tmp_x = particleId - tmp_w;\n\t\t\t\t\t\t\t\t\t
       \   float tmp_y = (float)tmp_x;\n\t\t\t\t\t\t\t\t\t    float tmp_ba = tmp_y
-      / (float)8;\n\t\t\t\t\t\t\t\t\t    float tmp_bb = saturate(tmp_ba);\n\t\t\t\t\t\t\t\t\t
-      \   \n\t\t\t\t\t\t\t\t\t    smoothness = tmp_bb;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_SMOOTHNESS
+      / (float)8;\n\t\t\t\t\t\t\t\t\t    float tmp_bc = max(tmp_ba, (float)0);\n\t\t\t\t\t\t\t\t\t
+      \   float tmp_be = min(tmp_bc, (float)1);\n\t\t\t\t\t\t\t\t\t    \n\t\t\t\t\t\t\t\t\t
+      \   smoothness = tmp_be;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_SMOOTHNESS
       = smoothness;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#if HDRP_MATERIAL_TYPE_STANDARD\n\t\t\t\t\t\t\t\t\t#ifdef
       VFX_VARYING_METALLIC\n\t\t\t\t\t\t\t\t\tfloat metallic = (float)0;\n\t\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\t
       \   uint tmp_v = particleId / (uint)8;\n\t\t\t\t\t\t\t\t\t    float tmp_w =
-      (float)tmp_v;\n\t\t\t\t\t\t\t\t\t    float tmp_x = saturate(tmp_w);\n\t\t\t\t\t\t\t\t\t
-      \   \n\t\t\t\t\t\t\t\t\t    metallic = tmp_x;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_METALLIC
+      (float)tmp_v;\n\t\t\t\t\t\t\t\t\t    float tmp_y = max(tmp_w, (float)0);\n\t\t\t\t\t\t\t\t\t
+      \   float tmp_ba = min(tmp_y, (float)1);\n\t\t\t\t\t\t\t\t\t    \n\t\t\t\t\t\t\t\t\t
+      \   metallic = tmp_ba;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_METALLIC
       = metallic;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#elif HDRP_MATERIAL_TYPE_SPECULAR\n\t\t\t\t\t\t\t\t\t#ifdef
       VFX_VARYING_SPECULAR\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_SPECULAR
       = specularColor;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#elif HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\t\t\t\t\t\t#ifdef
@@ -1370,13 +1374,15 @@ VisualEffectResource:
       \   uint tmp_t = particleId / (uint)8;\n\t\t\t\t\t\t\t\t\t    uint tmp_u = tmp_t
       * (uint)8;\n\t\t\t\t\t\t\t\t\t    uint tmp_v = particleId - tmp_u;\n\t\t\t\t\t\t\t\t\t
       \   float tmp_w = (float)tmp_v;\n\t\t\t\t\t\t\t\t\t    float tmp_y = tmp_w /
-      (float)8;\n\t\t\t\t\t\t\t\t\t    float tmp_z = saturate(tmp_y);\n\t\t\t\t\t\t\t\t\t
-      \   \n\t\t\t\t\t\t\t\t\t    smoothness = tmp_z;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_SMOOTHNESS
+      (float)8;\n\t\t\t\t\t\t\t\t\t    float tmp_ba = max(tmp_y, (float)0);\n\t\t\t\t\t\t\t\t\t
+      \   float tmp_bc = min(tmp_ba, (float)1);\n\t\t\t\t\t\t\t\t\t    \n\t\t\t\t\t\t\t\t\t
+      \   smoothness = tmp_bc;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_SMOOTHNESS
       = smoothness;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#if HDRP_MATERIAL_TYPE_STANDARD\n\t\t\t\t\t\t\t\t\t#ifdef
       VFX_VARYING_METALLIC\n\t\t\t\t\t\t\t\t\tfloat metallic = (float)0;\n\t\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\t
       \   uint tmp_t = particleId / (uint)8;\n\t\t\t\t\t\t\t\t\t    float tmp_u =
-      (float)tmp_t;\n\t\t\t\t\t\t\t\t\t    float tmp_v = saturate(tmp_u);\n\t\t\t\t\t\t\t\t\t
-      \   \n\t\t\t\t\t\t\t\t\t    metallic = tmp_v;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_METALLIC
+      (float)tmp_t;\n\t\t\t\t\t\t\t\t\t    float tmp_w = max(tmp_u, (float)0);\n\t\t\t\t\t\t\t\t\t
+      \   float tmp_y = min(tmp_w, (float)1);\n\t\t\t\t\t\t\t\t\t    \n\t\t\t\t\t\t\t\t\t
+      \   metallic = tmp_y;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_METALLIC
       = metallic;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#elif HDRP_MATERIAL_TYPE_SPECULAR\n\t\t\t\t\t\t\t\t\t#ifdef
       VFX_VARYING_SPECULAR\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_SPECULAR
       = specularColor;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#elif HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\t\t\t\t\t\t#ifdef
@@ -3418,13 +3424,13 @@ VisualEffectResource:
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 3
+        data[3]: 1
       - op: 1
-        valueIndex: 30
+        valueIndex: 28
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 1
+        data[3]: 3
       - op: 1
         valueIndex: 31
         data[0]: -1
@@ -3620,10 +3626,10 @@ VisualEffectResource:
         - m_ExpressionIndex: 7
           m_Value: 8
         - m_ExpressionIndex: 9
-          m_Value: 16
-        - m_ExpressionIndex: 10
           m_Value: 1
-        - m_ExpressionIndex: 14
+        - m_ExpressionIndex: 10
+          m_Value: 16
+        - m_ExpressionIndex: 13
           m_Value: 0
         - m_ExpressionIndex: 20
           m_Value: 0.22
@@ -3661,7 +3667,7 @@ VisualEffectResource:
           m_Value: {x: 0.86, y: 0, z: 0}
         - m_ExpressionIndex: 12
           m_Value: {x: -0.9457656, y: -0.3282824, z: 9.606571}
-        - m_ExpressionIndex: 13
+        - m_ExpressionIndex: 14
           m_Value: {x: 0.22999996, y: 0, z: 0.19}
         - m_ExpressionIndex: 15
           m_Value: {x: 0.50981003, y: -0.4105638, z: 0.123428285}

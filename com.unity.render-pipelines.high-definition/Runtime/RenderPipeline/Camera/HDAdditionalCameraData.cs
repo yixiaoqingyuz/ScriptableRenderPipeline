@@ -114,8 +114,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             None,
             FastApproximateAntialiasing,
-            SubpixelMorphologicalAntiAliasing,
-            TemporalAntialiasing
+            TemporalAntialiasing,
+            SubpixelMorphologicalAntiAliasing
         }
 
         public enum SMAAQualityLevel

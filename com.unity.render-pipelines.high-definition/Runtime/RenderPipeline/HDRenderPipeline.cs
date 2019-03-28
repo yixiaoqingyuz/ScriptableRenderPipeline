@@ -1217,7 +1217,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         _cullingResults.Reset();
 
                         if (!(TryCalculateFrameParameters(
-                                new MultipassCamera(camera),
+                                new MultipassCamera(camera, m_XRSystem.emptyPass),
                                 out _,
                                 out var hdCamera,
                                 out var cullingParameters
@@ -2134,8 +2134,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 currentFrameSettings.SetEnabled(FrameSettingsField.ObjectMotionVectors, false);
             }
 
-            var passId = multipassCamera.passId;
-            hdCamera = HDCamera.Get(camera, passId) ?? HDCamera.Create(camera, passId, m_XRSystem.GetPass(passId));
+            var xrPass = multipassCamera.pass;
+            hdCamera = HDCamera.Get(camera, xrPass) ?? HDCamera.Create(camera, xrPass);
 
             // From this point, we should only use frame settings from the camera
             hdCamera.Update(currentFrameSettings, m_VolumetricLightingSystem, m_MSAASamples);

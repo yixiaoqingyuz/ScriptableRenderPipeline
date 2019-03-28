@@ -786,11 +786,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
         // Will return NULL if the camera does not exist.
-        public static HDCamera Get(Camera camera, int passId)
+        public static HDCamera Get(Camera camera, XRPass xrPass)
         {
             HDCamera hdCamera;
 
-            if (!s_Cameras.TryGetValue(new MultipassCamera(camera, passId), out hdCamera))
+            if (!s_Cameras.TryGetValue(new MultipassCamera(camera, xrPass), out hdCamera))
             {
                 hdCamera = null;
             }
@@ -811,10 +811,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // Pass all the systems that may want to initialize per-camera data here.
         // That way you will never create an HDCamera and forget to initialize the data.
-        public static HDCamera Create(Camera camera, int passId, XRPass xrPass)
+        public static HDCamera Create(Camera camera, XRPass xrPass)
         {
             HDCamera hdCamera = new HDCamera(camera, xrPass);
-            s_Cameras.Add(new MultipassCamera(camera, passId), hdCamera);
+            s_Cameras.Add(new MultipassCamera(camera, xrPass), hdCamera);
 
             return hdCamera;
         }

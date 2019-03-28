@@ -19,18 +19,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
     public class XRSystem
     {
-        XRPass emptyPass = new XRPass();
+        public XRPass emptyPass { get; private set; } = new XRPass();
         List<XRPass> passList = new List<XRPass>();
 
 #if USE_XR_SDK
         List<XRDisplaySubsystem> displayList = new List<XRDisplaySubsystem>();
         XRDisplaySubsystem display = null;
 #endif
-
-        internal XRPass GetPass(int passId)
-        {
-            return (passId < 0) ? emptyPass : passList[passId];
-        }
 
         internal void SetupFrame(Camera[] cameras, ref List<MultipassCamera> multipassCameras)
         {
@@ -64,7 +59,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 // XRTODO: support render to texture
                 if (camera.cameraType != CameraType.Game || camera.targetTexture != null || !xrEnabled)
                 {
-                    multipassCameras.Add(new MultipassCamera(camera));
+                    multipassCameras.Add(new MultipassCamera(camera, emptyPass));
                     continue;
                 }
 
@@ -155,11 +150,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             passList.Clear();
         }
 
-        private void AddPassToFrame(XRPass passInfo, Camera camera, ref List<MultipassCamera> multipassCameras)
+        private void AddPassToFrame(XRPass pass, Camera camera, ref List<MultipassCamera> multipassCameras)
         {
             int passIndex = passList.Count;
-            passList.Add(passInfo);
-            multipassCameras.Add(new MultipassCamera(camera, passIndex));
+            passList.Add(pass);
+            multipassCameras.Add(new MultipassCamera(camera, pass));
         }
 
 #if USE_XR_SDK

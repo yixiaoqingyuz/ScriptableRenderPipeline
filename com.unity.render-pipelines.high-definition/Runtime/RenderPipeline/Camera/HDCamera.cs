@@ -61,7 +61,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // XRTODO: double-wide cleanup
         public Vector4      textureWidthScaling; // (2.0, 0.5) for SinglePassDoubleWide (stereo) and (1.0, 1.0) otherwise
 
-        // XR support: multipass and instanced views are supported (see XRSystem)
+        // XR multipass and instanced views are supported (see XRSystem)
         public readonly XRPass xr;
         ViewConstants[] xrViewConstants;
         ComputeBuffer   xrViewConstantsGpu;

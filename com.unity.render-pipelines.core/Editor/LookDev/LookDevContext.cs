@@ -2,27 +2,54 @@ using UnityEngine;
 
 namespace UnityEditor.Rendering.LookDev
 {
+    public enum ViewIndex
+    {
+        FirstOrFull,
+        Second
+    };
+
+    // /!\ WARNING: these value name are used as uss file too.
+    // if your rename here, rename in the uss too.
+    public enum Layout
+    {
+        FullA,
+        FullB,
+        HorizontalSplit,
+        VerticalSplit,
+        CustomSplit,
+        CustomCircular
+    }
+
     [System.Serializable]
-    public class LookDevContext : ScriptableObject
+    public class Context : ScriptableObject
     {
         [field: SerializeField]
-        public LayoutContext layout { get; private set; } = new LayoutContext();
-        [field: SerializeField]
-        public ViewContext viewA { get; private set; } = new ViewContext();
-        [field: SerializeField]
-        public ViewContext viewB { get; private set; } = new ViewContext();
-        [field: SerializeField]
-        public LookDevCameraState cameraA { get; private set; } = new LookDevCameraState();
-        [field: SerializeField]
-        public LookDevCameraState cameraB { get; private set; } = new LookDevCameraState();
+        public LayoutContext layout { get; } = new LayoutContext();
+
+        [SerializeField]
+        ViewContext[] m_Views = new ViewContext[2]
+        {
+            new ViewContext(),
+            new ViewContext()
+        };
+
+        [SerializeField]
+        CameraState[] m_Cameras = new CameraState[2]
+        {
+            new CameraState(),
+            new CameraState()
+        };
+
+        public ViewContext GetViewContent(ViewIndex index)
+            => m_Views[(int)index];
+
+        public CameraState GetCameraState(ViewIndex index)
+            => m_Cameras[(int)index];
     }
     
     [System.Serializable]
     public class LayoutContext
     {
-        // /!\ WARNING: these value name are used as uss file too.
-        // if your rename here, rename in the uss too.
-        public enum Layout { FullA, FullB, HorizontalSplit, VerticalSplit, CustomSplit, CustomCircular }
 
         public Layout viewLayout;
         public bool showEnvironmentPanel;
@@ -38,11 +65,15 @@ namespace UnityEditor.Rendering.LookDev
     [System.Serializable]
     public class ViewContext
     {
-        //[TODO: add object]
+        //TODO: list?
+        public GameObject contentPrefab { get; set; }
+
+        public GameObject prefabInstanceInPreview { get; internal set; }
+        
         //[TODO: add object position]
         //[TODO: add camera frustum]
         //[TODO: add HDRI]
         //[TODO: manage shadow and lights]
     }
-    
+
 }

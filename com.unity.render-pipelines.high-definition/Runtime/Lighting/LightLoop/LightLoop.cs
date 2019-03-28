@@ -1785,7 +1785,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 var hdShadowSettings = VolumeManager.instance.stack.GetComponent<HDShadowSettings>();
 
                 var viewMatrix = (hdCamera.xr.enabled ? hdCamera.xr.GetViewMatrix(0) : camera.worldToCameraMatrix);
-                Vector3 camPosWS = camera.transform.position;
+                Vector3 camPosWS = hdCamera.mainViewConstants.worldSpaceCameraPos;
 
                 // camera.worldToCameraMatrix is RHS and Unity's transforms are LHS, we need to flip it to work with transforms
                 var worldToView = s_FlipMatrixLHSRHS * viewMatrix;

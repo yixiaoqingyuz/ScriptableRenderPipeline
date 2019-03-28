@@ -58,6 +58,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed whole pipeline reconstruction on selecting for the first time or modifying other than the currently used HDRenderPipelineAsset
 - Fixed single shadow debug mode
 - Fixed global scale factor debug mode when scale > 1
+- Fixed debug menu material overrides not getting applied to the Terrain Lit shader
+- Fixed typo in computeLightVariants
+- Fixed deferred pass with XR instancing by disabling ComputeLightEvaluation
 - Fixed some resources to handle more than 2 instanced views for XR
 
 ### Changed
@@ -74,6 +77,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - DecalProjectorComponent are now scale independent in order to have reliable metric unit (see new Size field for changing the size of the volume)
 - Restructure code from HDCamera.Update() by adding UpdateAntialiasing() and UpdateViewConstants()
 - Renamed velocity to motion vectors
+- Objects rendered during the After Post Process pass while TAA is enabled will not benefit from existing depth buffer anymore. This is done to fix an issue where those object would wobble otherwise
 
 ## [6.5.0-preview] - 2019-03-07
 

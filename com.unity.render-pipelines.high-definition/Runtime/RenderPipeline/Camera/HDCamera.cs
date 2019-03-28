@@ -559,7 +559,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             viewMatrix = gpuView;
             projMatrix = gpuProj;
-            VFX.VFXManager.SetCameraData(camera, gpuView, gpuProj);
             nonJitteredProjMatrix = gpuNonJitteredProj;
 
             ConfigureStereoMatrices();

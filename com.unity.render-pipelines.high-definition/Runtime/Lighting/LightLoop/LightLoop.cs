@@ -1796,7 +1796,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                 var hdShadowSettings = VolumeManager.instance.stack.GetComponent<HDShadowSettings>();
 
-                Vector3 camPosWS = camera.transform.position;
+                Vector3 camPosWS = hdCamera.mainViewConstants.worldSpaceCameraPos;
 
                 var worldToView = WorldToCamera(camera);
                 var rightEyeWorldToView = Matrix4x4.identity;

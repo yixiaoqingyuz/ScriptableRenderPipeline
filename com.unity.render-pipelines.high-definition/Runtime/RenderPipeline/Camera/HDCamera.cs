@@ -300,56 +300,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
             }
 
-            // Local function to read XR view parameters
-            void GetXrViewParameters(int xrViewIndex, out Matrix4x4 proj, out Matrix4x4 view, out Vector3 cameraPosition)
-            {
-                proj = xr.GetProjMatrix(xrViewIndex);
-                view = xr.GetViewMatrix(xrViewIndex);
-                cameraPosition = view.inverse.GetColumn(3);
-            }
-
-            // Update view constants
-            {
-                var proj = camera.projectionMatrix;
-                var view = camera.worldToCameraMatrix;
-                var cameraPosition = camera.transform.position;
-
-                // XR multipass support
-                if (xr.enabled && viewCount == 1)
-                    GetXrViewParameters(0, out proj, out view, out cameraPosition);
-
-                UpdateViewConstants(ref mainViewConstants, proj, view, cameraPosition);
-
-                // Allocate or resize view constants buffers
-                if (xrViewConstants == null || xrViewConstants.Length != viewCount)
-                {
-                    CoreUtils.SafeRelease(xrViewConstantsGpu);
-
-                    xrViewConstants = new ViewConstants[viewCount];
-                    xrViewConstantsGpu = new ComputeBuffer(viewCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(ViewConstants)));
-                }
-
-                // XR instancing support
-                if (xr.instancingEnabled)
-                {
-                    for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
-                    {
-                        GetXrViewParameters(viewIndex, out proj, out view, out cameraPosition);
-                        UpdateViewConstants(ref xrViewConstants[viewIndex], proj, view, cameraPosition);
-
-                        // Compute offset between the main camera and the instanced views
-                        xrViewConstants[viewIndex].worldSpaceCameraPosViewOffset = xrViewConstants[viewIndex].worldSpaceCameraPos - mainViewConstants.worldSpaceCameraPos;
-                    }
-                }
-                else
-                {
-                    // Compute shaders always use the XR instancing path due to the lack of multi-compile
-                    xrViewConstants[0] = mainViewConstants;
-                }
-
-                xrViewConstantsGpu.SetData(xrViewConstants);
-                isFirstFrame = false;
-            }
+            UpdateAllViewConstants(IsTAAEnabled());
+            isFirstFrame = false;
 
             // Update viewport
             {
@@ -539,12 +491,61 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        void UpdateViewConstants(ref ViewConstants viewConstants, Matrix4x4 projMatrix, Matrix4x4 viewMatrix, Vector3 cameraPosition)
+        void GetXrViewParameters(int xrViewIndex, out Matrix4x4 proj, out Matrix4x4 view, out Vector3 cameraPosition)
+        {
+            proj = xr.GetProjMatrix(xrViewIndex);
+            view = xr.GetViewMatrix(xrViewIndex);
+            cameraPosition = view.inverse.GetColumn(3);
+        }
+
+        internal void UpdateAllViewConstants(bool jitterProjectionMatrix)
+        {
+            var proj = camera.projectionMatrix;
+            var view = camera.worldToCameraMatrix;
+            var cameraPosition = camera.transform.position;
+
+            // XR multipass support
+            if (camera.stereoEnabled && viewCount == 1)
+                GetXrViewParameters(0, out proj, out view, out cameraPosition);
+
+            UpdateViewConstants(ref mainViewConstants, proj, view, cameraPosition, jitterProjectionMatrix);
+
+            // Allocate or resize view constants buffers
+            if (xrViewConstants == null || xrViewConstants.Length != viewCount)
+            {
+                CoreUtils.SafeRelease(xrViewConstantsGpu);
+
+                xrViewConstants = new ViewConstants[viewCount];
+                xrViewConstantsGpu = new ComputeBuffer(viewCount, System.Runtime.InteropServices.Marshal.SizeOf(typeof(ViewConstants)));
+            }
+
+            // XR instancing support
+            if (xr.instancingEnabled)
+            {
+                for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+                {
+                    GetXrViewParameters(viewIndex, out proj, out view, out cameraPosition);
+                    UpdateViewConstants(ref xrViewConstants[viewIndex], proj, view, cameraPosition, jitterProjectionMatrix);
+
+                    // Compute offset between the main camera and the instanced views
+                    xrViewConstants[viewIndex].worldSpaceCameraPosViewOffset = xrViewConstants[viewIndex].worldSpaceCameraPos - mainViewConstants.worldSpaceCameraPos;
+                }
+            }
+            else
+            {
+                // Compute shaders always use the XR instancing path due to the lack of multi-compile
+                xrViewConstants[0] = mainViewConstants;
+            }
+
+            xrViewConstantsGpu.SetData(xrViewConstants);
+        }
+
+        void UpdateViewConstants(ref ViewConstants viewConstants, Matrix4x4 projMatrix, Matrix4x4 viewMatrix, Vector3 cameraPosition, bool jitterProjectionMatrix)
         {
              // If TAA is enabled projMatrix will hold a jittered projection matrix. The original,
             // non-jittered projection matrix can be accessed via nonJitteredProjMatrix.
             var nonJitteredCameraProj = projMatrix;
-            var cameraProj = IsTAAEnabled()
+            var cameraProj = jitterProjectionMatrix
                 ? GetJitteredProjectionMatrix(nonJitteredCameraProj)
                 : nonJitteredCameraProj;
 
@@ -700,7 +701,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 var view = cullingParams.stereoViewMatrix;
                 var proj = cullingParams.stereoProjectionMatrix;
 
-                UpdateViewConstants(ref mainViewConstants, proj, view, cullingParams.origin);
+                UpdateViewConstants(ref mainViewConstants, proj, view, cullingParams.origin, IsTAAEnabled());
             }
         }
 
@@ -867,6 +868,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.SetGlobalMatrix(HDShaderIDs._InvViewProjMatrix,         mainViewConstants.invViewProjMatrix);
             cmd.SetGlobalMatrix(HDShaderIDs._NonJitteredViewProjMatrix, mainViewConstants.nonJitteredViewProjMatrix);
             cmd.SetGlobalMatrix(HDShaderIDs._PrevViewProjMatrix,        mainViewConstants.prevViewProjMatrix);
+            cmd.SetGlobalMatrix(HDShaderIDs._CameraViewProjMatrix,      mainViewConstants.viewProjMatrix);
             cmd.SetGlobalVector(HDShaderIDs._WorldSpaceCameraPos,       mainViewConstants.worldSpaceCameraPos);
             cmd.SetGlobalVector(HDShaderIDs._PrevCamPosRWS,             mainViewConstants.prevWorldSpaceCameraPos);
             cmd.SetGlobalVector(HDShaderIDs._ScreenSize,                screenSize);

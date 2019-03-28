@@ -2423,7 +2423,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             bool enableFeatureVariants = GetFeatureVariantsEnabled();
             bool tileFlagsWritten = false;
             bool computeMaterialVariants = m_FrameSettings.IsEnabled(FrameSettingsField.ComputeMaterialVariants);
-            bool computeLightVariants = m_FrameSettings.IsEnabled(FrameSettingsField.ComputeMaterialVariants);
+            bool computeLightVariants = m_FrameSettings.IsEnabled(FrameSettingsField.ComputeLightVariants);
 
             // optimized for opaques only
             if (runLightList && m_FrameSettings.fptl)

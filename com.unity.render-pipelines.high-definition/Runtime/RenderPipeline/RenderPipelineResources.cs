@@ -171,8 +171,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public ComputeShader uberPostCS;
             [Reload("PostProcessing/Shaders/LutBuilder3D.compute")]
             public ComputeShader lutBuilder3DCS;
-            [Reload("PostProcessing/Shaders/TemporalAntialiasing.compute")]
-            public ComputeShader temporalAntialiasingCS;
             [Reload("PostProcessing/Shaders/DepthOfFieldKernel.compute")]
             public ComputeShader depthOfFieldKernelCS;
             [Reload("PostProcessing/Shaders/DepthOfFieldCoC.compute")]
@@ -215,7 +213,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public Shader clearBlackPS;
             [Reload("PostProcessing/Shaders/SubpixelMorphologicalAntialiasing.shader")]
             public Shader SMAAPS;
-
+            [Reload("PostProcessing/Shaders/TemporalAntialiasing.shader")]
+            public Shader temporalAntialiasingPS;
 
 #if ENABLE_RAYTRACING
             // Raytracing shaders

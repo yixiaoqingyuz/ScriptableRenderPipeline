@@ -20,6 +20,8 @@ namespace UnityEngine.Experimental.Rendering
         static readonly int _RectOffset = Shader.PropertyToID("_RectOffset");
         static readonly int _Result1 = Shader.PropertyToID("_Result1");
         static readonly int _Source4 = Shader.PropertyToID("_Source4");
+        static int[] _IntParams = new int[2];
+
         void SampleCopyChannel(
             CommandBuffer cmd,
             RectInt rect,
@@ -77,16 +79,20 @@ namespace UnityEngine.Experimental.Rendering
                 if (dispatch8Rect.width > 0 && dispatch8Rect.height > 0)
                 {
                     var r = dispatch8Rect;
-                    // Caution: passing parameters to SetComputeIntParams() via params generate 48B several times at each frame here !
-                    cmd.SetComputeIntParams(m_Shader, _RectOffset, (int)r.x, (int)r.y);
+                    // Use intermediate array to avoid garbage
+                    _IntParams[0] = r.x;
+                    _IntParams[1] = r.y;
+                    cmd.SetComputeIntParams(m_Shader, _RectOffset, _IntParams);
                     cmd.DispatchCompute(m_Shader, kernel8, (int)Mathf.Max(r.width / 8, 1), (int)Mathf.Max(r.height / 8, 1), slices);
                 }
 
                 for (int i = 0, c = dispatch1RectCount; i < c; ++i)
                 {
                     var r = dispatch1Rects[i];
-                    // Caution: passing parameters to SetComputeIntParams() via params generate 48B several times at each frame here !
-                    cmd.SetComputeIntParams(m_Shader, _RectOffset, (int)r.x, (int)r.y);
+                    // Use intermediate array to avoid garbage
+                    _IntParams[0] = r.x;
+                    _IntParams[1] = r.y;
+                    cmd.SetComputeIntParams(m_Shader, _RectOffset, _IntParams);
                     cmd.DispatchCompute(m_Shader, kernel1, (int)Mathf.Max(r.width, 1), (int)Mathf.Max(r.height, 1), slices);
                 }
             }

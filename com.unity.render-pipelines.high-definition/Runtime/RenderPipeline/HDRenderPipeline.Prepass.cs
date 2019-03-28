@@ -422,7 +422,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         // TODO: reading the depth buffer with a compute shader will cause it to decompress in place.
                         // On console, to preserve the depth test performance, we must NOT decompress the 'm_CameraDepthStencilBuffer' in place.
                         // We should call decompressDepthSurfaceToCopy() and decompress it to 'm_CameraDepthBufferMipChain'.
-                        m_GPUCopy.SampleCopyChannel_xyzw2x(renderGraphContext.cmd, resources.GetTexture(copyDepthPassData.inputDepth), resources.GetTexture(copyDepthPassData.outputDepth), new RectInt(0, 0, copyDepthPassData.width, copyDepthPassData.height));
+                        copyDepthPassData.GPUCopy.SampleCopyChannel_xyzw2x(renderGraphContext.cmd, resources.GetTexture(copyDepthPassData.inputDepth), resources.GetTexture(copyDepthPassData.outputDepth), new RectInt(0, 0, copyDepthPassData.width, copyDepthPassData.height));
                     });
                 }
 
@@ -432,8 +432,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         protected class GenerateDepthPyramidPassData : RenderPassData
         {
-            public RenderGraphMutableResource depthTexture;
-            public HDUtils.PackedMipChainInfo mipInfo;
+            public RenderGraphMutableResource   depthTexture;
+            public HDUtils.PackedMipChainInfo   mipInfo;
+            public MipGenerator                 mipGenerator;
         }
 
         protected virtual void GenerateDepthPyramid(RenderGraph renderGraph, HDCamera hdCamera, FullScreenDebugMode debugMode)
@@ -445,12 +446,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 passData.depthTexture = builder.WriteTexture(GetDepthTexture());
                 passData.mipInfo = GetDepthBufferMipChainInfo();
+                passData.mipGenerator = m_MipGenerator;
 
                 builder.SetRenderFunc(
                 (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
                 {
                     var depthPyramidData = (GenerateDepthPyramidPassData)data;
-                    m_MipGenerator.RenderMinDepthPyramid(renderGraphContext.cmd, renderGraphContext.resources.GetTexture(depthPyramidData.depthTexture), depthPyramidData.mipInfo);
+                    depthPyramidData.mipGenerator.RenderMinDepthPyramid(renderGraphContext.cmd, renderGraphContext.resources.GetTexture(depthPyramidData.depthTexture), depthPyramidData.mipInfo);
                 });
             }
 

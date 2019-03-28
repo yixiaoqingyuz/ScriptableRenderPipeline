@@ -4,6 +4,17 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [5.11.0-preview] - 2019-XX-XX
+
+### Changed
+- Restructure code from HDCamera.Update() by adding UpdateAntialiasing() and UpdateViewConstants()
+
+### Fixed
+- Fixed exposure weight on unlit materials
+- Fixed Light intensity not played in the player when recorded with animation/timeline
+- Fixed emission node breaking the main shader graph preview in certain conditions
+- Fixed checkout of baked probe asset when baking probes
+
 ## [5.10.0-preview] - 2019-03-19
 
 ## [5.9.0-preview] - 2019-03-15
@@ -94,6 +105,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed failing builds when light explorer window is open
 - Fixed cascade shadows border sometime causing artefacts between cascades
 - Restored shadows in the Cascade Shadow debug visualization
+- Fixed synchronization issue in decal HTile that occasionally caused rendering artifacts around decal borders, and very noticeable flickering for overlapping decals using shader graph
 
 ### Changed
 - When rendering reflection probe disable all specular lighting and for metals use fresnelF0 as diffuse color for bake lighting.

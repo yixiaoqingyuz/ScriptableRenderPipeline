@@ -327,7 +327,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
             }
 
-            UpdateViewConstants();
+            UpdateViewConstants(IsTAAEnabled());
 
             // Update viewport sizes.
             m_ViewportSizePrevFrame = new Vector2Int(m_ActualWidth, m_ActualHeight);
@@ -495,12 +495,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        void UpdateViewConstants()
+        internal void UpdateViewConstants(bool jitterProjectionMatrix)
         {
              // If TAA is enabled projMatrix will hold a jittered projection matrix. The original,
             // non-jittered projection matrix can be accessed via nonJitteredProjMatrix.
             var nonJitteredCameraProj = camera.projectionMatrix;
-            var cameraProj = IsTAAEnabled()
+            var cameraProj = jitterProjectionMatrix
                 ? GetJitteredProjectionMatrix(nonJitteredCameraProj)
                 : nonJitteredCameraProj;
 
@@ -923,6 +923,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.SetGlobalMatrix(HDShaderIDs._InvViewProjMatrix,         viewProjMatrix.inverse);
             cmd.SetGlobalMatrix(HDShaderIDs._NonJitteredViewProjMatrix, nonJitteredViewProjMatrix);
             cmd.SetGlobalMatrix(HDShaderIDs._PrevViewProjMatrix,        prevViewProjMatrix);
+            cmd.SetGlobalMatrix(HDShaderIDs._CameraViewProjMatrix,      viewProjMatrix);
             cmd.SetGlobalVector(HDShaderIDs._WorldSpaceCameraPos,       worldSpaceCameraPos);
             cmd.SetGlobalVector(HDShaderIDs._PrevCamPosRWS,             prevWorldSpaceCameraPos);
             cmd.SetGlobalVector(HDShaderIDs._ScreenSize,                screenSize);

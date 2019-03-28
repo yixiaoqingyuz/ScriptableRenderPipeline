@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
-    public class HDRenderPipeline : UnityEngine.Rendering.RenderPipeline, UnityEngine.Rendering.LookDev.ILookDevDataProvider
+    public class HDRenderPipeline : UnityEngine.Rendering.RenderPipeline, UnityEngine.Rendering.LookDev.IDataProvider
     {
         public const string k_ShaderTagName = "HDRenderPipeline";
         const string k_OldQualityShadowKey = "HDRP:oldQualityShadows";

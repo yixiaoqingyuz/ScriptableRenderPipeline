@@ -57,7 +57,10 @@ namespace UnityEditor.Rendering.LookDev
         }
 
         public static void SaveConfig(string path = lastRenderingDataSavePath)
-            => InternalEditorUtility.SaveToSerializedFileAndForget(new[] { currentContext ?? new Context() }, path, true);
+        {
+            if (currentContext != null && !currentContext.Equals(null))
+                InternalEditorUtility.SaveToSerializedFileAndForget(new[] { currentContext }, path, true);
+        }
 
         [MenuItem("Window/Experimental/NEW Look Dev", false, -1)]
         public static void Open()

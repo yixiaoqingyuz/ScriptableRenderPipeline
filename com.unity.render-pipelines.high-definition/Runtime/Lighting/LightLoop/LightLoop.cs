@@ -896,11 +896,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return s_FlipMatrixLHSRHS * camera.worldToCameraMatrix;
         }
 
-        static Matrix4x4 WorldToViewStereo(Camera camera, Camera.StereoscopicEye eyeIndex)
-        {
-            return s_FlipMatrixLHSRHS * camera.GetStereoViewMatrix(eyeIndex);
-        }
-
         // For light culling system, we need non oblique projection matrices
         static Matrix4x4 CameraProjectionNonObliqueLHS(HDCamera camera)
         {
@@ -1789,22 +1784,20 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                 var hdShadowSettings = VolumeManager.instance.stack.GetComponent<HDShadowSettings>();
 
+                var viewMatrix = (hdCamera.xr.enabled ? hdCamera.xr.GetViewMatrix(0) : camera.worldToCameraMatrix);
                 Vector3 camPosWS = camera.transform.position;
 
                 // camera.worldToCameraMatrix is RHS and Unity's transforms are LHS, we need to flip it to work with transforms
-                Matrix4x4 WorldToCamera(Matrix4x4 viewMatrix) { return Matrix4x4.Scale(new Vector3(1, 1, -1)) * viewMatrix; }
-
-                var worldToView = WorldToCamera(camera.worldToCameraMatrix);
+                var worldToView = s_FlipMatrixLHSRHS * viewMatrix;
                 var rightEyeWorldToView = Matrix4x4.identity;
 
-                if (hdCamera.xr.enabled)
+                // XRTODO: support more than 2 views
+                if (hdCamera.xr.instancingEnabled)
                 {
-                    worldToView = WorldToCamera(hdCamera.xr.GetViewMatrix(0));
-                    if (hdCamera.xr.viewCount > 1)
-                    {
-                        Debug.Assert(hdCamera.xr.viewCount == 2);
-                        rightEyeWorldToView = WorldToCamera(hdCamera.xr.GetViewMatrix(1));
-                    }
+                    if (hdCamera.xr.viewCount == 2)
+                        rightEyeWorldToView = s_FlipMatrixLHSRHS * hdCamera.xr.GetViewMatrix(1);
+                    else
+                        throw new NotImplementedException();
                 }
 
                 // We must clear the shadow requests before checking if they are any visible light because we would have requests from the last frame executed in the case where we don't see any lights

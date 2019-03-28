@@ -55,7 +55,7 @@ namespace UnityEditor.Rendering.LookDev
         public bool showEnvironmentPanel;
 
         [SerializeField]
-        internal LookDevGizmoState gizmoState = new LookDevGizmoState();
+        internal GizmoState gizmoState = new GizmoState();
 
         public bool isSimpleView => viewLayout == Layout.FullA || viewLayout == Layout.FullB;
         public bool isMultiView => viewLayout == Layout.HorizontalSplit || viewLayout == Layout.VerticalSplit;

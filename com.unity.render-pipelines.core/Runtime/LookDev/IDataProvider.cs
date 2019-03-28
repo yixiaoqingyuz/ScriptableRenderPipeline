@@ -1,6 +1,6 @@
 namespace UnityEngine.Rendering.LookDev
 {
-    public interface ILookDevDataProvider
+    public interface IDataProvider
     {
 
     }

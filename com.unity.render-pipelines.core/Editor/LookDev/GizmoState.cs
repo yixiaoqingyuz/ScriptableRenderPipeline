@@ -5,7 +5,7 @@ using UnityEngine;
 namespace UnityEditor.Rendering.LookDev
 {
     [Serializable]
-    internal class LookDevGizmoState
+    internal class GizmoState
     {
         [SerializeField]
         private Vector2 m_Point1;
@@ -30,7 +30,7 @@ namespace UnityEditor.Rendering.LookDev
         public Vector4 plane => m_Plane;
         public Vector4 planeOrtho => m_PlaneOrtho;
 
-        public LookDevGizmoState()
+        public GizmoState()
             => Update(m_Center, m_Length, m_Angle);
         
         private Vector4 Get2DPlane(Vector2 firstPoint, float angle)

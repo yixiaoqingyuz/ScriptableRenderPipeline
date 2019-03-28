@@ -7,19 +7,19 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     public partial class HDRenderPipeline
     {
         // The render target used when we do not support MSAA
-        protected RenderGraphMutableResource  m_DepthBuffer;
-        protected RenderGraphMutableResource  m_NormalBuffer;
-        protected RenderGraphMutableResource  m_VelocityBuffer;
+        protected RenderGraphMutableResource    m_DepthBuffer;
+        protected RenderGraphMutableResource    m_NormalBuffer;
+        protected RenderGraphMutableResource    m_VelocityBuffer;
 
-        protected RenderGraphMutableResource m_DepthBufferMipChain;
-        protected HDUtils.PackedMipChainInfo m_DepthBufferMipChainInfo; // This is metadata
+        protected RenderGraphMutableResource    m_DepthBufferMipChain;
+        protected HDUtils.PackedMipChainInfo    m_DepthBufferMipChainInfo; // This is metadata
 
         // MSAA Render targets
-        protected RenderGraphMutableResource  m_DepthBufferMSAA;
-        protected RenderGraphMutableResource  m_NormalBufferMSAA;
-        protected RenderGraphMutableResource m_VelocityBufferMSAA;
+        protected RenderGraphMutableResource    m_DepthBufferMSAA;
+        protected RenderGraphMutableResource    m_NormalBufferMSAA;
+        protected RenderGraphMutableResource    m_VelocityBufferMSAA;
         // This texture must be used because reading directly from an MSAA Depth buffer is way to expensive. The solution that we went for is writing the depth in an additional color buffer (10x cheaper to solve on ps4)
-        protected RenderGraphMutableResource m_DepthAsColorBufferMSAA;
+        protected RenderGraphMutableResource    m_DepthAsColorBufferMSAA;
 
         protected Vector2Int ComputeDepthBufferMipChainSize(Vector2Int screenSize)
         {
@@ -75,34 +75,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         protected RenderGraphMutableResource GetVelocityBuffer(bool isMSAA = false)
         {
             return isMSAA ? m_VelocityBufferMSAA : m_VelocityBuffer;
-        }
-
-        protected bool NeedClearColorBuffer(HDCamera hdCamera, SkyManager skyManager, DebugDisplaySettings debugDisplaySettings)
-        {
-            if (hdCamera.clearColorMode == HDAdditionalCameraData.ClearColorMode.Color ||
-                // If the luxmeter is enabled, the sky isn't rendered so we clear the background color
-                debugDisplaySettings.data.lightingDebugSettings.debugLightingMode == DebugLightingMode.LuxMeter ||
-                // If we want the sky but the sky don't exist, still clear with background color
-                (hdCamera.clearColorMode == HDAdditionalCameraData.ClearColorMode.Sky && !skyManager.IsVisualSkyValid()) ||
-                // Special handling for Preview we force to clear with background color (i.e black)
-                // Note that the sky use in this case is the last one setup. If there is no scene or game, there is no sky use as reflection in the preview
-                HDUtils.IsRegularPreviewCamera(hdCamera.camera)
-                )
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        protected Color GetColorBufferClearColor(HDCamera hdCamera, DebugDisplaySettings debugDisplaySettings)
-        {
-            Color clearColor = hdCamera.backgroundColorHDR;
-            // We set the background color to black when the luxmeter is enabled to avoid picking the sky color
-            if (debugDisplaySettings.data.lightingDebugSettings.debugLightingMode == DebugLightingMode.LuxMeter)
-                clearColor = Color.black;
-
-            return clearColor;
         }
 
         protected bool NeedClearGBuffer()

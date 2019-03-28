@@ -345,6 +345,15 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             commandBuffer.DrawProcedural(Matrix4x4.identity, material, shaderPassId, MeshTopology.Triangles, 3, 1, properties);
         }
 
+        public static void DrawFullScreen(CommandBuffer commandBuffer, RTHandleProperties rtHandleProperties, Material material,
+            RTHandleSystem.RTHandle colorBuffer,
+            MaterialPropertyBlock properties = null, int shaderPassId = 0)
+        {
+            HDUtils.SetRenderTarget(commandBuffer, rtHandleProperties, colorBuffer);
+            commandBuffer.SetGlobalVector(HDShaderIDs._ScreenToTargetScale, rtHandleProperties.screenToTargetScale);
+            commandBuffer.DrawProcedural(Matrix4x4.identity, material, shaderPassId, MeshTopology.Triangles, 3, 1, properties);
+        }
+
         public static void DrawFullScreen(CommandBuffer commandBuffer, HDCamera camera, Material material,
             RTHandleSystem.RTHandle colorBuffer, RTHandleSystem.RTHandle depthStencilBuffer,
             MaterialPropertyBlock properties = null, int shaderPassId = 0)

@@ -26,19 +26,21 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         protected virtual PrepassOutput RenderPrepass(RenderGraph renderGraph, CullingResults cullingResults, HDCamera hdCamera)
         {
+            StartStereoRendering(renderGraph, hdCamera.camera);
+
             var result = new PrepassOutput();
 
-            bool renderMotionVectorAfterGBuffer = RenderDepthPrepass(m_RenderGraph, cullingResults, hdCamera);
+            bool renderMotionVectorAfterGBuffer = RenderDepthPrepass(renderGraph, cullingResults, hdCamera);
 
             if (!renderMotionVectorAfterGBuffer)
             {
                 // If objects velocity if enabled, this will render the objects with motion vector into the target buffers (in addition to the depth)
                 // Note: An object with motion vector must not be render in the prepass otherwise we can have motion vector write that should have been rejected
-                RenderObjectsVelocityPass(m_RenderGraph, cullingResults, hdCamera);
+                RenderObjectsVelocityPass(renderGraph, cullingResults, hdCamera);
             }
 
             // At this point in forward all objects have been rendered to the prepass (depth/normal/velocity) so we can resolve them
-            result.depthValuesMSAA = ResolvePrepassBuffers(m_RenderGraph, hdCamera);
+            result.depthValuesMSAA = ResolvePrepassBuffers(renderGraph, hdCamera);
 
             /*
             // This will bind the depth buffer if needed for DBuffer)
@@ -54,7 +56,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 #endif
 */
 
-            result.gbuffer = RenderGBuffer(m_RenderGraph, cullingResults, hdCamera);
+            result.gbuffer = RenderGBuffer(renderGraph, cullingResults, hdCamera);
 
             // In both forward and deferred, everything opaque should have been rendered at this point so we can safely copy the depth buffer for later processing.
             GenerateDepthPyramid(renderGraph, hdCamera, FullScreenDebugMode.DepthPyramid);
@@ -62,8 +64,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             if (renderMotionVectorAfterGBuffer)
             {
                 // See the call RenderObjectsVelocity() above and comment
-                RenderObjectsVelocityPass(m_RenderGraph, cullingResults, hdCamera);
+                RenderObjectsVelocityPass(renderGraph, cullingResults, hdCamera);
             }
+
+            RenderCameraVelocity(renderGraph, hdCamera);
+
+            StopStereoRendering(renderGraph, hdCamera.camera);
 
             return result;
         }

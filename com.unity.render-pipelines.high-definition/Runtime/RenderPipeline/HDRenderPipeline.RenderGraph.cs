@@ -15,26 +15,166 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             CreateSharedResources(m_RenderGraph, hdCamera, m_CurrentDebugDisplaySettings);
 
-            StartStereoRendering(m_RenderGraph, hdCamera.camera);
+#if UNITY_EDITOR
+            var showGizmos = camera.cameraType == CameraType.Game
+                || camera.cameraType == CameraType.SceneView;
+#endif
 
-            var prepassOutput = RenderPrepass(m_RenderGraph, cullingResults, hdCamera);
+            RenderGraphMutableResource colorBuffer = CreateColorBuffer(hdCamera, true);
 
-            RenderCameraVelocity(m_RenderGraph, hdCamera);
+            if (m_CurrentDebugDisplaySettings.IsDebugMaterialDisplayEnabled() || m_CurrentDebugDisplaySettings.IsMaterialValidationEnabled())
+            {
+                StartStereoRendering(m_RenderGraph, hdCamera.camera);
+                RenderDebugViewMaterial(m_RenderGraph, cullingResults, hdCamera, colorBuffer);
+                colorBuffer = ResolveMSAAColor(m_RenderGraph, hdCamera, colorBuffer);
+                StopStereoRendering(m_RenderGraph, hdCamera.camera);
+            }
+            else
+            {
+                var prepassOutput = RenderPrepass(m_RenderGraph, cullingResults, hdCamera);
 
-            StopStereoRendering(m_RenderGraph, hdCamera.camera);
+                //// Caution: We require sun light here as some skies use the sun light to render, it means that UpdateSkyEnvironment must be called after PrepareLightsForGPU.
+                //// TODO: Try to arrange code so we can trigger this call earlier and use async compute here to run sky convolution during other passes (once we move convolution shader to compute).
+                //UpdateSkyEnvironment(hdCamera, cmd);
 
+                //RenderLighting();
+            }
+
+            ExecuteRenderGraph(m_RenderGraph, hdCamera, m_MSAASamples, renderContext, cmd);
+        }
+
+        static void ExecuteRenderGraph(RenderGraph renderGraph, HDCamera hdCamera, MSAASamples msaaSample, ScriptableRenderContext renderContext, CommandBuffer cmd)
+        {
             var renderGraphParams = new RenderGraphExecuteParams()
             {
                 renderingWidth = hdCamera.actualWidth,
                 renderingHeight = hdCamera.actualHeight,
-                msaaSamples = m_MSAASamples
+                msaaSamples = msaaSample
             };
 
-            //// Caution: We require sun light here as some skies use the sun light to render, it means that UpdateSkyEnvironment must be called after PrepareLightsForGPU.
-            //// TODO: Try to arrange code so we can trigger this call earlier and use async compute here to run sky convolution during other passes (once we move convolution shader to compute).
-            //UpdateSkyEnvironment(hdCamera, cmd);
+            renderGraph.Execute(renderContext, cmd, renderGraphParams);
+        }
 
-            m_RenderGraph.Execute(renderContext, cmd, renderGraphParams);
+        virtual protected RenderGraphMutableResource CreateColorBuffer(HDCamera hdCamera, bool allowMSAA)
+        {
+            bool msaa = hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA) && allowMSAA;
+            return m_RenderGraph.CreateTexture(
+                new TextureDesc(Vector2.one)
+                {
+                    colorFormat = GetColorBufferFormat(),
+                    enableRandomWrite = !msaa,
+                    bindTextureMS = msaa,
+                    enableMSAA = msaa,
+                    xrInstancing = true,
+                    useDynamicScale = true,
+                    clearBuffer = NeedClearColorBuffer(hdCamera),
+                    clearColor = GetColorBufferClearColor(hdCamera),
+                    name = "CameraColor" });
+        }
+
+        class DebugViewMaterialData : RenderPassData
+        {
+            public RenderGraphMutableResource   outputColor;
+            public RenderGraphMutableResource   outputDepth;
+            public RenderGraphResource          opaqueRendererList;
+            public RenderGraphResource          transparentRendererList;
+            public Material                     debugGBufferMaterial;
+            public FrameSettings                frameSettings;
+        }
+
+        virtual protected void RenderDebugViewMaterial(RenderGraph renderGraph, CullingResults cull, HDCamera hdCamera, RenderGraphMutableResource output)
+        {
+            if (m_CurrentDebugDisplaySettings.data.materialDebugSettings.IsDebugGBufferEnabled() && hdCamera.frameSettings.litShaderMode == LitShaderMode.Deferred)
+            {
+                using (var builder = renderGraph.AddRenderPass<DebugViewMaterialData>("DebugViewMaterialGBuffer", out var passData, CustomSamplerId.DebugViewMaterialGBuffer.GetSampler()))
+                {
+                    passData.debugGBufferMaterial = m_currentDebugViewMaterialGBuffer;
+                    passData.outputColor = builder.WriteTexture(output);
+
+                    builder.SetRenderFunc(
+                    (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                    {
+                        var debugViewData = (DebugViewMaterialData)data;
+                        var res = renderGraphContext.resources;
+                        HDUtils.DrawFullScreen(renderGraphContext.cmd, globalParams.rtHandleProperties, debugViewData.debugGBufferMaterial, res.GetTexture(debugViewData.outputColor));
+                    });
+                }
+            }
+            else
+            {
+                using (var builder = renderGraph.AddRenderPass<DebugViewMaterialData>("DisplayDebug ViewMaterial", out var passData, CustomSamplerId.DisplayDebugViewMaterial.GetSampler()))
+                {
+                    passData.frameSettings = hdCamera.frameSettings;
+                    passData.outputColor = builder.UseColorBuffer(output, 0);
+                    passData.outputDepth = builder.UseDepthBuffer(GetDepthStencilBuffer(hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA)));
+
+                    // When rendering debug material we shouldn't rely on a depth prepass for optimizing the alpha clip test. As it is control on the material inspector side
+                    // we must override the state here.
+                    passData.opaqueRendererList = builder.UseRendererList(
+                        builder.CreateRendererList(new RendererListDesc(m_AllForwardOpaquePassNames, cull, hdCamera.camera)
+                        {
+                            renderQueueRange = HDRenderQueue.k_RenderQueue_AllOpaque,
+                            sortingCriteria = SortingCriteria.CommonOpaque,
+                            rendererConfiguration = m_currentRendererConfigurationBakedLighting,
+                            stateBlock = m_DepthStateOpaque
+                        }));
+                    passData.transparentRendererList= builder.UseRendererList(
+                        builder.CreateRendererList(new RendererListDesc(m_AllTransparentPassNames, cull, hdCamera.camera)
+                        {
+                            renderQueueRange = HDRenderQueue.k_RenderQueue_AllOpaque,
+                            sortingCriteria = SortingCriteria.CommonTransparent | SortingCriteria.RendererPriority,
+                            rendererConfiguration = m_currentRendererConfigurationBakedLighting,
+                            stateBlock = m_DepthStateOpaque
+                        }));
+
+                    builder.SetRenderFunc(
+                    (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                    {
+                        var debugViewData = (DebugViewMaterialData)data;
+                        var res = renderGraphContext.resources;
+                        DrawOpaqueRendererList(debugViewData.frameSettings, res.GetRendererList(debugViewData.opaqueRendererList), renderGraphContext.renderContext, renderGraphContext.cmd);
+                        DrawOpaqueRendererList(debugViewData.frameSettings, res.GetRendererList(debugViewData.transparentRendererList), renderGraphContext.renderContext, renderGraphContext.cmd);
+                    });
+                }
+            }
+        }
+
+        class ResolveColorData : RenderPassData
+        {
+            public RenderGraphResource          input;
+            public RenderGraphMutableResource   output;
+            public Material                     resolveMaterial;
+            public int                          passIndex;
+        }
+
+        virtual protected RenderGraphMutableResource ResolveMSAAColor(RenderGraph renderGraph, HDCamera hdCamera, RenderGraphMutableResource input)
+        {
+            if (hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA))
+            {
+                using (var builder = renderGraph.AddRenderPass<ResolveColorData>("ResolveColor", out var passData))
+                {
+                    passData.input = builder.ReadTexture(input);
+                    passData.output = builder.UseColorBuffer(CreateColorBuffer(hdCamera, false), 0);
+                    passData.resolveMaterial = m_ColorResolveMaterial;
+                    passData.passIndex = SampleCountToPassIndex(m_MSAASamples);
+
+                    builder.SetRenderFunc(
+                    (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                    {
+                        var resolveData = (ResolveColorData)data;
+                        var res = renderGraphContext.resources;
+                        var mpb = renderGraphContext.renderGraphPool.GetTempMaterialPropertyBlock();
+                        mpb.SetTexture(HDShaderIDs._ColorTextureMS, res.GetTexture(resolveData.input));
+                        renderGraphContext.cmd.DrawProcedural(Matrix4x4.identity, resolveData.resolveMaterial, resolveData.passIndex, MeshTopology.Triangles, 3, 1, mpb);
+                    });
+
+                    return passData.output;
+                }
+            }
+            else
+            {
+                return input;
+            }
         }
 
         protected static void DrawRendererList(RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
@@ -85,6 +225,34 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     return 3;
             };
             return 0;
+        }
+
+        protected bool NeedClearColorBuffer(HDCamera hdCamera)
+        {
+            if (hdCamera.clearColorMode == HDAdditionalCameraData.ClearColorMode.Color ||
+                // If the luxmeter is enabled, the sky isn't rendered so we clear the background color
+                m_CurrentDebugDisplaySettings.data.lightingDebugSettings.debugLightingMode == DebugLightingMode.LuxMeter ||
+                // If we want the sky but the sky doesn't exist, still clear with background color
+                (hdCamera.clearColorMode == HDAdditionalCameraData.ClearColorMode.Sky && !m_SkyManager.IsVisualSkyValid()) ||
+                m_CurrentDebugDisplaySettings.IsDebugMaterialDisplayEnabled() || m_CurrentDebugDisplaySettings.IsMaterialValidationEnabled() ||
+                // Special handling for Preview we force to clear with background color (i.e black)
+                HDUtils.IsRegularPreviewCamera(hdCamera.camera)
+                )
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        protected Color GetColorBufferClearColor(HDCamera hdCamera)
+        {
+            Color clearColor = hdCamera.backgroundColorHDR;
+            // We set the background color to black when the luxmeter is enabled to avoid picking the sky color
+            if (debugDisplaySettings.data.lightingDebugSettings.debugLightingMode == DebugLightingMode.LuxMeter)
+                clearColor = Color.black;
+
+            return clearColor;
         }
 
         // XR Specific

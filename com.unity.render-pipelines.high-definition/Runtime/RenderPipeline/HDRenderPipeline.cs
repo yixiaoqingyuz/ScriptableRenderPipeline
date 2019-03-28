@@ -1563,9 +1563,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             RenderCameraMotionVectors(cullingResults, hdCamera, renderContext, cmd);
 
             hdCamera.xr.StopLegacyStereo(camera, cmd, renderContext);
+
             // Caution: We require sun light here as some skies use the sun light to render, it means that UpdateSkyEnvironment must be called after PrepareLightsForGPU.
             // TODO: Try to arrange code so we can trigger this call earlier and use async compute here to run sky convolution during other passes (once we move convolution shader to compute).
             UpdateSkyEnvironment(hdCamera, cmd);
+
+            hdCamera.xr.StartLegacyStereo(camera, cmd, renderContext);
 
 
 #if UNITY_EDITOR
@@ -1575,14 +1578,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             if (m_CurrentDebugDisplaySettings.IsDebugMaterialDisplayEnabled() || m_CurrentDebugDisplaySettings.IsMaterialValidationEnabled())
             {
-                hdCamera.xr.StartLegacyStereo(camera, cmd, renderContext);
                 RenderDebugViewMaterial(cullingResults, hdCamera, renderContext, cmd);
-                hdCamera.xr.StopLegacyStereo(camera, cmd, renderContext);
             }
             else
             {
-                hdCamera.xr.StartLegacyStereo(camera, cmd, renderContext);
-
                 if (!hdCamera.frameSettings.SSAORunsAsync())
                     m_AmbientOcclusionSystem.Render(cmd, hdCamera, m_SharedRTManager, renderContext, m_FrameCount);
 
@@ -1815,7 +1814,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     SSRTask.End(cmd);
                 }
 
-                // Might float this higher if we enable stereo w/ deferred
                 hdCamera.xr.StartLegacyStereo(camera, cmd, renderContext);
 
 #if (ENABLE_RAYTRACING)
@@ -1900,8 +1898,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 AccumulateDistortion(cullingResults, hdCamera, renderContext, cmd);
                 RenderDistortion(hdCamera, cmd);
 
-                hdCamera.xr.StopLegacyStereo(camera, cmd, renderContext);
-
                 PushFullScreenDebugTexture(hdCamera, cmd, m_CameraColorBuffer, FullScreenDebugMode.NanTracker);
                 PushFullScreenLightingDebugTexture(hdCamera, cmd, m_CameraColorBuffer);
             }
@@ -1917,18 +1913,15 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 hdCamera.ExecuteCaptureActions(m_IntermediateAfterPostProcessBuffer, cmd);
 
-                hdCamera.xr.StartLegacyStereo(camera, cmd, renderContext);
-
                 RenderDebug(hdCamera, cmd, cullingResults);
                 using (new ProfilingSample(cmd, "Final Blit (Dev Build Only)"))
                 {
                     BlitFinalCameraTexture(cmd, hdCamera, target.id);
                 }
-
-                hdCamera.xr.StopLegacyStereo(camera, cmd, renderContext);
             }
 
             // XR mirror view and blit do device
+            hdCamera.xr.StopLegacyStereo(camera, cmd, renderContext);
             hdCamera.xr.EndCamera(hdCamera, renderContext, cmd);
 
             // Send all required graphics buffer to client systems.
@@ -3387,8 +3380,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             bool flipInPostProcesses = HDUtils.PostProcessIsFinalPass() && (hdCamera.flipYMode == HDAdditionalCameraData.FlipYMode.ForceFlipY || hdCamera.isMainGameView);
             RenderTargetIdentifier destination = HDUtils.PostProcessIsFinalPass() ? finalRT : m_IntermediateAfterPostProcessBuffer;
 
-            hdCamera.xr.StartLegacyStereo(hdCamera.camera, cmd, renderContext);
-
             // We render AfterPostProcess objects first into a separate buffer that will be composited in the final post process pass
             RenderAfterPostProcess(cullResults, hdCamera, renderContext, cmd);
 
@@ -3407,8 +3398,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 depthBuffer: m_SharedRTManager.GetDepthStencilBuffer(),
                 flipY: flipInPostProcesses
             );
-
-            hdCamera.xr.StopLegacyStereo(hdCamera.camera, cmd, renderContext);
         }
 
 

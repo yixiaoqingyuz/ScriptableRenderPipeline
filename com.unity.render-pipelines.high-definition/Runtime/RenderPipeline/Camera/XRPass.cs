@@ -52,10 +52,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     {
         readonly List<XRView> views = new List<XRView>(2);
 
-        internal bool enabled { get => views.Count > 0; }
+        internal bool enabled      { get => views.Count > 0; }
         internal bool xrSdkEnabled { get; private set; }
 
-        internal int passId { get; private set; }
+        internal int passId         { get; private set; }
         internal int cullingPassId  { get; private set; }
 
         // Ability to specify where to render the pass
@@ -93,6 +93,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             passInfo.renderTargetDesc = default;
             passInfo.xrSdkEnabled = false;
             passInfo.tempRenderTexture = null;
+            passInfo.tempRenderTextureDesc = default;
 
             return passInfo;
         }

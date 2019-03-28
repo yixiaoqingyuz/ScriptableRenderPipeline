@@ -4,7 +4,7 @@ using UnityEngine;
 namespace UnityEditor.Rendering.LookDev
 {
     [System.Serializable]
-    public class LookDevCameraState
+    public class CameraState
     {
         private static readonly Quaternion kDefaultRotation = Quaternion.LookRotation(new Vector3(0.0f, 0.0f, 1.0f));
         private const float kDefaultViewSize = 10f;
@@ -13,22 +13,22 @@ namespace UnityEditor.Rendering.LookDev
         private static readonly float distanceCoef = 1f / Mathf.Tan(kDefaultFoV * 0.5f * Mathf.Deg2Rad);
 
         //Note: we need animation to do the same focus as in SceneView
-        [SerializeField] private AnimVector3 m_Pivot = new AnimVector3(kDefaultPivot);
-        [SerializeField] private AnimQuaternion m_Rotation = new AnimQuaternion(kDefaultRotation);
-        [SerializeField] private AnimFloat m_ViewSize = new AnimFloat(kDefaultViewSize);
+        public AnimVector3 pivot = new AnimVector3(kDefaultPivot);
+        public AnimQuaternion rotation = new AnimQuaternion(kDefaultRotation);
+        public AnimFloat viewSize = new AnimFloat(kDefaultViewSize);
 
-        public AnimVector3 pivot { get { return m_Pivot; } set { m_Pivot = value; } }
-        public AnimQuaternion rotation { get { return m_Rotation; } set { m_Rotation = value; } }
-        public AnimFloat viewSize { get { return m_ViewSize; } set { m_ViewSize = value; } }
-
-        public float cameraDistance => m_ViewSize.value * distanceCoef;
+        public float distanceFromPivot => viewSize.value * distanceCoef;
+        public Vector3 position
+            => pivot.value + rotation.value * new Vector3(0, 0, -distanceFromPivot);
+        public float fov => kDefaultFoV;
+        public float farClip => Mathf.Max(1000f, 2000f * viewSize.value);
 
         public void UpdateCamera(Camera camera)
         {
-            camera.transform.rotation = m_Rotation.value;
-            camera.transform.position = m_Pivot.value + camera.transform.rotation * new Vector3(0, 0, -cameraDistance);
+            camera.transform.rotation = rotation.value;
+            camera.transform.position = pivot.value + camera.transform.rotation * new Vector3(0, 0, -distanceFromPivot);
 
-            float farClip = Mathf.Max(1000f, 2000f * m_ViewSize.value);
+            float farClip = this.farClip;
             camera.nearClipPlane = farClip * 0.000005f;
             camera.farClipPlane = farClip;
         }

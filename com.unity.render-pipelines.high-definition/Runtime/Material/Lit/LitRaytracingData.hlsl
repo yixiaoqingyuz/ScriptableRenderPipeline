@@ -1,6 +1,6 @@
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/MaterialUtilities.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinUtilities.hlsl"
-#include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/Raytracing/Shaders/RaytracingBuiltinData.hlsl"
+#include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/Raytracing/Shaders/RaytracingCommon.hlsl"
 
 bool GetSurfaceDataFromIntersection(FragInputs input, float3 V, PositionInputs posInput, IntersectionVertice intersectionVertice, RayCone rayCone, out SurfaceData surfaceData, out BuiltinData builtinData)
 {
@@ -33,7 +33,7 @@ bool GetSurfaceDataFromIntersection(FragInputs input, float3 V, PositionInputs p
 #ifdef _MATERIAL_FEATURE_SPECULAR_COLOR
     surfaceData.materialFeatures |= MATERIALFEATUREFLAGS_LIT_SPECULAR_COLOR;
 #endif
-    
+
     // Generate the primary uv coordinates
     float2 uvBase = _UVMappingMask.x * input.texCoord0.xy +
                     _UVMappingMask.y * input.texCoord1.xy +
@@ -45,8 +45,9 @@ bool GetSurfaceDataFromIntersection(FragInputs input, float3 V, PositionInputs p
 
     // The base color of the object mixed with the base color texture
     #ifdef USE_RAY_CONE_LOD
-    float lod = computeTextureLOD(_BaseColorMap, _UVMappingMask, V, input.worldToTangent[2], rayCone, intersectionVertice);
+    float lod = computeTextureLOD(_BaseColorMap, _UVMappingMask, _BaseColorMap_ST.xy, V, input.worldToTangent[2], rayCone.width, intersectionVertice);
     surfaceData.baseColor = SAMPLE_TEXTURE2D_LOD(_BaseColorMap, sampler_BaseColorMap, uvBase, lod).rgb * _BaseColor.rgb;
+    //surfaceData.baseColor = HsvToRgb(float3(fmod(lod * 0.25, 1), 1, 1)); // DEBUG
     #else
     surfaceData.baseColor = SAMPLE_TEXTURE2D_LOD(_BaseColorMap, sampler_BaseColorMap, uvBase, 0).rgb * _BaseColor.rgb;
     #endif

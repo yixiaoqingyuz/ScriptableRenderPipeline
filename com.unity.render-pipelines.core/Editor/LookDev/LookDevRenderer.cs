@@ -1,14 +1,11 @@
+using System;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
 namespace UnityEditor.Rendering.LookDev
 {
-    public enum ViewIndex
-    {
-        FirstOrFull,
-        Second
-    };
-
     enum ViewCompositionIndex
     {
         First = ViewIndex.FirstOrFull,
@@ -16,143 +13,172 @@ namespace UnityEditor.Rendering.LookDev
         Composite
     };
 
-    class LookDevRenderTextureCache
+    class RenderTextureCache
     {
         RenderTexture[] m_RTs = new RenderTexture[3];
 
         public RenderTexture this[ViewCompositionIndex index]
             => m_RTs[(int)index];
-        
-        public void UpdateSize(Rect rect, ViewCompositionIndex index)
+
+        public void UpdateSize(Rect rect, ViewCompositionIndex index, bool pixelPerfect, Camera renderingCamera)
         {
-            int width = (int)rect.width;
-            int height = (int)rect.height;
+            float scaleFactor = GetScaleFactor(rect.width, rect.height, pixelPerfect);
+            int width = (int)(rect.width * scaleFactor);
+            int height = (int)(rect.height * scaleFactor);
             if (m_RTs[(int)index] == null
                 || width != m_RTs[(int)index].width
                 || height != m_RTs[(int)index].height)
+            {
+                if (m_RTs[(int)index] != null)
+                    UnityEngine.Object.DestroyImmediate(m_RTs[(int)index]);
+                
+                // Do not use GetTemporary to manage render textures. Temporary RTs are only
+                // garbage collected each N frames, and in the editor we might be wildly resizing
+                // the inspector, thus using up tons of memory.
+                //GraphicsFormat format = camera.allowHDR ? GraphicsFormat.R16G16B16A16_SFloat : GraphicsFormat.R8G8B8A8_UNorm;
+                //m_RenderTexture = new RenderTexture(rtWidth, rtHeight, 16, format);
+                //m_RenderTexture.hideFlags = HideFlags.HideAndDontSave;
+                //TODO: check format
                 m_RTs[(int)index] = new RenderTexture(
                     width, height, 0,
-                    RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+                    RenderTextureFormat.ARGBHalf, RenderTextureReadWrite.Default);
+                m_RTs[(int)index].hideFlags = HideFlags.HideAndDontSave;
+                m_RTs[(int)index].name = "LookDevTexture";
+                m_RTs[(int)index].Create();
+
+                renderingCamera.targetTexture = m_RTs[(int)index];
+            }
+        }
+        
+        float GetScaleFactor(float width, float height, bool pixelPerfect)
+        {
+            float scaleFacX = Mathf.Max(Mathf.Min(width * 2, 1024), width) / width;
+            float scaleFacY = Mathf.Max(Mathf.Min(height * 2, 1024), height) / height;
+            float result = Mathf.Min(scaleFacX, scaleFacY) * EditorGUIUtility.pixelsPerPoint;
+            if (pixelPerfect)
+                result = Mathf.Max(Mathf.Round(result), 1f);
+            return result;
         }
     }
 
-    public class SceneContent
+    //TODO: for automatising environment change
+    // if Unsupported.SetOverrideRenderSettings
+    // do not behave as expected (see Stage)
+    struct EnvironmentScope : IDisposable
     {
-        //TODO: list?
-        public GameObject contentObject { get; set; }
-
-        //TODO: lights
-    }
-
-    public class LookDevContent
-    {
-        SceneContent[] m_SCs = new SceneContent[2]
+        public EnvironmentScope(bool b)
         {
-            new SceneContent(),
-            new SceneContent()
-        };
+        }
 
-        public SceneContent this[ViewIndex index]
-            => m_SCs[(int)index];
+        void IDisposable.Dispose()
+        {
+        }
     }
+
 
     /// <summary>
     /// Rendering logic
+    /// TODO: extract SceneLogic elsewhere
     /// </summary>
-    internal class LookDevRenderer
+    internal class Renderer : IDisposable
     {
-        ILookDevDisplayer displayer;
-        LookDevContext context;
-        LookDevContent content;
-        LookDevRenderTextureCache m_RenderTextures = new LookDevRenderTextureCache();
-        PreviewRenderUtility previewUtility;
+        IDisplayer m_Displayer;
+        Context m_Contexts;
+        RenderTextureCache m_RenderTextures = new RenderTextureCache();
+        //TODO: add a second stage
+        Stage m_Stage;
 
-        public LookDevRenderer(
-            ILookDevDisplayer displayer,
-            LookDevContext context,
-            LookDevContent content)
+        Color m_AmbientColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+        bool m_PixelPerfect;
+
+        public Renderer(
+            IDisplayer displayer,
+            Context contexts)
         {
-            this.displayer = displayer;
-            this.context = context;
-            this.content = content;
+            this.m_Displayer = displayer;
+            this.m_Contexts = contexts;
 
-            previewUtility = new PreviewRenderUtility();
+            //TODO: add a second stage
+            m_Stage = new Stage("LookDevViewA");
 
             EditorApplication.update += Render;
         }
 
-        bool cleaned = false;
-        internal void CleanUp()
+        void CleanUp()
+            => EditorApplication.update -= Render;
+        public void Dispose()
         {
-            if (!cleaned)
-            {
-                cleaned = true;
-                EditorApplication.update -= Render;
-                previewUtility.Cleanup();
-            }
+            CleanUp();
+            GC.SuppressFinalize(this);
         }
-        ~LookDevRenderer() => CleanUp();
+        ~Renderer() => CleanUp();
+
+
+        public void UpdateScene()
+        {
+            m_Stage.Clear();
+            var viewContent = m_Contexts.GetViewContent(ViewIndex.FirstOrFull);
+            if (viewContent == null)
+            {
+                viewContent.prefabInstanceInPreview = null;
+                return;
+            }
+
+            if (viewContent.contentPrefab != null && !viewContent.contentPrefab.Equals(null))
+                viewContent.prefabInstanceInPreview = m_Stage.InstantiateInStage(viewContent.contentPrefab);
+        }
 
         public void Render()
         {
-            //if (Event.current.type == EventType.Repaint)
-            //{
-            //    if (m_LookDevConfig.rotateObjectMode)
-            //        m_ObjRotationAcc = Math.Min(m_ObjRotationAcc + Time.deltaTime * 0.5f, 1.0f);
-            //    else
-            //        // Do brutal stop because weoften want to stop at a particular position
-            //        m_ObjRotationAcc = 0.0f; // Math.Max(m_ObjRotationAcc - Time.deltaTime * 0.5f, 0.0f);
-
-            //    if (m_LookDevConfig.rotateEnvMode)
-            //        m_EnvRotationAcc = Math.Min(m_EnvRotationAcc + Time.deltaTime * 0.5f, 1.0f);
-            //    else
-            //        // Do brutal stop because weoften want to stop at a particular position
-            //        m_EnvRotationAcc = 0.0f; // Math.Max(m_EnvRotationAcc - Time.deltaTime * 0.5f, 0.0f);
-
-            //    // Handle objects/env rotation
-            //    // speed control (in degree) - Time.deltaTime is in seconds
-            //    m_CurrentObjRotationOffset = (m_CurrentObjRotationOffset + Time.deltaTime * 360.0f * 0.3f * m_LookDevConfig.objRotationSpeed * m_ObjRotationAcc) % 360.0f;
-            //    m_LookDevConfig.lookDevContexts[0].envRotation = (m_LookDevConfig.lookDevContexts[0].envRotation + Time.deltaTime * 360.0f * 0.03f * m_LookDevConfig.envRotationSpeed * m_EnvRotationAcc) % 720.0f; // 720 to match GUI
-            //    m_LookDevConfig.lookDevContexts[1].envRotation = (m_LookDevConfig.lookDevContexts[1].envRotation + Time.deltaTime * 360.0f * 0.03f * m_LookDevConfig.envRotationSpeed * m_EnvRotationAcc) % 720.0f; // 720 to match GUI
-
-                switch (context.layout.viewLayout)
-                {
-                    case LayoutContext.Layout.FullA:
-                    RenderSingle(ViewCompositionIndex.First);
+            switch (m_Contexts.layout.viewLayout)
+            {
+                case Layout.FullA:
+                    RenderSingle(ViewIndex.FirstOrFull);
                     break;
-                case LayoutContext.Layout.FullB:
-                    RenderSingle(ViewCompositionIndex.Second);
+                case Layout.FullB:
+                    RenderSingle(ViewIndex.Second);
                     break;
-                    case LayoutContext.Layout.HorizontalSplit:
-                    case LayoutContext.Layout.VerticalSplit:
-                        RenderSideBySide();
-                        break;
-                    case LayoutContext.Layout.CustomSplit:
-                    case LayoutContext.Layout.CustomCircular:
-                        RenderDualView();
-                        break;
-                }
-            //}
+                case Layout.HorizontalSplit:
+                case Layout.VerticalSplit:
+                    RenderSideBySide();
+                    break;
+                case Layout.CustomSplit:
+                case Layout.CustomCircular:
+                    RenderDualView();
+                    break;
+            }
         }
 
         bool IsNullArea(Rect r)
             => r.width == 0 || r.height == 0
             || float.IsNaN(r.width) || float.IsNaN(r.height);
 
-        void RenderSingle(ViewCompositionIndex index)
+        void RenderSingle(ViewIndex index)
         {
-            Rect rect = displayer.GetRect((ViewIndex)index);
+            Rect rect = m_Displayer.GetRect(index);
             if (IsNullArea(rect))
                 return;
 
-            m_RenderTextures.UpdateSize(rect, index);
-
+            var cameraState = m_Contexts.GetCameraState(index);
+            var viewContext = m_Contexts.GetViewContent(index);
+            
             var texture = RenderScene(
                 rect,
-                //context,
-                content[(ViewIndex)index].contentObject);
+                cameraState,
+                (ViewCompositionIndex)index);
 
-            displayer.SetTexture((ViewIndex)index, texture);
+            //Texture2D myTexture2D = new Texture2D(texture.width, texture.height);
+            //RenderTexture.active = texture;
+            //myTexture2D.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
+            //myTexture2D.Apply();
+            //var bytes = myTexture2D.EncodeToPNG();
+            //System.IO.File.WriteAllBytes(Application.dataPath + "/../SavedScreen.png", bytes);
+           
+            //Graphics.SetRenderTarget(texture);
+            //GL.Clear(false, true, Color.cyan);
+            m_Displayer.SetTexture(ViewIndex.FirstOrFull, texture);
+            //m_Displayer.SetTexture(ViewIndex.FirstOrFull, Texture2D.whiteTexture);
+            //m_Displayer.SetTexture(ViewIndex.FirstOrFull, myTexture2D);
         }
 
         void RenderSideBySide()
@@ -165,43 +191,58 @@ namespace UnityEditor.Rendering.LookDev
 
         }
 
-        private Texture RenderScene(Rect previewRect, GameObject currentObject)
+        RenderTexture RenderScene(Rect previewRect, CameraState cameraState, ViewCompositionIndex index)
         {
-            previewUtility.BeginPreview(previewRect, "IN BigTitle inner");
+            BeginPreview(previewRect, index);
             
-            previewUtility.camera.renderingPath = RenderingPath.DeferredShading;
-            previewUtility.camera.backgroundColor = Color.black;
-            previewUtility.camera.allowHDR = true;
+            m_Stage.camera.transform.position = cameraState.position;
+            m_Stage.camera.transform.rotation = cameraState.rotation.value;
+            m_Stage.camera.fieldOfView = cameraState.fov;
+            m_Stage.camera.nearClipPlane = 2.0f; // must be >0
+            m_Stage.camera.farClipPlane = cameraState.farClip;
+            m_Stage.camera.aspect = previewRect.width / previewRect.height;
 
-            //for (int lightIndex = 0; lightIndex < 2; lightIndex++)
-            //{
-            //    previewUtility.lights[lightIndex].enabled = false;
-            //    previewUtility.lights[lightIndex].intensity = 0.0f;
-            //    previewUtility.lights[lightIndex].shadows = LightShadows.None;
-            //}
-            
-            //previewUtility.ambientColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
 
-            //RenderSettings.ambientIntensity = 1.0f; // fix this to 1, this parameter should not exist!
-            //RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Skybox; // Force skybox for our HDRI
-            //RenderSettings.reflectionIntensity = 1.0f;
-            
-            if (currentObject != null)
-            {
-                foreach (Renderer renderer in currentObject.GetComponentsInChildren<Renderer>())
-                    renderer.enabled = true;
-            }
+            m_Stage.camera.enabled = true;
+            var oldAllowPipes = Unsupported.useScriptableRenderPipeline;
+            Unsupported.useScriptableRenderPipeline = true;
+            m_Stage.camera.Render();
+            Unsupported.useScriptableRenderPipeline = oldAllowPipes;
+            m_Stage.camera.enabled = false;
 
-            previewUtility.Render(true, false);
-
-            if (currentObject != null)
-            {
-                foreach (Renderer renderer in currentObject.GetComponentsInChildren<Renderer>())
-                    renderer.enabled = false;
-            }
-
-            return previewUtility.EndPreview();
+            return EndPreview(index);
         }
 
+        void BeginPreview(Rect rect, ViewCompositionIndex index)
+        {
+            if (index != ViewCompositionIndex.Composite)
+                //TODO: handle multi-stage
+                m_Stage.SetGameObjectVisible(true);
+
+            //TODO: handle multi-stage
+            m_RenderTextures.UpdateSize(rect, index, m_PixelPerfect, m_Stage.camera);
+
+            //TODO: check scissor
+            //TODO: check default (without style) clear
+            //m_SavedState = new SavedRenderTargetState();
+            //EditorGUIUtility.SetRenderTextureNoViewport(m_RenderTexture);
+            //GL.LoadOrtho();
+            //GL.LoadPixelMatrix(0, m_RenderTexture.width, m_RenderTexture.height, 0);
+            //ShaderUtil.rawViewportRect = new Rect(0, 0, m_RenderTexture.width, m_RenderTexture.height);
+            //ShaderUtil.rawScissorRect = new Rect(0, 0, m_RenderTexture.width, m_RenderTexture.height);
+            //GL.Clear(true, true, camera.backgroundColor);
+        }
+
+        RenderTexture EndPreview(ViewCompositionIndex index)
+        {
+
+            if (index != ViewCompositionIndex.Composite)
+                //TODO: handle multi-stage
+                m_Stage.SetGameObjectVisible(false);
+
+            //m_SavedState.Restore();
+
+            return m_RenderTextures[index];
+        }
     }
 }

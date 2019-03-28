@@ -704,6 +704,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
+        // XRTODO: this function should not rely on camera.pixelWidth and camera.pixelHeight
         Matrix4x4 GetJitteredProjectionMatrix(Matrix4x4 origProj)
         {
             // The variance between 0 and the actual halton sequence values reveals noticeable

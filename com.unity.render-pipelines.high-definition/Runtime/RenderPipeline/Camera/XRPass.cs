@@ -50,7 +50,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
     public class XRPass
     {
-        private readonly List<XRView> views = new List<XRView>(2);
+        readonly List<XRView> views = new List<XRView>(2);
 
         internal bool enabled { get => views.Count > 0; }
         internal bool xrSdkEnabled { get; private set; }
@@ -76,6 +76,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // XRTODO(2019.3) : remove once XRE-445 is done
         // We need an intermediate target to render the mirror view
         public RenderTexture tempRenderTexture { get; private set; } = null;
+        RenderTextureDescriptor tempRenderTextureDesc;
 
         // Legacy multipass support
         internal int  legacyMultipassEye      { get => (int)views[0].legacyStereoEye; }
@@ -117,20 +118,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             // XRTODO(2019.3) : remove once XRE-445 is done
             {
-                // Local function to check if 2 descriptors are similar.
-                // Note: we can't use the base Equals because the flags are different (CreatedFromScript)
-                bool Equals(RenderTextureDescriptor descA, RenderTextureDescriptor descB)
-                {
-                    return descA.width == descB.width && descA.height == descB.height && descA.colorFormat == descB.colorFormat;
-                }
-
-                if (passInfo.tempRenderTexture == null || !Equals(passInfo.tempRenderTexture.descriptor, xrRenderPass.renderTargetDesc))
+                // Avoid allocating every frame by reusing the same RT unless the configuration changed
+                if (passInfo.tempRenderTexture == null || !Equals(passInfo.tempRenderTextureDesc, xrRenderPass.renderTargetDesc))
                 {
                     if (passInfo.tempRenderTexture != null)
                         passInfo.tempRenderTexture.Release();
 
                     passInfo.tempRenderTexture = new RenderTexture(xrRenderPass.renderTargetDesc);
                     passInfo.tempRenderTexture.Create();
+
+                    // Store the original descriptor because the one from the RT has the flag 'CreatedFromScript' and would fail the Equals()
+                    passInfo.tempRenderTextureDesc = xrRenderPass.renderTargetDesc;
                 }
             }
 
@@ -154,7 +152,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             GenericPool<XRPass>.Release(xrPass);
         }
 
-        private void AddViewInternal(XRView xrView)
+        void AddViewInternal(XRView xrView)
         {
             views.Add(xrView);
 

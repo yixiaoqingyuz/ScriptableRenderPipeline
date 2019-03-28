@@ -150,7 +150,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             passList.Clear();
         }
 
-        private void AddPassToFrame(XRPass pass, Camera camera, ref List<MultipassCamera> multipassCameras)
+        void AddPassToFrame(XRPass pass, Camera camera, ref List<MultipassCamera> multipassCameras)
         {
             int passIndex = passList.Count;
             passList.Add(pass);
@@ -158,7 +158,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
 #if USE_XR_SDK
-        private bool CanUseInstancing(Camera camera, XRDisplaySubsystem.XRRenderPass renderPass)
+        bool CanUseInstancing(Camera camera, XRDisplaySubsystem.XRRenderPass renderPass)
         {
             // XRTODO: instanced views support with XR SDK
             return false;

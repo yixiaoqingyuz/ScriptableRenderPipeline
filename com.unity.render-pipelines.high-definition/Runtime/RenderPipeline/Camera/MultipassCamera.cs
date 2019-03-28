@@ -10,9 +10,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public readonly Camera camera;
         public readonly XRPass pass;
 
-        private readonly int cachedHashCode;
+        readonly int cachedHashCode;
 
-        public MultipassCamera(Camera camera, XRPass pass = null)
+        public MultipassCamera(Camera camera, XRPass pass)
         {
             this.camera = camera;
             this.pass = pass;
@@ -21,11 +21,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public static bool operator ==(MultipassCamera x, MultipassCamera y) => x.cachedHashCode == y.cachedHashCode;
         public static bool operator !=(MultipassCamera x, MultipassCamera y) => x.cachedHashCode != y.cachedHashCode;
-        public override bool Equals(object obj) => obj is MultipassCamera && ((MultipassCamera)obj).cachedHashCode == cachedHashCode;
         public bool Equals(MultipassCamera other) => cachedHashCode == other.cachedHashCode;
+        public override bool Equals(object obj) => obj is MultipassCamera && ((MultipassCamera)obj).cachedHashCode == cachedHashCode;
         public override int GetHashCode() => cachedHashCode;
 
-        private static int ComputeHashCode(Camera camera, XRPass pass)
+        static int ComputeHashCode(Camera camera, XRPass pass)
         {
             int hash = 13;
 

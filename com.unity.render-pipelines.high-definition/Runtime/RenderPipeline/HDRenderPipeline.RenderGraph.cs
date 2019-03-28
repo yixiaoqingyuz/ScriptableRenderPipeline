@@ -30,10 +30,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 msaaSamples = m_MSAASamples
             };
 
+            //// Caution: We require sun light here as some skies use the sun light to render, it means that UpdateSkyEnvironment must be called after PrepareLightsForGPU.
+            //// TODO: Try to arrange code so we can trigger this call earlier and use async compute here to run sky convolution during other passes (once we move convolution shader to compute).
+            //UpdateSkyEnvironment(hdCamera, cmd);
+
             m_RenderGraph.Execute(renderContext, cmd, renderGraphParams);
         }
 
-        static void DrawRendererList(RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
+        protected static void DrawRendererList(RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
         {
             if (!rendererList.isValid)
                 throw new ArgumentException("Invalid renderer list provided to DrawOpaqueRendererList");
@@ -51,7 +55,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        static void DrawOpaqueRendererList(in FrameSettings frameSettings, RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
+        protected static void DrawOpaqueRendererList(in FrameSettings frameSettings, RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
         {
             if (!frameSettings.IsEnabled(FrameSettingsField.OpaqueObjects))
                 return;
@@ -59,7 +63,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             DrawRendererList(rendererList, renderContext, cmd);
         }
 
-        static void DrawTransparentRendererList(in FrameSettings frameSettings, RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
+        protected static void DrawTransparentRendererList(in FrameSettings frameSettings, RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
         {
             if (!frameSettings.IsEnabled(FrameSettingsField.TransparentObjects))
                 return;
@@ -67,7 +71,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             DrawRendererList(rendererList, renderContext, cmd);
         }
 
-        static int SampleCountToPassIndex(MSAASamples samples)
+        protected static int SampleCountToPassIndex(MSAASamples samples)
         {
             switch (samples)
             {
@@ -84,13 +88,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
         // XR Specific
-        class StereoRenderingPassData : RenderPassData
+        protected class StereoRenderingPassData : RenderPassData
         {
             public Camera camera;
         }
 
-
-        void StartStereoRendering(RenderGraph renderGraph, Camera camera)
+        protected void StartStereoRendering(RenderGraph renderGraph, Camera camera)
         {
             if (camera.stereoEnabled)
             {
@@ -112,7 +115,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        void StopStereoRendering(RenderGraph renderGraph, Camera camera)
+        protected void StopStereoRendering(RenderGraph renderGraph, Camera camera)
         {
             if (camera.stereoEnabled)
             {

@@ -7,20 +7,20 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
     public partial class HDRenderPipeline
     {
-        enum MipLevel { Original, L1, L2, L3, L4, L5, L6, Count }
+        protected enum MipLevel { Original, L1, L2, L3, L4, L5, L6, Count }
 
-        RenderPipelineResources m_Resources;
-        ScaleFunc[] m_ScaleFunctors;
+        protected RenderPipelineResources m_Resources;
+        protected ScaleFunc[] m_ScaleFunctors;
 
         // MSAA-specific
-        Material m_ResolveMaterial;
+        protected Material m_ResolveMaterial;
 
 #if ENABLE_RAYTRACING
         public HDRaytracingManager m_RayTracingManager = new HDRaytracingManager();
         readonly HDRaytracingAmbientOcclusion m_RaytracingAmbientOcclusion = new HDRaytracingAmbientOcclusion();
 #endif
 
-        public void InitializeAmbientOcclusion(HDRenderPipelineAsset hdAsset)
+        protected virtual void InitializeAmbientOcclusion(HDRenderPipelineAsset hdAsset)
         {
             if (!hdAsset.currentPlatformRenderPipelineSettings.supportSSAO)
                 return;
@@ -50,7 +50,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        public void CleanupAmbientOcclusion()
+        protected virtual void CleanupAmbientOcclusion()
         {
 #if ENABLE_RAYTRACING
             m_RaytracingAmbientOcclusion.Release();
@@ -67,9 +67,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 #endif
 
-        public bool IsActive(HDCamera camera, AmbientOcclusion settings) => camera.frameSettings.IsEnabled(FrameSettingsField.SSAO) && settings.intensity.value > 0f;
+        bool IsActive(HDCamera camera, AmbientOcclusion settings) => camera.frameSettings.IsEnabled(FrameSettingsField.SSAO) && settings.intensity.value > 0f;
 
-        public RenderGraphResource RenderAmbientOcclusion(RenderGraph renderGraph, HDCamera camera, RenderGraphResource inputDepth, uint frameCount)
+        protected virtual RenderGraphResource RenderAmbientOcclusion(RenderGraph renderGraph, HDCamera camera, RenderGraphResource inputDepth, uint frameCount)
         {
             // Grab current settings
             var settings = VolumeManager.instance.stack.GetComponent<AmbientOcclusion>();
@@ -92,7 +92,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return result;
         }
 
-        class AOPassData : RenderPassData
+        protected class AOPassData : RenderPassData
         {
             public Vector2 viewport;
             public bool msaaEnabled;
@@ -126,7 +126,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public RenderGraphMutableResource combinedTex3;
         }
 
-        void CreateTransientResources(RenderGraphBuilder builder, AOPassData passData, bool supportMSAA)
+        protected virtual void CreateTransientResources(RenderGraphBuilder builder, AOPassData passData, bool supportMSAA)
         {
             RenderGraphMutableResource Alloc(TextureDimension dim, int slices, MipLevel size, GraphicsFormat format, bool uav, string name)
             {
@@ -161,14 +161,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             passData.combinedTex3 = Alloc(TextureDimension.Tex2D, 1, MipLevel.L3, fmtFX8, true, "AOCombined3");
         }
 
-        RenderGraphMutableResource CreateOutputAOTexture(RenderGraphBuilder builder, bool msaa)
+        protected RenderGraphMutableResource CreateOutputAOTexture(RenderGraphBuilder builder, bool msaa)
         {
             GraphicsFormat format = msaa ? GraphicsFormat.R8G8_UNorm : GraphicsFormat.R8_UNorm;
             string name = msaa ? "Ambient Occlusion MSAA" : "Ambient Occlusion";
             return builder.CreateTexture(new TextureDesc(Vector2.one) { filterMode = FilterMode.Bilinear, colorFormat = format, enableRandomWrite = true, xrInstancing = true, useDynamicScale = true, name = name });
         }
 
-        unsafe RenderGraphResource RenderAmbientOcclusion(RenderGraph renderGraph, HDCamera camera, RenderGraphResource inputDepth, AmbientOcclusion settings)
+        protected virtual unsafe RenderGraphResource RenderAmbientOcclusion(RenderGraph renderGraph, HDCamera camera, RenderGraphResource inputDepth, AmbientOcclusion settings)
         {
             using (var builder = renderGraph.AddRenderPass<AOPassData>("Render SSAO", out var renderPassData, CustomSamplerId.RenderSSAO.GetSampler()))
             {
@@ -323,7 +323,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 sampleWeightTable[i] /= totalWeight;
         }
 
-        static unsafe void PushDownsampleCommands(CommandBuffer cmd, AOPassData data, RenderGraphResourceRegistry resources, int* widths, int* heights)
+        protected static unsafe void PushDownsampleCommands(CommandBuffer cmd, AOPassData data, RenderGraphResourceRegistry resources, int* widths, int* heights)
         {
             var kernelName = data.msaaEnabled ? "KMain_MSAA" : "KMain";
 
@@ -353,7 +353,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.DispatchCompute(cs, kernel, widths[(int)MipLevel.L6], heights[(int)MipLevel.L6], XRGraphics.computePassCount);
         }
 
-        static void PushRenderCommands(CommandBuffer cmd, AOPassData data, RTHandle source, RTHandle destination, in Vector3 sourceSize, float[] sampleWeightTable, float[] sampleThickness, float[] invThicknessTable)
+        protected static void PushRenderCommands(CommandBuffer cmd, AOPassData data, RTHandle source, RTHandle destination, in Vector3 sourceSize, float[] sampleWeightTable, float[] sampleThickness, float[] invThicknessTable)
         {
             InitializeSamplingData(sampleWeightTable, sampleThickness, invThicknessTable, sourceSize, data.tanHalfFoVHeight);
 
@@ -379,7 +379,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             );
         }
 
-        static void PushUpsampleCommands(CommandBuffer cmd, AOPassData passData, RTHandle lowResDepth, RTHandle interleavedAO, RTHandle highResDepth, RTHandle highResAO, RTHandle dest, in Vector3 lowResDepthSize, in Vector2 highResDepthSize)
+        protected static void PushUpsampleCommands(CommandBuffer cmd, AOPassData passData, RTHandle lowResDepth, RTHandle interleavedAO, RTHandle highResDepth, RTHandle highResAO, RTHandle dest, in Vector3 lowResDepthSize, in Vector2 highResDepthSize)
         {
             var cs = passData.upSampleCS;
             int kernel = passData.msaaEnabled
@@ -410,7 +410,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.DispatchCompute(cs, kernel, xcount, ycount, XRGraphics.computePassCount);
         }
 
-        class AOPostPassData : RenderPassData
+        protected class AOPostPassData : RenderPassData
         {
             public bool enableMSAA;
             public bool isActive; // Temporary
@@ -423,7 +423,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public Material resolveMaterial;
         }
 
-        public RenderGraphResource ResolveAmbientOcclusion(RenderGraph renderGraph, HDCamera camera, RenderGraphResource inputDepth, RenderGraphResource inputAO)
+        protected virtual RenderGraphResource ResolveAmbientOcclusion(RenderGraph renderGraph, HDCamera camera, RenderGraphResource inputDepth, RenderGraphResource inputAO)
         {
             using (var builder = renderGraph.AddRenderPass<AOPostPassData>("MSAA Resolve AO Buffer", out var renderPassData, CustomSamplerId.ResolveSSAO.GetSampler()))
             {

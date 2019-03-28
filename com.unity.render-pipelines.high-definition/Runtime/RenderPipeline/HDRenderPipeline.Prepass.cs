@@ -6,23 +6,25 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
     public partial class HDRenderPipeline
     {
-        public void InitializePrepass(HDRenderPipelineAsset hdAsset)
+        protected Material m_DepthResolveMaterial = null;
+
+        protected virtual void InitializePrepass(HDRenderPipelineAsset hdAsset)
         {
             m_DepthResolveMaterial = CoreUtils.CreateEngineMaterial(asset.renderPipelineResources.shaders.depthValuesPS);
         }
 
-        public void CleanupPrepass()
+        protected virtual void CleanupPrepass()
         {
             CoreUtils.Destroy(m_DepthResolveMaterial);
         }
 
-        struct PrepassOutput
+        protected struct PrepassOutput
         {
             public GBufferOutput       gbuffer;
             public RenderGraphResource depthValuesMSAA;
         }
 
-        PrepassOutput RenderPrepass(RenderGraph renderGraph, CullingResults cullingResults, HDCamera hdCamera)
+        protected virtual PrepassOutput RenderPrepass(RenderGraph renderGraph, CullingResults cullingResults, HDCamera hdCamera)
         {
             var result = new PrepassOutput();
 
@@ -66,7 +68,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return result;
         }
 
-        class DepthPrepassData : RenderPassData
+        protected class DepthPrepassData : RenderPassData
         {
             public FrameSettings frameSettings;
             public bool msaaEnabled;
@@ -84,7 +86,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // Lit Deferred: We always render depth prepass for alpha tested (optimization), other deferred material are render based on engine configuration.
         // Forward opaque with deferred renderer (DepthForwardOnly pass): We always render all materials
         // True is returned if motion vector must be rendered after GBuffer pass
-        bool RenderDepthPrepass(RenderGraph renderGraph, CullingResults cull, HDCamera hdCamera)
+        protected virtual bool RenderDepthPrepass(RenderGraph renderGraph, CullingResults cull, HDCamera hdCamera)
         {
             // Guidelines:
             // Lit shader can be in deferred or forward mode. In this case we use "DepthOnly" pass with "GBuffer" or "Forward" pass name
@@ -213,7 +215,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return shouldRenderMotionVectorAfterGBuffer;
         }
 
-        class ObjectVelocityPassData : RenderPassData
+        protected class ObjectVelocityPassData : RenderPassData
         {
             public FrameSettings                frameSettings;
             public RenderGraphMutableResource   depthBuffer;
@@ -223,7 +225,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public RenderGraphResource          rendererList;
         }
 
-        void RenderObjectsVelocityPass(RenderGraph renderGraph, CullingResults cull, HDCamera hdCamera)
+        protected virtual void RenderObjectsVelocityPass(RenderGraph renderGraph, CullingResults cull, HDCamera hdCamera)
         {
             if (!hdCamera.frameSettings.IsEnabled(FrameSettingsField.ObjectMotionVectors))
                 return;
@@ -256,7 +258,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        class GBufferPassData : RenderPassData
+        protected class GBufferPassData : RenderPassData
         {
             public FrameSettings                frameSettings;
             public RenderGraphResource          rendererList;
@@ -264,12 +266,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public RenderGraphMutableResource   depthBuffer;
         }
 
-        struct GBufferOutput
+        protected struct GBufferOutput
         {
             public RenderGraphResource[] gbuffer;
         }
 
-        void SetupGBufferTargets(GBufferPassData passData, ref GBufferOutput output, FrameSettings frameSettings, RenderGraphBuilder builder)
+        protected void SetupGBufferTargets(GBufferPassData passData, ref GBufferOutput output, FrameSettings frameSettings, RenderGraphBuilder builder)
         {
             bool clearGBuffer = NeedClearGBuffer();
             bool lightLayers = frameSettings.IsEnabled(FrameSettingsField.LightLayers);
@@ -305,7 +307,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // RenderGBuffer do the gbuffer pass. This is only called with deferred. If we use a depth prepass, then the depth prepass will perform the alpha testing for opaque alpha tested and we don't need to do it anymore
         // during Gbuffer pass. This is handled in the shader and the depth test (equal and no depth write) is done here.
-        GBufferOutput RenderGBuffer(RenderGraph renderGraph, CullingResults cull, HDCamera hdCamera)
+        protected virtual GBufferOutput RenderGBuffer(RenderGraph renderGraph, CullingResults cull, HDCamera hdCamera)
         {
             var output = new GBufferOutput();
 
@@ -337,7 +339,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return output;
         }
 
-        class ResolvePrepassData : RenderPassData
+        protected class ResolvePrepassData : RenderPassData
         {
             public RenderGraphMutableResource   depthBuffer;
             public RenderGraphMutableResource   depthValuesBuffer;
@@ -348,7 +350,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public int                          depthResolvePassIndex;
         }
 
-        RenderGraphResource ResolvePrepassBuffers(RenderGraph renderGraph, HDCamera hdCamera)
+        protected virtual RenderGraphResource ResolvePrepassBuffers(RenderGraph renderGraph, HDCamera hdCamera)
         {
             if (!hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA))
                 return new RenderGraphResource();
@@ -380,7 +382,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        class CopyDepthPassData : RenderPassData
+        protected class CopyDepthPassData : RenderPassData
         {
             public RenderGraphResource          inputDepth;
             public RenderGraphMutableResource   outputDepth;
@@ -389,7 +391,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public int                          height;
         }
 
-        void CopyDepthBufferIfNeeded(RenderGraph renderGraph, HDCamera hdCamera)
+        protected void CopyDepthBufferIfNeeded(RenderGraph renderGraph, HDCamera hdCamera)
         {
             if (!m_IsDepthBufferCopyValid)
             {
@@ -422,13 +424,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        class GenerateDepthPyramidPassData : RenderPassData
+        protected class GenerateDepthPyramidPassData : RenderPassData
         {
             public RenderGraphMutableResource depthTexture;
             public HDUtils.PackedMipChainInfo mipInfo;
         }
 
-        void GenerateDepthPyramid(RenderGraph renderGraph, HDCamera hdCamera, FullScreenDebugMode debugMode)
+        protected virtual void GenerateDepthPyramid(RenderGraph renderGraph, HDCamera hdCamera, FullScreenDebugMode debugMode)
         {
             // If the depth buffer hasn't been already copied by the decal pass, then we do the copy here.
             CopyDepthBufferIfNeeded(renderGraph, hdCamera);
@@ -459,14 +461,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             //PushFullScreenDebugTextureMip(hdCamera, cmd, m_SharedRTManager.GetDepthTexture(), mipCount, m_PyramidScale, debugMode);
         }
 
-        class CameraVelocityPassData : RenderPassData
+        protected class CameraVelocityPassData : RenderPassData
         {
             public Material cameraMotionVectorMaterial;
             public RenderGraphMutableResource velocityBuffer;
             public RenderGraphMutableResource depthBuffer;
         }
 
-        void RenderCameraVelocity(RenderGraph renderGraph, HDCamera hdCamera)
+        protected virtual void RenderCameraVelocity(RenderGraph renderGraph, HDCamera hdCamera)
         {
             if (!hdCamera.frameSettings.IsEnabled(FrameSettingsField.MotionVectors))
                 return;

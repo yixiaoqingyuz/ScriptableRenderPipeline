@@ -738,8 +738,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             var historyScale = new Vector2(camera.actualWidth / (float)prevHistory.rt.width, camera.actualHeight / (float)prevHistory.rt.height);
 
-            m_TemporalAAMaterial.SetInt(HDShaderIDs._StencilMask, (int)HDRenderPipeline.StencilBitMask.ReducedTAAHistory);
-            m_TemporalAAMaterial.SetInt(HDShaderIDs._StencilRef, (int)HDRenderPipeline.StencilBitMask.ReducedTAAHistory);
+            m_TemporalAAMaterial.SetInt(HDShaderIDs._StencilMask, (int)HDRenderPipeline.StencilBitMask.ExcludeFromTAA);
+            m_TemporalAAMaterial.SetInt(HDShaderIDs._StencilRef, (int)HDRenderPipeline.StencilBitMask.ExcludeFromTAA);
             m_TemporalAAMaterial.SetVector(HDShaderIDs._ScreenToTargetScaleHistory, historyScale);
             m_TemporalAAMaterial.SetTexture(HDShaderIDs._InputTexture, source);
             m_TemporalAAMaterial.SetTexture(HDShaderIDs._InputHistoryTexture, prevHistory);

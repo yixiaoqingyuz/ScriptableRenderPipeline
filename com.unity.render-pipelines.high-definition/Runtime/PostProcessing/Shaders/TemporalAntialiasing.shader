@@ -196,6 +196,7 @@ Shader "Hidden/HDRP/TemporalAntialiasing"
             float2 uv = input.texcoord - jitter;
 
             float3 color = Fetch(_InputTexture, uv, 0.0, _ScreenToTargetScale.xy);
+
             outColor = color;
             outColorHistory = color;
         }
@@ -212,9 +213,7 @@ Shader "Hidden/HDRP/TemporalAntialiasing"
             {
                 ReadMask [_StencilMask]
                 Ref [_StencilRef]
-              //  Comp Never
-
-                Comp Always
+                Comp NotEqual
                 Pass Keep
             }
 
@@ -227,15 +226,14 @@ Shader "Hidden/HDRP/TemporalAntialiasing"
         }
 
         // Excluded from TAA
-        // Note: This is a straightup passthrough now, but it would be interesting instead to try to reduce 
+        // Note: This is a straightup passthrough now, but it would be interesting instead to try to reduce history influence instead.
         Pass
         {
             Stencil
             {
                 ReadMask [_StencilMask]
                 Ref [_StencilRef]
-                Comp Never
-         //    Comp Always
+                Comp Equal
                 Pass Keep
             }
 

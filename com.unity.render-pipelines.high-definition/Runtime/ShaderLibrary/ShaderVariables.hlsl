@@ -143,7 +143,10 @@ CBUFFER_START(UnityGlobal)
     float  _Pad1;
 #endif
     float4 _ScreenSize;                 // { w, h, 1 / w, 1 / h }
+
+    // Those two uniforms are specific to the RTHandle system
     float4 _ScreenToTargetScale;        // { w / RTHandle.maxWidth, h / RTHandle.maxHeight } : xy = currFrame, zw = prevFrame
+    float4 _ScreenToTargetScaleHistory; // Same as above but the RTHandle handle size is that of the history buffer
 
     // Values used to linearize the Z buffer (http://www.humus.name/temp/Linearize%20depth.txt)
     // x = 1 - f/n
@@ -266,14 +269,24 @@ float SampleCameraDepth(float2 uv)
     return LoadCameraDepth(uint2(uv * _ScreenSize.xy));
 }
 
+float3 LoadCameraColor(uint2 pixelCoords, uint lod)
+{
+    return LOAD_TEXTURE2D_X_LOD(_ColorPyramidTexture, pixelCoords, lod).rgb;
+}
+
+float3 SampleCameraColor(float2 uv, float lod)
+{
+    return SAMPLE_TEXTURE2D_X_LOD(_ColorPyramidTexture, s_trilinear_clamp_sampler, uv * _ScreenToTargetScaleHistory.xy, lod).rgb;
+}
+
 float3 LoadCameraColor(uint2 pixelCoords)
 {
-    return LOAD_TEXTURE2D_X_LOD(_ColorPyramidTexture, pixelCoords, 0).rgb;
+    return LoadCameraColor(pixelCoords, 0);
 }
 
 float3 SampleCameraColor(float2 uv)
 {
-    return LoadCameraColor(uint2(uv * _ScreenSize.xy));
+    return SampleCameraColor(uv, 0);
 }
 
 float4x4 OptimizeProjectionMatrix(float4x4 M)

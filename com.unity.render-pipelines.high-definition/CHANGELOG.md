@@ -13,9 +13,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added depth offset input in shader graph master nodes
 - Added a Parallax Occlusion Mapping node
 - Added SMAA support
-- Added an option in preferences to toggle the light emission normalization
 - Added Homothety and Symetry quick edition modifier on volume used in ReflectionProbe, PlanarReflectionProbe and DensityVolume
 - Added multi-edition support for DecalProjectorComponent
+- Improve hair shader
+- Added the _ScreenToTargetScaleHistory uniform variable to be used when sampling HDRP RTHandle history buffers.
+- Added settings in `FrameSettings` to change `QualitySettings.lodBias` and `QualitySettings.maximumLODLevel` during a rendering
+- Added an exposure node to retrieve the current, inverse and previous frame exposure value.
+- Added an HD scene color node which allow to sample the scene color with mips and a toggle to remove the exposure.
 
 ### Fixed
 - Fixed HDRI sky intensity lux mode
@@ -56,6 +60,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed single shadow debug mode
 - Fixed global scale factor debug mode when scale > 1
 - Fixed debug menu material overrides not getting applied to the Terrain Lit shader
+- Fixed typo in computeLightVariants
+- Fixed deferred pass with XR instancing by disabling ComputeLightEvaluation
 
 ### Changed
 - DensityVolume scripting API will no longuer allow to change between advance and normal edition mode
@@ -72,6 +78,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Restructure code from HDCamera.Update() by adding UpdateAntialiasing() and UpdateViewConstants()
 - Renamed velocity to motion vectors
 - Objects rendered during the After Post Process pass while TAA is enabled will not benefit from existing depth buffer anymore. This is done to fix an issue where those object would wobble otherwise
+- Removed usage of builtin unity matrix for shadow, shadow now use same constant than other view
 
 ## [6.5.0-preview] - 2019-03-07
 

@@ -10,7 +10,7 @@ projects:
   #- name: VisualEffectGraph
   - name: LWGraphicsTest
   #- name: HDRP_Tests
-  #- name: PostProcessing
+  - name: PostProcessing
 testplatforms:
   - name: StandaloneOSX
     args: --suite=playmode --platform=StandaloneOSX

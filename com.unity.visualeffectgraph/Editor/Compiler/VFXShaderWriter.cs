@@ -223,6 +223,8 @@ namespace UnityEditor.VFX
             }
         }
 
+        static readonly string[] s_reservedName = new [] { "unity_ObjectToWorld", "unity_WorldToObject" };
+
         public void WriteCBuffer(VFXUniformMapper mapper, string bufferName)
         {
             var uniformValues = mapper.uniforms
@@ -252,6 +254,9 @@ namespace UnityEditor.VFX
                     {
                         string type = VFXExpression.TypeToUniformCode(value.valueType);
                         string name = mapper.GetName(value);
+                        if (s_reservedName.Contains(name))
+                            continue;
+
                         currentSize += VFXExpression.TypeToSize(value.valueType);
 
                         WriteLineFormat("{0} {1};", type, name);

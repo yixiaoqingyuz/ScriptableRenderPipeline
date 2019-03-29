@@ -242,6 +242,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public static readonly int _DirectionalLightDirection = Shader.PropertyToID("_DirectionalLightDirection");
         public static readonly int _PunctualLightPosition = Shader.PropertyToID("_PunctualLightPosition");
         public static readonly int _MicroShadowingOpacity = Shader.PropertyToID("_MicroShadowOpacity");
+        public static readonly int _ShadowClipPlanes = Shader.PropertyToID("_ShadowClipPlanes");
 
         public static readonly int _StencilMask = Shader.PropertyToID("_StencilMask");
         public static readonly int _StencilRef = Shader.PropertyToID("_StencilRef");
@@ -275,6 +276,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public static readonly int _InvProjMatrix = Shader.PropertyToID("_InvProjMatrix");
         public static readonly int _NonJitteredViewProjMatrix = Shader.PropertyToID("_NonJitteredViewProjMatrix");
         public static readonly int _ViewProjMatrix = Shader.PropertyToID("_ViewProjMatrix");
+        public static readonly int _CameraViewProjMatrix = Shader.PropertyToID("_CameraViewProjMatrix");
         public static readonly int _InvViewProjMatrix = Shader.PropertyToID("_InvViewProjMatrix");
         public static readonly int _ZBufferParams = Shader.PropertyToID("_ZBufferParams");
         public static readonly int _ProjectionParams = Shader.PropertyToID("_ProjectionParams");
@@ -670,8 +672,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public static readonly int _DitherParams                   = Shader.PropertyToID("_DitherParams");
         public static readonly int _UVTransform                    = Shader.PropertyToID("_UVTransform");
 
-        public static readonly int _VelocityAndDepth               = Shader.PropertyToID("_VelocityAndDepth");
-        public static readonly int _TileVelMinMax                  = Shader.PropertyToID("_TileMinMaxVel");
+        public static readonly int _MotionVecAndDepth              = Shader.PropertyToID("_MotionVecAndDepth");
+        public static readonly int _TileMinMaxMotionVec            = Shader.PropertyToID("_TileMinMaxMotionVec");
         public static readonly int _TileMaxNeighbourhood           = Shader.PropertyToID("_TileMaxNeighbourhood");
         public static readonly int _TileToScatterMax               = Shader.PropertyToID("_TileToScatterMax");
         public static readonly int _TileToScatterMin               = Shader.PropertyToID("_TileToScatterMin");

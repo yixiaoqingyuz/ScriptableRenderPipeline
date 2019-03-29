@@ -61,14 +61,14 @@ struct IntersectionVertice
 // Fetch the intersetion vertex data for the target vertex
 void FetchIntersectionVertex(uint vertexIndex, out IntersectionVertice outVertex)
 {
-    outVertex.positionOS  			= UnityRaytracingFetchVertexAttribute3(vertexIndex, kVertexAttributePosition);
-    outVertex.normalOS    			= UnityRaytracingFetchVertexAttribute3(vertexIndex, kVertexAttributeNormal);
-    outVertex.tangentOS    			= UnityRaytracingFetchVertexAttribute3(vertexIndex, kVertexAttributeTangent);
-    outVertex.texCoord0    			= UnityRaytracingFetchVertexAttribute2(vertexIndex, kVertexAttributeTexCoord0);
-    outVertex.texCoord1    			= UnityRaytracingFetchVertexAttribute2(vertexIndex, kVertexAttributeTexCoord1);
-    outVertex.texCoord2    			= UnityRaytracingFetchVertexAttribute2(vertexIndex, kVertexAttributeTexCoord2);
-    outVertex.texCoord3    			= UnityRaytracingFetchVertexAttribute2(vertexIndex, kVertexAttributeTexCoord3);
-    outVertex.vertexColor    		= UnityRaytracingFetchVertexAttribute4(vertexIndex, kVertexAttributeColor);
+    outVertex.positionOS  = UnityRaytracingFetchVertexAttribute3(vertexIndex, kVertexAttributePosition);
+    outVertex.normalOS    = UnityRaytracingFetchVertexAttribute3(vertexIndex, kVertexAttributeNormal);
+    outVertex.tangentOS   = UnityRaytracingFetchVertexAttribute3(vertexIndex, kVertexAttributeTangent);
+    outVertex.texCoord0   = UnityRaytracingFetchVertexAttribute2(vertexIndex, kVertexAttributeTexCoord0);
+    outVertex.texCoord1   = UnityRaytracingFetchVertexAttribute2(vertexIndex, kVertexAttributeTexCoord1);
+    outVertex.texCoord2   = UnityRaytracingFetchVertexAttribute2(vertexIndex, kVertexAttributeTexCoord2);
+    outVertex.texCoord3   = UnityRaytracingFetchVertexAttribute2(vertexIndex, kVertexAttributeTexCoord3);
+    outVertex.vertexColor = UnityRaytracingFetchVertexAttribute4(vertexIndex, kVertexAttributeColor);
 }
 
 void GetCurrentIntersectionVertice(AttributeData attributeData, out IntersectionVertice outVertex)
@@ -86,19 +86,47 @@ void GetCurrentIntersectionVertice(AttributeData attributeData, out Intersection
 	float3 barycentricCoordinates = float3(1.0 - attributeData.barycentrics.x - attributeData.barycentrics.y, attributeData.barycentrics.x, attributeData.barycentrics.y);
 
 	// Interpolate all the data
-	outVertex.positionOS = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.positionOS, v1.positionOS, v2.positionOS, barycentricCoordinates);
-	outVertex.normalOS = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.normalOS, v1.normalOS, v2.normalOS, barycentricCoordinates);
-	outVertex.tangentOS = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.tangentOS, v1.tangentOS, v2.tangentOS, barycentricCoordinates);
-	outVertex.texCoord0 = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.texCoord0, v1.texCoord0, v2.texCoord0, barycentricCoordinates);
-	outVertex.texCoord1 = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.texCoord1, v1.texCoord1, v2.texCoord1, barycentricCoordinates);
-	outVertex.texCoord2 = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.texCoord2, v1.texCoord2, v2.texCoord2, barycentricCoordinates);
-	outVertex.texCoord3 = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.texCoord3, v1.texCoord3, v2.texCoord3, barycentricCoordinates);
+	outVertex.positionOS  = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.positionOS, v1.positionOS, v2.positionOS, barycentricCoordinates);
+	outVertex.normalOS    = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.normalOS, v1.normalOS, v2.normalOS, barycentricCoordinates);
+	outVertex.tangentOS   = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.tangentOS, v1.tangentOS, v2.tangentOS, barycentricCoordinates);
+	outVertex.texCoord0   = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.texCoord0, v1.texCoord0, v2.texCoord0, barycentricCoordinates);
+	outVertex.texCoord1   = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.texCoord1, v1.texCoord1, v2.texCoord1, barycentricCoordinates);
+	outVertex.texCoord2   = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.texCoord2, v1.texCoord2, v2.texCoord2, barycentricCoordinates);
+	outVertex.texCoord3   = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.texCoord3, v1.texCoord3, v2.texCoord3, barycentricCoordinates);
 	outVertex.vertexColor = INTERPOLATE_RAYTRACING_ATTRIBUTE(v0.vertexColor, v1.vertexColor, v2.vertexColor, barycentricCoordinates);
 
 	// Compute the lambda value
-	outVertex.triangleArea = length(cross(v1.positionOS - v0.positionOS, v2.positionOS - v0.positionOS));
+	outVertex.triangleArea  = length(cross(v1.positionOS - v0.positionOS, v2.positionOS - v0.positionOS));
 	outVertex.texCoord0Area = abs((v1.texCoord0.x - v0.texCoord0.x) * (v2.texCoord0.y - v0.texCoord0.y) - (v2.texCoord0.x - v0.texCoord0.x) * (v1.texCoord0.y - v0.texCoord0.y));
 	outVertex.texCoord1Area = abs((v1.texCoord1.x - v0.texCoord1.x) * (v2.texCoord1.y - v0.texCoord1.y) - (v2.texCoord1.x - v0.texCoord1.x) * (v1.texCoord1.y - v0.texCoord1.y));
 	outVertex.texCoord2Area = abs((v1.texCoord2.x - v0.texCoord2.x) * (v2.texCoord2.y - v0.texCoord2.y) - (v2.texCoord2.x - v0.texCoord2.x) * (v1.texCoord2.y - v0.texCoord2.y));
 	outVertex.texCoord3Area = abs((v1.texCoord3.x - v0.texCoord3.x) * (v2.texCoord3.y - v0.texCoord3.y) - (v2.texCoord3.x - v0.texCoord3.x) * (v1.texCoord3.y - v0.texCoord3.y));
+}
+
+float2 GetIntersectionTextureCoordinates(IntersectionVertice input, float4 uvMask, float2 tiling, float2 offset)
+{
+    // Generate the primary uv coordinates
+    float2 uv = uvMask.x * input.texCoord0.xy +
+                uvMask.y * input.texCoord1.xy +
+                uvMask.z * input.texCoord2.xy +
+                uvMask.w * input.texCoord3.xy;
+
+    // Apply tiling and offset
+    uv = uv * tiling + offset;
+
+    return uv;
+}
+
+float GetIntersectionTextureArea(IntersectionVertice input, float4 uvMask, float2 tiling)
+{
+    // Fetch the target area based on the mask
+    float area = uvMask.x * input.texCoord0Area +
+                 uvMask.y * input.texCoord1Area +
+                 uvMask.z * input.texCoord2Area +
+                 uvMask.w * input.texCoord3Area;
+
+    // Apply tiling factor to the tex coord area
+    area *= tiling.x * tiling.y;
+
+    return area;
 }

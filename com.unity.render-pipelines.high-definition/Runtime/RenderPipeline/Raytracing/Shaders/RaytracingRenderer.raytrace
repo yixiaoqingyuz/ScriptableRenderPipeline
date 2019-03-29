@@ -45,7 +45,6 @@ void RayGenRenderer()
 
 	_RaytracingPrimaryDebug[currentPixelCoord] = float4(0.0, 0.0, 0.0, 1.0);
 
-
     // If we do not need to override the pixel, stop right away
     if (_RaytracingFlagMask[currentPixelCoord] < 0.5f)
     	return;
@@ -59,7 +58,7 @@ void RayGenRenderer()
 
 	// Compute the incident vector on the surfaces
 	float3 incidentWS = normalize(posInput.positionWS - _WorldSpaceCameraPos);
-	
+
 	// Create the ray descriptor for this pixel
 	RayDesc rayDescriptor;
 	rayDescriptor.Origin = _WorldSpaceCameraPos;
@@ -78,7 +77,7 @@ void RayGenRenderer()
 	// In order to achieve filtering for the textures, we need to compute the spread angle of the pixel
 	rayIntersection.cone.spreadAngle = _RaytracingPixelSpreadAngle;
 	rayIntersection.cone.width = 0.0f;
-	
+
 	// Evaluate the ray intersection
 	TraceRay(_RaytracingAccelerationStructure, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, RAYTRACING_OPAQUE_FLAG | RAYTRACING_TRANSPARENT_FLAG, 0, 1, 0, rayDescriptor, rayIntersection);
 
@@ -89,7 +88,7 @@ void RayGenRenderer()
 
 [shader("closesthit")]
 void ClosestHitMain(inout RayIntersection rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes)
-{   
+{
 	// When we do not hit any known closest hit, that means that no shader was specified for the target object meaning either it has nothing to do in the acceleration structure or we need to add raytracing subshaders to it
 	rayIntersection.color = float3(1.0, 0.0, 0.5);
 }

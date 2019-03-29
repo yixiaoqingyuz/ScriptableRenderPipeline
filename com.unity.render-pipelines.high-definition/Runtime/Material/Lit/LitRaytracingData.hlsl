@@ -2,6 +2,8 @@
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinUtilities.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/RenderPipeline/Raytracing/Shaders/RaytracingCommon.hlsl"
 
+
+
 bool GetSurfaceDataFromIntersection(FragInputs input, float3 V, PositionInputs posInput, IntersectionVertice intersectionVertice, RayCone rayCone, out SurfaceData surfaceData, out BuiltinData builtinData)
 {
 #ifdef _DOUBLESIDED_ON
@@ -34,26 +36,28 @@ bool GetSurfaceDataFromIntersection(FragInputs input, float3 V, PositionInputs p
     surfaceData.materialFeatures |= MATERIALFEATUREFLAGS_LIT_SPECULAR_COLOR;
 #endif
 
-    // Generate the primary uv coordinates
-    float2 uvBase = _UVMappingMask.x * input.texCoord0.xy +
-                    _UVMappingMask.y * input.texCoord1.xy +
-                    _UVMappingMask.z * input.texCoord2.xy +
-                    _UVMappingMask.w * input.texCoord3.xy;
+    // Generate the primary UV coordinates and area
+    const float2 uvBase = GetIntersectionTextureCoordinates(intersectionVertice, _UVMappingMask, _BaseColorMap_ST.xy, _BaseColorMap_ST.zw);
 
-    // Apply tiling and offset
-    uvBase = uvBase * _BaseColorMap_ST.xy + _BaseColorMap_ST.zw;
+    // Compute base LOD for all textures (all using the same UV parameterization)
+    #ifdef USE_RAY_CONE_LOD
+    const float uvArea = GetIntersectionTextureArea(intersectionVertice, _UVMappingMask, _BaseColorMap_ST.xy);
+    const float baseLOD = computeBaseTextureLOD(V, input.worldToTangent[2], rayCone.width, uvArea, intersectionVertice.triangleArea);
+    #else
+    const float baseLOD = 0;
+    #endif
+
+    float lod = 0.0;
 
     // The base color of the object mixed with the base color texture
     #ifdef USE_RAY_CONE_LOD
-    float lod = computeTextureLOD(_BaseColorMap, _UVMappingMask, _BaseColorMap_ST.xy, V, input.worldToTangent[2], rayCone.width, intersectionVertice);
-    surfaceData.baseColor = SAMPLE_TEXTURE2D_LOD(_BaseColorMap, sampler_BaseColorMap, uvBase, lod).rgb * _BaseColor.rgb;
-    //surfaceData.baseColor = HsvToRgb(float3(fmod(lod * 0.25, 1), 1, 1)); // DEBUG
-    #else
-    surfaceData.baseColor = SAMPLE_TEXTURE2D_LOD(_BaseColorMap, sampler_BaseColorMap, uvBase, 0).rgb * _BaseColor.rgb;
+    lod = computeTargetTextureLOD(_BaseColorMap, baseLOD);
     #endif
+    surfaceData.baseColor = SAMPLE_TEXTURE2D_LOD(_BaseColorMap, sampler_BaseColorMap, uvBase, lod).rgb * _BaseColor.rgb;
+    //surfaceData.baseColor = HsvToRgb(float3(fmod(lod * 0.25, 1), 0.75, 1)); // DEBUG
 
     // Transparency Data
-    float alpha = SAMPLE_TEXTURE2D_LOD(_BaseColorMap, sampler_BaseColorMap, uvBase, 0).a * _BaseColor.a;
+    float alpha = SAMPLE_TEXTURE2D_LOD(_BaseColorMap, sampler_BaseColorMap, uvBase, lod).a * _BaseColor.a;
 
 #ifdef _ALPHATEST_ON
     if(alpha < _AlphaCutoff)
@@ -72,7 +76,10 @@ bool GetSurfaceDataFromIntersection(FragInputs input, float3 V, PositionInputs p
     surfaceData.specularOcclusion = 1.0;
 
     #ifdef _NORMALMAP
-    float3 normalTS = SAMPLE_TEXTURE2D_LOD(_NormalMap, sampler_NormalMap, uvBase, _NormalScale);
+    #ifdef USE_RAY_CONE_LOD
+    lod = computeTargetTextureLOD(_NormalMap, baseLOD);
+    #endif
+    float3 normalTS = SAMPLE_TEXTURE2D_LOD(_NormalMap, sampler_NormalMap, uvBase, _NormalScale + lod);
     GetNormalWS(input, normalTS, surfaceData.normalWS, doubleSidedConstants);
     #else
     surfaceData.normalWS = input.worldToTangent[2];
@@ -80,7 +87,10 @@ bool GetSurfaceDataFromIntersection(FragInputs input, float3 V, PositionInputs p
 
     // Default smoothness
     #ifdef _MASKMAP
-    surfaceData.perceptualSmoothness = SAMPLE_TEXTURE2D_LOD(_MaskMap, sampler_MaskMap, uvBase, 0).a;
+    #ifdef USE_RAY_CONE_LOD
+    lod = computeTargetTextureLOD(_MaskMap, baseLOD);
+    #endif
+    surfaceData.perceptualSmoothness = SAMPLE_TEXTURE2D_LOD(_MaskMap, sampler_MaskMap, uvBase, lod).a;
     surfaceData.perceptualSmoothness = lerp(_SmoothnessRemapMin, _SmoothnessRemapMax, surfaceData.perceptualSmoothness);
     #else
     surfaceData.perceptualSmoothness = _Smoothness;
@@ -88,7 +98,7 @@ bool GetSurfaceDataFromIntersection(FragInputs input, float3 V, PositionInputs p
 
     // Default Ambient occlusion
     #ifdef _MASKMAP
-    surfaceData.ambientOcclusion = SAMPLE_TEXTURE2D_LOD(_MaskMap, sampler_MaskMap, uvBase, 0).g;
+    surfaceData.ambientOcclusion = SAMPLE_TEXTURE2D_LOD(_MaskMap, sampler_MaskMap, uvBase, lod).g;
     surfaceData.ambientOcclusion = lerp(_AORemapMin, _AORemapMax, surfaceData.ambientOcclusion);
     #else
     surfaceData.ambientOcclusion = 1.0f;
@@ -96,7 +106,7 @@ bool GetSurfaceDataFromIntersection(FragInputs input, float3 V, PositionInputs p
 
     // Default Metallic
     #ifdef _MASKMAP
-    surfaceData.metallic = SAMPLE_TEXTURE2D_LOD(_MaskMap, sampler_MaskMap, uvBase, 0).r * _Metallic;
+    surfaceData.metallic = SAMPLE_TEXTURE2D_LOD(_MaskMap, sampler_MaskMap, uvBase, lod).r * _Metallic;
     #else
     surfaceData.metallic = _Metallic;
     #endif
@@ -104,27 +114,39 @@ bool GetSurfaceDataFromIntersection(FragInputs input, float3 V, PositionInputs p
 #ifdef _MATERIAL_FEATURE_CLEAR_COAT
     surfaceData.coatMask = _CoatMask;
     // To shader feature for keyword to limit the variant
-    surfaceData.coatMask *= SAMPLE_TEXTURE2D_LOD(_CoatMaskMap, sampler_CoatMaskMap, uvBase, 0.0f).r;
+    #ifdef USE_RAY_CONE_LOD
+    lod = computeTargetTextureLOD(_CoatMaskMap, baseLOD);
+    #endif
+    surfaceData.coatMask *= SAMPLE_TEXTURE2D_LOD(_CoatMaskMap, sampler_CoatMaskMap, uvBase, lod).r;
 #else
     surfaceData.coatMask = 0.0;
 #endif
 
 #ifdef _MATERIAL_FEATURE_IRIDESCENCE
     #ifdef _IRIDESCENCE_THICKNESSMAP
-    surfaceData.iridescenceThickness = SAMPLE_TEXTURE2D_LOD(_IridescenceThicknessMap, sampler_IridescenceThicknessMap, uvBase, 0.0f).r;
+    #ifdef USE_RAY_CONE_LOD
+    lod = computeTargetTextureLOD(_IridescenceThicknessMap, baseLOD);
+    #endif
+    surfaceData.iridescenceThickness = SAMPLE_TEXTURE2D_LOD(_IridescenceThicknessMap, sampler_IridescenceThicknessMap, uvBase, lod).r;
     surfaceData.iridescenceThickness = saturate(_IridescenceThicknessRemap.x + _IridescenceThicknessRemap.y * surfaceData.iridescenceThickness);
     #else
     surfaceData.iridescenceThickness = _IridescenceThickness;
     #endif
+    #ifdef USE_RAY_CONE_LOD
+    lod = computeTargetTextureLOD(_IridescenceMaskMap, baseLOD);
+    #endif
     surfaceData.iridescenceMask = _IridescenceMask;
-    surfaceData.iridescenceMask *= SAMPLE_TEXTURE2D_LOD(_IridescenceMaskMap, sampler_IridescenceMaskMap, uvBase, 0.0f).r;
+    surfaceData.iridescenceMask *= SAMPLE_TEXTURE2D_LOD(_IridescenceMaskMap, sampler_IridescenceMaskMap, uvBase, lod).r;
 #else
     surfaceData.iridescenceThickness = 0.0;
     surfaceData.iridescenceMask = 0.0;
 #endif
 
 #ifdef _ANISOTROPYMAP
-    surfaceData.anisotropy = SAMPLE_TEXTURE2D_LOD(_AnisotropyMap, sampler_AnisotropyMap, uvBase, 0.0f).r;
+    #ifdef USE_RAY_CONE_LOD
+    lod = computeTargetTextureLOD(_AnisotropyMap, baseLOD);
+    #endif
+    surfaceData.anisotropy = SAMPLE_TEXTURE2D_LOD(_AnisotropyMap, sampler_AnisotropyMap, uvBase, lod).r;
 #else
     surfaceData.anisotropy = 1.0;
 #endif
@@ -137,7 +159,10 @@ bool GetSurfaceDataFromIntersection(FragInputs input, float3 V, PositionInputs p
     surfaceData.subsurfaceMask = 0.0;
 
 #ifdef _THICKNESSMAP_IDX
-    surfaceData.thickness = SAMPLE_TEXTURE2D_LOD(_ThicknessMap, SAMPLER_THICKNESSMAP_IDX, uvBase, 0.0f).r;
+    #ifdef USE_RAY_CONE_LOD
+    lod = computeTargetTextureLOD(_ThicknessMap, baseLOD);
+    #endif
+    surfaceData.thickness = SAMPLE_TEXTURE2D_LOD(_ThicknessMap, SAMPLER_THICKNESSMAP_IDX, uvBase, lod).r;
     surfaceData.thickness = _ThicknessRemap.x + _ThicknessRemap.y * surfaceData.thickness;
 #else
     surfaceData.thickness = _Thickness;
@@ -151,7 +176,10 @@ bool GetSurfaceDataFromIntersection(FragInputs input, float3 V, PositionInputs p
     surfaceData.ior = _Ior;
     surfaceData.transmittanceColor = _TransmittanceColor;
 #ifdef _TRANSMITTANCECOLORMAP
-    surfaceData.transmittanceColor *= SAMPLE_TEXTURE2D_LOD(_TransmittanceColorMap, sampler_TransmittanceColorMap, uvBase, 0.0f).rgb;
+    #ifdef USE_RAY_CONE_LOD
+    lod = computeTargetTextureLOD(_TransmittanceColorMap, baseLOD);
+    #endif
+    surfaceData.transmittanceColor *= SAMPLE_TEXTURE2D_LOD(_TransmittanceColorMap, sampler_TransmittanceColorMap, uvBase, lod).rgb;
 #endif
 
     surfaceData.atDistance = _ATDistance;

@@ -7,9 +7,9 @@ platforms:
     flavor: m1.large
 projects:
   - name: ShaderGraph
-  - name: VisualEffectGraph
+  #- name: VisualEffectGraph
   - name: LWGraphicsTest
-  - name: HDRP_Tests
+  #- name: HDRP_Tests
   - name: PostProcessing
 testplatforms:
   - name: StandaloneWindows64

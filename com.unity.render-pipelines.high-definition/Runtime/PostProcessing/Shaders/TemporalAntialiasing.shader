@@ -2,8 +2,6 @@ Shader "Hidden/HDRP/TemporalAntialiasing"
 {
     HLSLINCLUDE
 
-
-
         #pragma target 4.5
         #pragma multi_compile_local _ ORTHOGRAPHIC
         #pragma multi_compile_local _ REDUCED_HISTORY_CONTRIB

@@ -92,6 +92,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // This is the scale of the camera viewport compared to the reference size of our Render Targets (RTHandle.maxSize)
         Vector2 m_ViewportScaleCurrentFrame;
         Vector2 m_ViewportScalePreviousFrame;
+        Vector2 m_ViewportScaleCurrentFrameHistory;
+        Vector2 m_ViewportScalePreviousFrameHistory;
         // Current mssa sample
         MSAASamples m_msaaSamples;
         FrameSettings m_frameSettings;
@@ -109,6 +111,18 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
 
                 return new Vector4(m_ViewportScaleCurrentFrame.x, m_ViewportScaleCurrentFrame.y, m_ViewportScalePreviousFrame.x, m_ViewportScalePreviousFrame.y);
+            }
+        }
+        public Vector4 doubleBufferedViewportScaleHistory
+        {
+            get
+            {
+                if (HDDynamicResolutionHandler.instance.HardwareDynamicResIsEnabled())
+                {
+                    return new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+                }
+
+                return new Vector4(m_ViewportScaleCurrentFrameHistory.x, m_ViewportScaleCurrentFrameHistory.y, m_ViewportScalePreviousFrameHistory.x, m_ViewportScalePreviousFrameHistory.y);
             }
         }
         public MSAASamples msaaSamples { get { return m_msaaSamples; } }
@@ -139,6 +153,30 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // Helper property to inform how many views are rendered simultaneously
         public int viewCount { get => Math.Max(1, xr.viewCount); }
+
+        public int computePassCount
+        {
+            get
+            {
+                // XRTODO: double-wide cleanup
+                if (camera.stereoEnabled && XRGraphics.stereoRenderingMode == XRGraphics.StereoRenderingMode.SinglePass)
+                    return 1;
+
+                return viewCount;
+            }
+        }
+
+        // Helper property to inform how many views are rendered simultaneously
+        public int viewCount
+        {
+            get
+            {
+                if (camera.stereoEnabled && XRGraphics.stereoRenderingMode == XRGraphics.StereoRenderingMode.SinglePassInstanced)
+                    return 2;
+
+                return 1;
+            }
+        }
 
         public int computePassCount
         {
@@ -427,13 +465,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
             }
 
-            int maxWidth  = RTHandles.maxWidth;
-            int maxHeight = RTHandles.maxHeight;
 
-            Vector2 rcpTextureSize = Vector2.one / new Vector2(maxWidth, maxHeight);
+            Vector2 rcpTextureSize = Vector2.one / new Vector2(RTHandles.maxWidth, RTHandles.maxHeight);
+            Vector2 rcpTextureSizeHistory = Vector2.one / new Vector2(m_HistoryRTSystem.maxWidth, m_HistoryRTSystem.maxHeight);
 
             m_ViewportScalePreviousFrame = m_ViewportSizePrevFrame * rcpTextureSize;
+            m_ViewportScalePreviousFrameHistory = m_ViewportSizePrevFrame * rcpTextureSizeHistory;
             m_ViewportScaleCurrentFrame  = new Vector2Int(m_ActualWidth, m_ActualHeight) * rcpTextureSize;
+            m_ViewportScaleCurrentFrameHistory = m_ViewportSizePrevFrame * rcpTextureSizeHistory;
 
             screenSize = new Vector4(screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
             screenParams = new Vector4(screenSize.x, screenSize.y, 1 + screenSize.z, 1 + screenSize.w);
@@ -875,6 +914,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.SetGlobalVector(HDShaderIDs._PrevCamPosRWS,             mainViewConstants.prevWorldSpaceCameraPos);
             cmd.SetGlobalVector(HDShaderIDs._ScreenSize,                screenSize);
             cmd.SetGlobalVector(HDShaderIDs._ScreenToTargetScale,       doubleBufferedViewportScale);
+            cmd.SetGlobalVector(HDShaderIDs._ScreenToTargetScaleHistory, doubleBufferedViewportScaleHistory);
             cmd.SetGlobalVector(HDShaderIDs._ZBufferParams,             zBufferParams);
             cmd.SetGlobalVector(HDShaderIDs._ProjectionParams,          projectionParams);
             cmd.SetGlobalVector(HDShaderIDs.unity_OrthoParams,          unity_OrthoParams);

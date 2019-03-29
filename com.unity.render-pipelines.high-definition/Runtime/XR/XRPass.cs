@@ -36,6 +36,15 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             legacyStereoEye = eye;
         }
 
+        internal XRView(Matrix4x4 proj, Matrix4x4 view, Rect vp)
+        {
+            projMatrix = proj;
+            viewMatrix = view;
+            viewport = vp;
+            occlusionMesh = null;
+            legacyStereoEye = (Camera.StereoscopicEye)(-1);
+        }
+
 #if USE_XR_SDK
         internal XRView(XRDisplaySubsystem.XRRenderParameter renderParameter)
         {
@@ -98,9 +107,30 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return passInfo;
         }
 
+        internal static XRPass Create(int passId, RenderTexture rt)
+        {
+            XRPass passInfo = GenericPool<XRPass>.Get();
+
+            passInfo.passId = passId;
+            passInfo.cullingPassId = -1;
+            passInfo.views.Clear();
+            passInfo.renderTarget = new RenderTargetIdentifier(rt);
+            passInfo.renderTargetDesc = rt.descriptor;
+            passInfo.xrSdkEnabled = false;
+            passInfo.tempRenderTexture = null;
+            passInfo.tempRenderTextureDesc = default;
+
+            return passInfo;
+        }
+
         internal void AddView(Camera camera, Camera.StereoscopicEye eye)
         {
             AddViewInternal(new XRView(camera, eye));
+        }
+
+        internal void AddView(Matrix4x4 proj, Matrix4x4 view, Rect vp)
+        {
+            AddViewInternal(new XRView(proj, view, vp));
         }
 
 #if USE_XR_SDK

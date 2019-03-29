@@ -58,6 +58,41 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 bool xrEnabled = xrSdkActive || (camera.stereoEnabled && XRGraphics.enabled);
 
+                if (camera.targetTexture != null && !xrEnabled)
+                {
+                    // LEFT
+                    {
+                        var xrPass = XRPass.Create(0, camera.targetTexture);
+
+                        Rect vp = new Rect(0, 0, camera.targetTexture.width / 2, camera.targetTexture.height);
+
+                        var planes = camera.projectionMatrix.decomposeProjection;
+                        planes.right = (planes.left + planes.right) * 0.5f;
+                        var newProj = Matrix4x4.Frustum(planes);
+
+                        xrPass.AddView(newProj, camera.worldToCameraMatrix, vp);
+
+                        AddPassToFrame(xrPass, camera, ref multipassCameras);
+                    }
+
+                    // RIGHT
+                    {
+                        var xrPass = XRPass.Create(0, camera.targetTexture);
+
+                        Rect vp = new Rect(camera.targetTexture.width / 2, 0, camera.targetTexture.width / 2, camera.targetTexture.height);
+
+                        var planes = camera.projectionMatrix.decomposeProjection;
+                        planes.left = (planes.left + planes.right) * 0.5f;
+                        var newProj = Matrix4x4.Frustum(planes);
+
+                        xrPass.AddView(newProj, camera.worldToCameraMatrix, vp);
+
+                        AddPassToFrame(xrPass, camera, ref multipassCameras);
+                    }
+
+                    continue;
+                }
+
                 // XRTODO: support render to texture
                 if (camera.cameraType != CameraType.Game || camera.targetTexture != null || !xrEnabled)
                 {

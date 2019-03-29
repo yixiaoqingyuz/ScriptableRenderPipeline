@@ -299,6 +299,14 @@ int ComputeAdding_GetDualNormalsTopHandlingMethod()
     return method;
 }
 
+bool ShouldHonorLightMinRoughness()
+{
+#ifdef _STACK_LIT_HONORS_LIGHT_MIN_ROUGHNESS
+    return true;
+#else
+    return false;
+#endif
+}
 
 // Assume bsdfData.normalWS is init
 void FillMaterialAnisotropy(float anisotropyA, float anisotropyB, float3 tangentWS, float3 bitangentWS, inout BSDFData bsdfData)
@@ -338,8 +346,32 @@ float3 GetNormalForShadowBias(BSDFData bsdfData)
 
 void ClampRoughness(inout BSDFData bsdfData, float minRoughness)
 {
-    // TODO
+    // Generic thunk for SurfaceShading.hlsl, we have a different prototype that uses PreLightData,
+    // see below in this file.
 }
+
+float ClampRoughnessForDiracLightsByDefault(float roughness, float minRoughness = 0.0)
+{
+    if (ShouldHonorLightMinRoughness() == false)
+    {
+        roughness = ClampRoughnessForAnalyticalLights(roughness);
+    }
+    else
+    {
+        roughness = max(roughness, minRoughness);
+    }
+    return roughness;
+}
+
+float ClampRoughnessIfHonorLightMinRoughness(float roughness, float minRoughness = 0.0)
+{
+    if (ShouldHonorLightMinRoughness())
+    {
+        roughness = max(roughness, minRoughness);
+    }
+    return roughness;
+}
+
 
 float ComputeMicroShadowing(BSDFData bsdfData, float NdotL)
 {
@@ -534,6 +566,7 @@ void HazeMapping(float3 fresnel0, float roughnessAT, float roughnessAB, float ha
 
     //float2 alpha_n = float2(roughnessAT, roughnessAB);
     float2 alpha_n = float2(ClampRoughnessForAnalyticalLights(roughnessAT), ClampRoughnessForAnalyticalLights(roughnessAB));
+    // ...see above, we always use that clamp for numerical stability
     float alpha_n_xy = alpha_n.x * alpha_n.y;
     float beta_h = haziness;
     float2 lambda_h;
@@ -696,17 +729,17 @@ BSDFData ConvertSurfaceDataToBSDFData(uint2 positionSS, SurfaceData surfaceData)
         bsdfData.fresnel0 = ConvertF0ForAirInterfaceToF0ForNewTopIor(bsdfData.fresnel0, bsdfData.coatIor);
 
         // We dont clamp the roughnesses for now, ComputeAdding() will use those directly, unclamped.
-        // (don't forget to call ClampRoughnessForAnalyticalLights after though)
+        // (don't forget to call ClampRoughnessForDiracLightsByDefault after though)
         bsdfData.coatRoughness = PerceptualRoughnessToRoughness(bsdfData.coatPerceptualRoughness);
     }
     else
     {
         // roughnessT and roughnessB are clamped, and are meant to be used with punctual and directional lights.
         // perceptualRoughness is not clamped, and is meant to be used for IBL.
-        bsdfData.roughnessAT = ClampRoughnessForAnalyticalLights(bsdfData.roughnessAT);
-        bsdfData.roughnessAB = ClampRoughnessForAnalyticalLights(bsdfData.roughnessAB);
-        bsdfData.roughnessBT = ClampRoughnessForAnalyticalLights(bsdfData.roughnessBT);
-        bsdfData.roughnessBB = ClampRoughnessForAnalyticalLights(bsdfData.roughnessBB);
+        bsdfData.roughnessAT = ClampRoughnessForDiracLightsByDefault(bsdfData.roughnessAT);
+        bsdfData.roughnessAB = ClampRoughnessForDiracLightsByDefault(bsdfData.roughnessAB);
+        bsdfData.roughnessBT = ClampRoughnessForDiracLightsByDefault(bsdfData.roughnessBT);
+        bsdfData.roughnessBB = ClampRoughnessForDiracLightsByDefault(bsdfData.roughnessBB);
     }
 
     bsdfData.ambientOcclusion = surfaceData.ambientOcclusion;
@@ -816,7 +849,7 @@ struct PreLightData
     // coatRoughness for analytical dirac lights will also be stored here;
     // These should always be:
     // preLightData.iblPerceptualRoughness[COAT_LOBE_IDX] = bsdfData.coatPerceptualRoughness;
-    // preLightData.layeredCoatRoughness = ClampRoughnessForAnalyticalLights(bsdfData.coatRoughness);
+    // preLightData.layeredCoatRoughness = ClampRoughnessForDiracLightsByDefault(bsdfData.coatRoughness);
 
     float  iblAnisotropy[BASE_NB_LOBES];
 
@@ -1191,7 +1224,6 @@ void ComputeAdding_GetVOrthoGeomN(BSDFData bsdfData, float3 V, bool calledPerLig
 //
 
 
-
 ///Helper function that parses the BSDFData object to generate the current layer's
 // statistics.
 //
@@ -1200,7 +1232,7 @@ void ComputeAdding_GetVOrthoGeomN(BSDFData bsdfData, float3 V, bool calledPerLig
 //       (more like p8, T21 <- T21*TIR, R21 <- R21 + (1-TIR)*T21 )
 //
 //ComputeStatistics(cti, V, vOrthoGeomN, useGeomN, i, bsdfData, preLightData, ctt, R12, T12, R21, T21, s_r12, s_t12, j12, s_r21, s_t21, j21);
-void ComputeStatistics(in  float  cti, in float3 V, in float3 vOrthoGeomN, in bool useGeomN, in int i, in BSDFData bsdfData,
+void ComputeStatistics(in  float  cti, in float3 V, in float3 vOrthoGeomN, in bool useGeomN, in int i, in BSDFData bsdfData, in float minRoughness,
                        inout PreLightData preLightData,
                        out float  ctt,
                        out float3 R12,   out float3 T12,   out float3 R21,   out float3 T21,
@@ -1244,7 +1276,7 @@ void ComputeStatistics(in  float  cti, in float3 V, in float3 vOrthoGeomN, in bo
             // Moreover, we don't consider offspecular effect as well as never outputting final downward lobes anyway, so we
             // never output the means but just track them as cosines of angles (cti) for energy transfer calculations
             // (should do with FGD but depends, see comments above).
-            const float alpha = bsdfData.coatRoughness;
+            const float alpha = ClampRoughnessIfHonorLightMinRoughness(bsdfData.coatRoughness, minRoughness);
             const float scale = clamp((1.0-alpha)*(sqrt(1.0-alpha) + alpha), 0.0, 1.0);
             //http://www.wolframalpha.com/input/?i=f(alpha)+%3D+(1.0-alpha)*(sqrt(1.0-alpha)+%2B+alpha)+alpha+%3D+0+to+1
             stt = scale*stt + (1.0-scale)*sti;
@@ -1259,12 +1291,12 @@ void ComputeStatistics(in  float  cti, in float3 V, in float3 vOrthoGeomN, in bo
         }
 
         // Update variance
-        s_r12 = RoughnessToLinearVariance(bsdfData.coatRoughness);
-        s_t12 = RoughnessToLinearVariance(bsdfData.coatRoughness * 0.5 * abs((ctt*n12 - cti)/(ctt*n12)));
+        s_r12 = RoughnessToLinearVariance(ClampRoughnessIfHonorLightMinRoughness(bsdfData.coatRoughness, minRoughness));
+        s_t12 = RoughnessToLinearVariance(ClampRoughnessIfHonorLightMinRoughness(bsdfData.coatRoughness, minRoughness) * 0.5 * abs((ctt*n12 - cti)/(ctt*n12)));
         j12   = (ctt/cti)*n12;
 
         s_r21 = s_r12;
-        s_t21 = RoughnessToLinearVariance(bsdfData.coatRoughness * 0.5 * abs((cti/n12 - ctt)/(cti/n12)));
+        s_t21 = RoughnessToLinearVariance(ClampRoughnessIfHonorLightMinRoughness(bsdfData.coatRoughness, minRoughness) * 0.5 * abs((cti/n12 - ctt)/(cti/n12)));
         j21   = 1.0/j12;
 
     // Case of the media layer
@@ -1366,8 +1398,22 @@ void ComputeStatistics(in  float  cti, in float3 V, in float3 vOrthoGeomN, in bo
 } //...ComputeStatistics()
 
 
-void ComputeAdding(float _cti, float3 V, in BSDFData bsdfData, inout PreLightData preLightData, bool calledPerLight = false, bool testSingularity = false)
+void ComputeAdding(float _cti, float3 V, in BSDFData bsdfData, inout PreLightData preLightData,
+                   bool calledPerLight = false, bool testSingularity = false, float minRoughness = 0.0)
 {
+    if (calledPerLight == false)
+    {
+        // Just a precaution
+        minRoughness = 0.0;
+        // ie We will only take it into account if called per light. If ShouldHonorLightMinRoughness(), we will
+        // escape the default clamp of ClampRoughnessForDiracLightsByDefault() still though.
+    }
+    // Note that minRoughness is only useful if calledPerLight == true and ShouldHonorLightMinRoughness() == true:
+    // In that case, ClampRoughnessForDiracLightsByDefault() will not clamp anything but ClampRoughnessIfHonorLightMinRoughness
+    // used here and in ComputeStatistics will and we're passing bsdfData's roughnesses through that function before using them,
+    // so the net result will be a per light (ie light specific - see the call to ComputeAdding() in BSDF_SetupNormalsAndAngles)
+    // minimum roughness value enforced on the input roughness values used before computing the stack statistics.
+
     // _cti should be LdotH or VdotH if calledPerLight == true (symmetric parametrization), V is unused in this case.
     // _cti should be NdotV if calledPerLight == false and no independent coat normal map is used (ie single normal map), V is unused in this case.
     // _cti should be (coatNormalWS dot V) if calledPerLight == false and we have a coat normal map. V is used in this case
@@ -1377,14 +1423,14 @@ void ComputeAdding(float _cti, float3 V, in BSDFData bsdfData, inout PreLightDat
     {
         preLightData.vLayerEnergyCoeff[TOP_VLAYER_IDX] = 0.0 * F_Schlick(IorToFresnel0(bsdfData.coatIor), _cti);
         preLightData.iblPerceptualRoughness[COAT_LOBE_IDX] = bsdfData.coatPerceptualRoughness;
-        preLightData.layeredCoatRoughness = ClampRoughnessForAnalyticalLights(bsdfData.coatRoughness);
+        preLightData.layeredCoatRoughness = ClampRoughnessForDiracLightsByDefault(bsdfData.coatRoughness, minRoughness);
 
         preLightData.vLayerEnergyCoeff[BOTTOM_VLAYER_IDX] = 1.0 * F_Schlick(bsdfData.fresnel0, _cti);
 
-        preLightData.layeredRoughnessT[0] = ClampRoughnessForAnalyticalLights(bsdfData.roughnessAT);
-        preLightData.layeredRoughnessB[0] = ClampRoughnessForAnalyticalLights(bsdfData.roughnessAB);
-        preLightData.layeredRoughnessT[1] = ClampRoughnessForAnalyticalLights(bsdfData.roughnessBT);
-        preLightData.layeredRoughnessB[1] = ClampRoughnessForAnalyticalLights(bsdfData.roughnessBB);
+        preLightData.layeredRoughnessT[0] = ClampRoughnessForDiracLightsByDefault(bsdfData.roughnessAT, minRoughness);
+        preLightData.layeredRoughnessB[0] = ClampRoughnessForDiracLightsByDefault(bsdfData.roughnessAB, minRoughness);
+        preLightData.layeredRoughnessT[1] = ClampRoughnessForDiracLightsByDefault(bsdfData.roughnessBT, minRoughness);
+        preLightData.layeredRoughnessB[1] = ClampRoughnessForDiracLightsByDefault(bsdfData.roughnessBB, minRoughness);
         preLightData.iblPerceptualRoughness[BASE_LOBEA_IDX] = bsdfData.perceptualRoughnessA;
         preLightData.iblPerceptualRoughness[BASE_LOBEB_IDX] = bsdfData.perceptualRoughnessB;
         return;
@@ -1445,7 +1491,7 @@ void ComputeAdding(float _cti, float3 V, in BSDFData bsdfData, inout PreLightDat
         float s_r21=0.0, s_t12=0.0, s_t21=0.0, j12=1.0, j21=1.0, ctt;
 
         // Layer specific evaluation of the transmittance, reflectance, variance
-        ComputeStatistics(cti, V, vOrthoGeomN, useGeomN, i, bsdfData, preLightData, ctt, R12, T12, R21, T21, s_r12, s_t12, j12, s_r21, s_t21, j21);
+        ComputeStatistics(cti, V, vOrthoGeomN, useGeomN, i, bsdfData, minRoughness, preLightData, ctt, R12, T12, R21, T21, s_r12, s_t12, j12, s_r21, s_t21, j21);
 
         // Multiple scattering forms
         float3 denom = (float3(1.0, 1.0, 1.0) - Ri0*R12); //i = new layer, 0 = cumulative top (llab3.1 to 3.4)
@@ -1551,7 +1597,7 @@ void ComputeAdding(float _cti, float3 V, in BSDFData bsdfData, inout PreLightDat
         // analytical lights. For these we also don't need to recompute the following, but only the Fresnel
         // or FGD term are necessary in ComputeAdding, see BSDF().
         preLightData.iblPerceptualRoughness[COAT_LOBE_IDX] = bsdfData.coatPerceptualRoughness;
-        preLightData.layeredCoatRoughness = ClampRoughnessForAnalyticalLights(bsdfData.coatRoughness);
+        preLightData.layeredCoatRoughness = ClampRoughnessForDiracLightsByDefault(bsdfData.coatRoughness);
     }
 
     // calledPerLight and all of the bools above are static time known.
@@ -1583,10 +1629,10 @@ void ComputeAdding(float _cti, float3 V, in BSDFData bsdfData, inout PreLightDat
     preLightData.iblAnisotropy[1] = bsdfData.anisotropyB;
 
 
-    s_r12 = RoughnessToLinearVariance(PerceptualRoughnessToRoughness(bsdfData.perceptualRoughnessA));
+    s_r12 = RoughnessToLinearVariance(ClampRoughnessIfHonorLightMinRoughness(PerceptualRoughnessToRoughness(bsdfData.perceptualRoughnessA), minRoughness));
     _s_r0m = s_ti0 + j0i*(s_t0i + s_r12 + m_rr*(s_r12+s_ri0));
     preLightData.iblPerceptualRoughness[BASE_LOBEA_IDX] = LinearVarianceToPerceptualRoughness(_s_r0m);
-    s_r12 = RoughnessToLinearVariance(PerceptualRoughnessToRoughness(bsdfData.perceptualRoughnessB));
+    s_r12 = RoughnessToLinearVariance(ClampRoughnessIfHonorLightMinRoughness(PerceptualRoughnessToRoughness(bsdfData.perceptualRoughnessB), minRoughness));
     _s_r0m = s_ti0 + j0i*(s_t0i + s_r12 + m_rr*(s_r12+s_ri0));
     preLightData.iblPerceptualRoughness[BASE_LOBEB_IDX] = LinearVarianceToPerceptualRoughness(_s_r0m);
 
@@ -1595,21 +1641,32 @@ void ComputeAdding(float _cti, float3 V, in BSDFData bsdfData, inout PreLightDat
     // that destretching happens.
     IF_DEBUG( if( _DebugAniso.x == 1) )
     {
-        preLightData.iblAnisotropy[0] = GetModifiedAnisotropy(bsdfData.anisotropyA, bsdfData.perceptualRoughnessA,
-                                                              PerceptualRoughnessToRoughness(bsdfData.perceptualRoughnessA),
+        // To be consistent with ClampRoughnessIfHonorLightMinRoughness() here, we should do:
+        float originalPerceptualRoughness = RoughnessToPerceptualRoughness(ClampRoughnessIfHonorLightMinRoughness(PerceptualRoughnessToRoughness(bsdfData.perceptualRoughnessA), minRoughness));
+        // compiler should optimize out all of this when not required (eg if ShouldHonorLightMinRoughness() == false) and fold subexpressions.
+
+        preLightData.iblAnisotropy[0] = GetModifiedAnisotropy(bsdfData.anisotropyA, /*bsdfData.perceptualRoughnessA*/originalPerceptualRoughness,
+                                                              PerceptualRoughnessToRoughness(/*bsdfData.perceptualRoughnessA*/originalPerceptualRoughness),
                                                               preLightData.iblPerceptualRoughness[BASE_LOBEA_IDX]);
-        preLightData.iblAnisotropy[1] = GetModifiedAnisotropy(bsdfData.anisotropyB, bsdfData.perceptualRoughnessB,
-                                                              PerceptualRoughnessToRoughness(bsdfData.perceptualRoughnessB),
+
+        originalPerceptualRoughness = RoughnessToPerceptualRoughness(ClampRoughnessIfHonorLightMinRoughness(PerceptualRoughnessToRoughness(bsdfData.perceptualRoughnessB), minRoughness));
+
+        preLightData.iblAnisotropy[1] = GetModifiedAnisotropy(bsdfData.anisotropyB, /*bsdfData.perceptualRoughnessB*/originalPerceptualRoughness,
+                                                              PerceptualRoughnessToRoughness(/*bsdfData.perceptualRoughnessB*/originalPerceptualRoughness),
                                                               preLightData.iblPerceptualRoughness[BASE_LOBEB_IDX]);
     }
 #endif
 
     if( !perLightOption || calledPerLight)
     {
-        ConvertAnisotropyToClampRoughness(preLightData.iblPerceptualRoughness[BASE_LOBEA_IDX], preLightData.iblAnisotropy[0],
-                                          preLightData.layeredRoughnessT[0], preLightData.layeredRoughnessB[0]);
-        ConvertAnisotropyToClampRoughness(preLightData.iblPerceptualRoughness[BASE_LOBEB_IDX], preLightData.iblAnisotropy[1],
-                                          preLightData.layeredRoughnessT[1], preLightData.layeredRoughnessB[1]);
+        ConvertAnisotropyToRoughness(preLightData.iblPerceptualRoughness[BASE_LOBEA_IDX], preLightData.iblAnisotropy[0],
+                                     preLightData.layeredRoughnessT[0], preLightData.layeredRoughnessB[0]);
+        ConvertAnisotropyToRoughness(preLightData.iblPerceptualRoughness[BASE_LOBEB_IDX], preLightData.iblAnisotropy[1],
+                                     preLightData.layeredRoughnessT[1], preLightData.layeredRoughnessB[1]);
+        preLightData.layeredRoughnessT[0] = ClampRoughnessForDiracLightsByDefault(preLightData.layeredRoughnessT[0]);
+        preLightData.layeredRoughnessB[0] = ClampRoughnessForDiracLightsByDefault(preLightData.layeredRoughnessB[0]);
+        preLightData.layeredRoughnessT[1] = ClampRoughnessForDiracLightsByDefault(preLightData.layeredRoughnessT[1]);
+        preLightData.layeredRoughnessB[1] = ClampRoughnessForDiracLightsByDefault(preLightData.layeredRoughnessB[1]);
     }
 
 #else
@@ -1618,6 +1675,8 @@ void ComputeAdding(float _cti, float3 V, in BSDFData bsdfData, inout PreLightDat
     // --------------------------------------------------------------------------------
     if( !calledPerLight && !haveAnisotropy)
     {
+        // We're not called per light, so don't do anything with ClampRoughnessIfHonorLightMinRoughness().
+
         // Calculate modified base lobe roughnesses T (no anisotropy)
 
         // There's no anisotropy and we haven't clamped the roughness in the T and B fields, so
@@ -1639,13 +1698,15 @@ void ComputeAdding(float _cti, float3 V, in BSDFData bsdfData, inout PreLightDat
         {
             // We're not going to get called again per analytical light so store the result needed and used by them:
             // LOBEA and LOBEB but only the T part...
-            preLightData.layeredRoughnessT[0] = ClampRoughnessForAnalyticalLights(LinearVarianceToRoughness(varianceLobeA));
-            preLightData.layeredRoughnessT[1] = ClampRoughnessForAnalyticalLights(LinearVarianceToRoughness(varianceLobeB));
+            preLightData.layeredRoughnessT[0] = ClampRoughnessForDiracLightsByDefault(LinearVarianceToRoughness(varianceLobeA));
+            preLightData.layeredRoughnessT[1] = ClampRoughnessForDiracLightsByDefault(LinearVarianceToRoughness(varianceLobeB));
         }
     }
 
     if( !calledPerLight && haveAnisotropy)
     {
+        // We're not called per light, so don't do anything with ClampRoughnessIfHonorLightMinRoughness().
+
         // We're in GetPreLightData context so we need to deal with IBL precalc, and
         // regardless of if we had the VLAYERED_RECOMPUTE_PERLIGHT option or not, we
         // still need to compute the full anistropic modification of variances.
@@ -1676,8 +1737,8 @@ void ComputeAdding(float _cti, float3 V, in BSDFData bsdfData, inout PreLightDat
         {
             // We're not going to get called again per analytical light so store the result needed and used by them:
             // LOBEA T and B part:
-            preLightData.layeredRoughnessT[0] = ClampRoughnessForAnalyticalLights(roughnessT);
-            preLightData.layeredRoughnessB[0] = ClampRoughnessForAnalyticalLights(roughnessB);
+            preLightData.layeredRoughnessT[0] = ClampRoughnessForDiracLightsByDefault(roughnessT);
+            preLightData.layeredRoughnessB[0] = ClampRoughnessForDiracLightsByDefault(roughnessB);
         }
 
 
@@ -1703,8 +1764,8 @@ void ComputeAdding(float _cti, float3 V, in BSDFData bsdfData, inout PreLightDat
         {
             // We're not going to get called again per analytical light so store the result needed and used by them:
             // LOBEB T and B part:
-            preLightData.layeredRoughnessT[1] = ClampRoughnessForAnalyticalLights(roughnessT);
-            preLightData.layeredRoughnessB[1] = ClampRoughnessForAnalyticalLights(roughnessB);
+            preLightData.layeredRoughnessT[1] = ClampRoughnessForDiracLightsByDefault(roughnessT);
+            preLightData.layeredRoughnessB[1] = ClampRoughnessForDiracLightsByDefault(roughnessB);
         }
 
     } // if( !calledPerLight && haveAnisotropy)
@@ -1719,26 +1780,30 @@ void ComputeAdding(float _cti, float3 V, in BSDFData bsdfData, inout PreLightDat
         // We just need to propagate variance for LOBEA and LOBEB and clamp.
 
         // LOBEA roughness for analytical lights (T part)
-        s_r12 = RoughnessToLinearVariance(bsdfData.roughnessAT);
+        //s_r12 = RoughnessToLinearVariance(bsdfData.roughnessAT);
+        s_r12 = RoughnessToLinearVariance(ClampRoughnessIfHonorLightMinRoughness(bsdfData.roughnessAT, minRoughness));
         _s_r0m = s_ti0 + j0i*(s_t0i + s_r12 + m_rr*(s_r12+s_ri0));
-        preLightData.layeredRoughnessT[0] = ClampRoughnessForAnalyticalLights(LinearVarianceToRoughness(_s_r0m));
+        preLightData.layeredRoughnessT[0] = ClampRoughnessForDiracLightsByDefault(LinearVarianceToRoughness(_s_r0m));
 
         // LOBEB roughness for analytical lights (T part)
-        s_r12 = RoughnessToLinearVariance(bsdfData.roughnessBT);
+        //s_r12 = RoughnessToLinearVariance(bsdfData.roughnessBT);
+        s_r12 = RoughnessToLinearVariance(ClampRoughnessIfHonorLightMinRoughness(bsdfData.roughnessBT, minRoughness));
         _s_r0m = s_ti0 + j0i*(s_t0i + s_r12 + m_rr*(s_r12+s_ri0));
-        preLightData.layeredRoughnessT[1] = ClampRoughnessForAnalyticalLights(LinearVarianceToRoughness(_s_r0m));
+        preLightData.layeredRoughnessT[1] = ClampRoughnessForDiracLightsByDefault(LinearVarianceToRoughness(_s_r0m));
 
         if ( haveAnisotropy )
         {
             // LOBEA roughness for analytical lights (B part)
-            s_r12 = RoughnessToLinearVariance(bsdfData.roughnessAB);
+            //s_r12 = RoughnessToLinearVariance(bsdfData.roughnessAB);
+            s_r12 = RoughnessToLinearVariance(ClampRoughnessIfHonorLightMinRoughness(bsdfData.roughnessAB, minRoughness));
             _s_r0m = s_ti0 + j0i*(s_t0i + s_r12 + m_rr*(s_r12+s_ri0));
-            preLightData.layeredRoughnessB[0] = ClampRoughnessForAnalyticalLights(LinearVarianceToRoughness(_s_r0m));
+            preLightData.layeredRoughnessB[0] = ClampRoughnessForDiracLightsByDefault(LinearVarianceToRoughness(_s_r0m));
 
             // LOBEB roughness for analytical lights (B part)
-            s_r12 = RoughnessToLinearVariance(bsdfData.roughnessBB);
+            //s_r12 = RoughnessToLinearVariance(bsdfData.roughnessBB);
+            s_r12 = RoughnessToLinearVariance(ClampRoughnessIfHonorLightMinRoughness(bsdfData.roughnessBB, minRoughness));
             _s_r0m = s_ti0 + j0i*(s_t0i + s_r12 + m_rr*(s_r12+s_ri0));
-            preLightData.layeredRoughnessB[1] = ClampRoughnessForAnalyticalLights(LinearVarianceToRoughness(_s_r0m));
+            preLightData.layeredRoughnessB[1] = ClampRoughnessForDiracLightsByDefault(LinearVarianceToRoughness(_s_r0m));
         }
     }
     // ...Non scalar treatment of anisotropy to have the option to remove some anisotropy
@@ -2394,7 +2459,21 @@ PreLightData GetPreLightData(float3 V, PositionInputs posInput, inout BSDFData b
     return preLightData;
 }
 
+void ClampRoughness(inout BSDFData bsdfData, inout PreLightData preLightData, float minRoughness)
+{
+    if (ShouldHonorLightMinRoughness())
+    {
+        if( IsVLayeredEnabled(bsdfData) )
+        {
+            preLightData.layeredCoatRoughness = max(minRoughness, preLightData.layeredCoatRoughness);
+        }
 
+        preLightData.layeredRoughnessT[0] = max(minRoughness, preLightData.layeredRoughnessT[0]);
+        preLightData.layeredRoughnessT[1] = max(minRoughness, preLightData.layeredRoughnessT[1]);
+        preLightData.layeredRoughnessB[0] = max(minRoughness, preLightData.layeredRoughnessB[0]);
+        preLightData.layeredRoughnessB[1] = max(minRoughness, preLightData.layeredRoughnessB[1]);
+    }
+}
 
 //-----------------------------------------------------------------------------
 // bake lighting function
@@ -2647,7 +2726,7 @@ LightTransportData GetLightTransportData(SurfaceData surfaceData, BuiltinData bu
 //                           L, V, N, NdotL,
 //                           H, NdotH, savedLdotH, NdotV);
 
-void BSDF_SetupNormalsAndAngles(BSDFData bsdfData, inout PreLightData preLightData, float inNdotL,
+void BSDF_SetupNormalsAndAngles(BSDFData bsdfData, inout PreLightData preLightData, float lightMinRoughness, float inNdotL,
                                 inout float3 L[NB_LV_DIR], inout float3 V[NB_LV_DIR], out float3 N[NB_NORMALS], out float NdotL[NDOTLV_SIZE],
                                 out float3 H, out float NdotH[NB_NORMALS], out float savedLdotH, out float NdotV[NDOTLV_SIZE])
 {
@@ -2707,7 +2786,7 @@ void BSDF_SetupNormalsAndAngles(BSDFData bsdfData, inout PreLightData preLightDa
 
 #ifdef VLAYERED_RECOMPUTE_PERLIGHT
         // Must call ComputeAdding and update partLambdaV
-        ComputeAdding(savedLdotH, V[TOP_DIR_IDX], bsdfData, preLightData, true);
+        ComputeAdding(savedLdotH, V[TOP_DIR_IDX], bsdfData, preLightData, true, /* testSingularity */ false, lightMinRoughness);
         // Notice the top LdotH as interface angle, symmetric model parametrization (see paper sec. 6 and comments
         // on ComputeAdding)
         // layered*Roughness* and vLayerEnergyCoeff are now updated for the proper light direction.
@@ -2833,9 +2912,10 @@ void CalculateAnisoAngles(BSDFData bsdfData, float3 H, float3 L, float3 V, out f
 //
 // Assumes that NdotL is positive.
 void BSDF2(float3 inV, float3 inL, float inNdotL, float3 positionWS, PreLightData preLightData, BSDFData bsdfData,
-            out float3 diffuseLighting,
-            out float3 specularLighting,
-            out float3 diffuseBsdfNoNdotL)
+           float lightMinRoughness, // this is only used if we recompute the layer stack statistics per light
+           out float3 diffuseLighting,
+           out float3 specularLighting,
+           out float3 diffuseBsdfNoNdotL)
 {
     float NdotL[NDOTLV_SIZE];
     float NdotV[NDOTLV_SIZE];
@@ -2862,7 +2942,7 @@ void BSDF2(float3 inV, float3 inL, float inNdotL, float3 positionWS, PreLightDat
     L[TOP_DIR_IDX] = inL;
     V[TOP_DIR_IDX] = inV;
 
-    BSDF_SetupNormalsAndAngles(bsdfData, preLightData, inNdotL, L, V, N, NdotL, H, NdotH, savedLdotH, NdotV);
+    BSDF_SetupNormalsAndAngles(bsdfData, preLightData, lightMinRoughness, inNdotL, L, V, N, NdotL, H, NdotH, savedLdotH, NdotV);
 
 
     // TODO: with iridescence, will be optionally per light sample
@@ -2985,7 +3065,7 @@ void BSDF(float3 inV, float3 inL, float inNdotL, float3 positionWS, PreLightData
     out float3 specularLighting)
 {
     float3 unused;
-    BSDF2(inV, inL, inNdotL, positionWS, preLightData, bsdfData,
+    BSDF2(inV, inL, inNdotL, positionWS, preLightData, bsdfData, /* lightMinRoughness */ 0.0,
         diffuseLighting,
         specularLighting,
         unused);
@@ -3160,10 +3240,16 @@ DirectLighting EvaluateBSDF_Directional(LightLoopContext lightLoopContext,
         // Due to the floating point arithmetic (see math in ComputeSunLightDirection() and
         // GetBSDFAngle()), we will never arrive at this exact number, so no lighting will be reflected.
         // If we increase the roughness somewhat, the trick still works.
-        ClampRoughness(bsdfData, light.minRoughness);
+        // This won't work well in StackLit because the coat roughness influences the bottom one and
+        // a large clamp of the top roughness might not modify the bottom roughness at is above the minRoughness,
+        // while normally this top modification could impact appreciably the bottom.
+        // We give the user the option to honor (see ShouldHonorLightMinRoughness) that minRoughness value,
+        // and such discrepancies can then be avoided by forcing stack recomputations per light
+        // (but it is very expensive).
+        ClampRoughness(bsdfData, preLightData, light.minRoughness);
 
         float3 diffuseBsdf, specularBsdf, diffuseBsdfNoNdotL;
-        BSDF2(V, L, NdotL, posInput.positionWS, preLightData, bsdfData, diffuseBsdf, specularBsdf, diffuseBsdfNoNdotL);
+        BSDF2(V, L, NdotL, posInput.positionWS, preLightData, bsdfData, light.minRoughness, diffuseBsdf, specularBsdf, diffuseBsdfNoNdotL);
 
         if (surfaceReflection)
         {
@@ -3242,10 +3328,10 @@ DirectLighting EvaluateBSDF_Punctual(LightLoopContext lightLoopContext,
         // Simulate a sphere/disk light with this hack
         // Note that it is not correct with our pre-computation of PartLambdaV (mean if we disable the optimization we will not have the
         // same result) but we don't care as it is a hack anyway
-        ClampRoughness(bsdfData, light.minRoughness);
+        ClampRoughness(bsdfData, preLightData, light.minRoughness);
 
         float3 diffuseBsdf, specularBsdf, diffuseBsdfNoNdotL;
-        BSDF2(V, L, NdotL, posInput.positionWS, preLightData, bsdfData, diffuseBsdf, specularBsdf, diffuseBsdfNoNdotL);
+        BSDF2(V, L, NdotL, posInput.positionWS, preLightData, bsdfData, light.minRoughness, diffuseBsdf, specularBsdf, diffuseBsdfNoNdotL);
 
         if (surfaceReflection)
         {

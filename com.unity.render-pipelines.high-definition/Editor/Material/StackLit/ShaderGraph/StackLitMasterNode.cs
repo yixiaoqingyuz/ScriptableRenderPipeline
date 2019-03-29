@@ -597,6 +597,21 @@ namespace UnityEditor.ShaderGraph
         }
 
         [SerializeField]
+        bool m_HonorPerLightMinRoughness;
+
+        public ToggleData honorPerLightMinRoughness
+        {
+            get { return new ToggleData(m_HonorPerLightMinRoughness); }
+            set
+            {
+                if (m_HonorPerLightMinRoughness == value.isOn)
+                    return;
+                m_HonorPerLightMinRoughness = value.isOn;
+                Dirty(ModificationScope.Graph);
+            }
+        }
+
+        [SerializeField]
         bool m_ShadeBaseUsingRefractedAngles;
 
         public ToggleData shadeBaseUsingRefractedAngles

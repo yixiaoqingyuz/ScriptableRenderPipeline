@@ -72,7 +72,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     name = "CameraColor" });
         }
 
-        class DebugViewMaterialData : RenderPassData
+        class DebugViewMaterialData
         {
             public RenderGraphMutableResource   outputColor;
             public RenderGraphMutableResource   outputDepth;
@@ -92,11 +92,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     passData.outputColor = builder.WriteTexture(output);
 
                     builder.SetRenderFunc(
-                    (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                    (DebugViewMaterialData data, RenderGraphContext context) =>
                     {
-                        var debugViewData = (DebugViewMaterialData)data;
-                        var res = renderGraphContext.resources;
-                        HDUtils.DrawFullScreen(renderGraphContext.cmd, globalParams.rtHandleProperties, debugViewData.debugGBufferMaterial, res.GetTexture(debugViewData.outputColor));
+                        var res = context.resources;
+                        HDUtils.DrawFullScreen(context.cmd, context.rtHandleProperties, data.debugGBufferMaterial, res.GetTexture(data.outputColor));
                     });
                 }
             }
@@ -128,18 +127,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         }));
 
                     builder.SetRenderFunc(
-                    (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                    (DebugViewMaterialData data, RenderGraphContext context) =>
                     {
-                        var debugViewData = (DebugViewMaterialData)data;
-                        var res = renderGraphContext.resources;
-                        DrawOpaqueRendererList(debugViewData.frameSettings, res.GetRendererList(debugViewData.opaqueRendererList), renderGraphContext.renderContext, renderGraphContext.cmd);
-                        DrawOpaqueRendererList(debugViewData.frameSettings, res.GetRendererList(debugViewData.transparentRendererList), renderGraphContext.renderContext, renderGraphContext.cmd);
+                        var res = context.resources;
+                        DrawOpaqueRendererList(data.frameSettings, res.GetRendererList(data.opaqueRendererList), context);
+                        DrawOpaqueRendererList(data.frameSettings, res.GetRendererList(data.transparentRendererList), context);
                     });
                 }
             }
         }
 
-        class ResolveColorData : RenderPassData
+        class ResolveColorData
         {
             public RenderGraphResource          input;
             public RenderGraphMutableResource   output;
@@ -159,13 +157,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     passData.passIndex = SampleCountToPassIndex(m_MSAASamples);
 
                     builder.SetRenderFunc(
-                    (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                    (ResolveColorData data, RenderGraphContext context) =>
                     {
-                        var resolveData = (ResolveColorData)data;
-                        var res = renderGraphContext.resources;
-                        var mpb = renderGraphContext.renderGraphPool.GetTempMaterialPropertyBlock();
-                        mpb.SetTexture(HDShaderIDs._ColorTextureMS, res.GetTexture(resolveData.input));
-                        renderGraphContext.cmd.DrawProcedural(Matrix4x4.identity, resolveData.resolveMaterial, resolveData.passIndex, MeshTopology.Triangles, 3, 1, mpb);
+                        var res = context.resources;
+                        var mpb = context.renderGraphPool.GetTempMaterialPropertyBlock();
+                        mpb.SetTexture(HDShaderIDs._ColorTextureMS, res.GetTexture(data.input));
+                        context.cmd.DrawProcedural(Matrix4x4.identity, data.resolveMaterial, data.passIndex, MeshTopology.Triangles, 3, 1, mpb);
                     });
 
                     return passData.output;
@@ -177,38 +174,38 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        protected static void DrawRendererList(RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
+        protected static void DrawRendererList(RendererList rendererList, RenderGraphContext context)
         {
             if (!rendererList.isValid)
                 throw new ArgumentException("Invalid renderer list provided to DrawOpaqueRendererList");
 
             // This is done here because DrawRenderers API lives outside command buffers so we need to make call this before doing any DrawRenders
-            renderContext.ExecuteCommandBuffer(cmd);
-            cmd.Clear();
+            context.renderContext.ExecuteCommandBuffer(context.cmd);
+            context.cmd.Clear();
 
             if (rendererList.stateBlock == null)
-                renderContext.DrawRenderers(rendererList.cullingResult, ref rendererList.drawSettings, ref rendererList.filteringSettings);
+                context.renderContext.DrawRenderers(rendererList.cullingResult, ref rendererList.drawSettings, ref rendererList.filteringSettings);
             else
             {
                 var renderStateBlock = rendererList.stateBlock.Value;
-                renderContext.DrawRenderers(rendererList.cullingResult, ref rendererList.drawSettings, ref rendererList.filteringSettings, ref renderStateBlock);
+                context.renderContext.DrawRenderers(rendererList.cullingResult, ref rendererList.drawSettings, ref rendererList.filteringSettings, ref renderStateBlock);
             }
         }
 
-        protected static void DrawOpaqueRendererList(in FrameSettings frameSettings, RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
+        protected static void DrawOpaqueRendererList(in FrameSettings frameSettings, RendererList rendererList, RenderGraphContext context)
         {
             if (!frameSettings.IsEnabled(FrameSettingsField.OpaqueObjects))
                 return;
 
-            DrawRendererList(rendererList, renderContext, cmd);
+            DrawRendererList(rendererList, context);
         }
 
-        protected static void DrawTransparentRendererList(in FrameSettings frameSettings, RendererList rendererList, ScriptableRenderContext renderContext, CommandBuffer cmd)
+        protected static void DrawTransparentRendererList(in FrameSettings frameSettings, RendererList rendererList, RenderGraphContext context)
         {
             if (!frameSettings.IsEnabled(FrameSettingsField.TransparentObjects))
                 return;
 
-            DrawRendererList(rendererList, renderContext, cmd);
+            DrawRendererList(rendererList, context);
         }
 
         protected static int SampleCountToPassIndex(MSAASamples samples)
@@ -256,7 +253,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
         // XR Specific
-        protected class StereoRenderingPassData : RenderPassData
+        protected class StereoRenderingPassData
         {
             public Camera camera;
         }
@@ -269,15 +266,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 {
                     passData.camera = camera;
                     builder.SetRenderFunc(
-                    (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                    (StereoRenderingPassData data, RenderGraphContext context) =>
                     {
-                        StereoRenderingPassData stereoPassData = (StereoRenderingPassData)data;
                         // Reset scissor and viewport for C++ stereo code
-                        renderGraphContext.cmd.DisableScissorRect();
-                        renderGraphContext.cmd.SetViewport(stereoPassData.camera.pixelRect);
-                        renderGraphContext.renderContext.ExecuteCommandBuffer(renderGraphContext.cmd);
-                        renderGraphContext.cmd.Clear();
-                        renderGraphContext.renderContext.StartMultiEye(stereoPassData.camera);
+                        context.cmd.DisableScissorRect();
+                        context.cmd.SetViewport(data.camera.pixelRect);
+                        context.renderContext.ExecuteCommandBuffer(context.cmd);
+                        context.cmd.Clear();
+                        context.renderContext.StartMultiEye(data.camera);
                     });
                 }
             }
@@ -291,12 +287,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 {
                     passData.camera = camera;
                     builder.SetRenderFunc(
-                    (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                    (StereoRenderingPassData data, RenderGraphContext context) =>
                     {
-                        StereoRenderingPassData stereoPassData = (StereoRenderingPassData)data;
-                        renderGraphContext.renderContext.ExecuteCommandBuffer(renderGraphContext.cmd);
-                        renderGraphContext.cmd.Clear();
-                        renderGraphContext.renderContext.StopMultiEye(stereoPassData.camera);
+                        context.renderContext.ExecuteCommandBuffer(context.cmd);
+                        context.cmd.Clear();
+                        context.renderContext.StopMultiEye(data.camera);
                     });
                 }
             }

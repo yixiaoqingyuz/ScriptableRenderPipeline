@@ -299,6 +299,16 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         #endregion
 
         #region Internal Interface
+        private RenderGraphResourceRegistry()
+        {
+
+        }
+
+        internal RenderGraphResourceRegistry(bool supportMSAA, MSAASamples initialSampleCount)
+        {
+            m_RTHandleSystem.Initialize(1, 1, supportMSAA, initialSampleCount);
+        }
+
         internal void SetRTHandleReferenceSize(int width, int height, MSAASamples msaaSamples)
         {
             m_RTHandleSystem.SetReferenceSize(width, height, msaaSamples);

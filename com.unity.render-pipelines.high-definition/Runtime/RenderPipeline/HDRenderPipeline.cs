@@ -240,10 +240,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
         // RENDER GRAPH
-        RenderGraph m_RenderGraph = new RenderGraph();
+        RenderGraph m_RenderGraph;
         bool        m_UseRenderGraph = false;
         // MSAA resolve materials
-        Material m_DepthResolveMaterial = null;
         Material m_ColorResolveMaterial = null;
 
 
@@ -408,6 +407,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             testPanel.children.Add(list.ToArray());
 
             // Render Graph
+            m_RenderGraph = new RenderGraph(m_Asset.currentPlatformRenderPipelineSettings.supportMSAA, m_MSAASamples);
             InitializeSharedResources(m_Asset);
             InitializeAmbientOcclusion(m_Asset);
             InitializePrepass(m_Asset);

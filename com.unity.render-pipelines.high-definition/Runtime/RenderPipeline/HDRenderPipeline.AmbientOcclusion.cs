@@ -92,7 +92,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return result;
         }
 
-        protected class AOPassData : RenderPassData
+        protected class AOPassData
         {
             public Vector2 viewport;
             public bool msaaEnabled;
@@ -190,12 +190,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 CreateTransientResources(builder, renderPassData, renderPassData.msaaEnabled);
 
                 builder.SetRenderFunc(
-                (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                (AOPassData data, RenderGraphContext context) =>
                 {
-                    AOPassData passData = (AOPassData)data;
-                    var cmd = renderGraphContext.cmd;
-                    var resources = renderGraphContext.resources;
-                    var renderGraphPool = renderGraphContext.renderGraphPool;
+                    var cmd = context.cmd;
+                    var resources = context.resources;
+                    var renderGraphPool = context.renderGraphPool;
 
                     // Share alloc between all render commands
                     float[] sampleWeightTable = renderGraphPool.GetTempArray<float>(12);
@@ -205,23 +204,23 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     int* widths = stackalloc int[7];
                     int* heights = stackalloc int[7];
 
-                    InitializeSizeArrays(widths, heights, passData.cameraWidth, passData.cameraHeight);
+                    InitializeSizeArrays(widths, heights, data.cameraWidth, data.cameraHeight);
 
                     Vector2 GetSize(MipLevel mip) => new Vector2(widths[(int)mip], heights[(int)mip]);
                     Vector3 GetSizeArray(MipLevel mip) => new Vector3(widths[(int)mip], heights[(int)mip], 16);
 
                     // Render logic
-                    PushDownsampleCommands(cmd, passData, resources, widths, heights);
+                    PushDownsampleCommands(cmd, data, resources, widths, heights);
 
-                    PushRenderCommands(cmd, passData, resources.GetTexture(passData.tiledDepthTex1), resources.GetTexture(passData.occlusionTex1), GetSizeArray(MipLevel.L3), sampleWeightTable, sampleThickness, invThicknessTable);
-                    PushRenderCommands(cmd, passData, resources.GetTexture(passData.tiledDepthTex2), resources.GetTexture(passData.occlusionTex2), GetSizeArray(MipLevel.L4), sampleWeightTable, sampleThickness, invThicknessTable);
-                    PushRenderCommands(cmd, passData, resources.GetTexture(passData.tiledDepthTex3), resources.GetTexture(passData.occlusionTex3), GetSizeArray(MipLevel.L5), sampleWeightTable, sampleThickness, invThicknessTable);
-                    PushRenderCommands(cmd, passData, resources.GetTexture(passData.tiledDepthTex4), resources.GetTexture(passData.occlusionTex4), GetSizeArray(MipLevel.L6), sampleWeightTable, sampleThickness, invThicknessTable);
+                    PushRenderCommands(cmd, data, resources.GetTexture(data.tiledDepthTex1), resources.GetTexture(data.occlusionTex1), GetSizeArray(MipLevel.L3), sampleWeightTable, sampleThickness, invThicknessTable);
+                    PushRenderCommands(cmd, data, resources.GetTexture(data.tiledDepthTex2), resources.GetTexture(data.occlusionTex2), GetSizeArray(MipLevel.L4), sampleWeightTable, sampleThickness, invThicknessTable);
+                    PushRenderCommands(cmd, data, resources.GetTexture(data.tiledDepthTex3), resources.GetTexture(data.occlusionTex3), GetSizeArray(MipLevel.L5), sampleWeightTable, sampleThickness, invThicknessTable);
+                    PushRenderCommands(cmd, data, resources.GetTexture(data.tiledDepthTex4), resources.GetTexture(data.occlusionTex4), GetSizeArray(MipLevel.L6), sampleWeightTable, sampleThickness, invThicknessTable);
 
-                    PushUpsampleCommands(cmd, passData, resources.GetTexture(passData.lowDepthTex4), resources.GetTexture(passData.occlusionTex4), resources.GetTexture(passData.lowDepthTex3), resources.GetTexture(passData.occlusionTex3), resources.GetTexture(passData.combinedTex3), GetSize(MipLevel.L4), GetSize(MipLevel.L3));
-                    PushUpsampleCommands(cmd, passData, resources.GetTexture(passData.lowDepthTex3), resources.GetTexture(passData.combinedTex3), resources.GetTexture(passData.lowDepthTex2), resources.GetTexture(passData.occlusionTex2), resources.GetTexture(passData.combinedTex2), GetSize(MipLevel.L3), GetSize(MipLevel.L2));
-                    PushUpsampleCommands(cmd, passData, resources.GetTexture(passData.lowDepthTex2), resources.GetTexture(passData.combinedTex2), resources.GetTexture(passData.lowDepthTex1), resources.GetTexture(passData.occlusionTex1), resources.GetTexture(passData.combinedTex1), GetSize(MipLevel.L2), GetSize(MipLevel.L1));
-                    PushUpsampleCommands(cmd, passData, resources.GetTexture(passData.lowDepthTex1), resources.GetTexture(passData.combinedTex1), resources.GetTexture(passData.linearDepthTex), null, resources.GetTexture(passData.output), GetSize(MipLevel.L1), GetSize(MipLevel.Original));
+                    PushUpsampleCommands(cmd, data, resources.GetTexture(data.lowDepthTex4), resources.GetTexture(data.occlusionTex4), resources.GetTexture(data.lowDepthTex3), resources.GetTexture(data.occlusionTex3), resources.GetTexture(data.combinedTex3), GetSize(MipLevel.L4), GetSize(MipLevel.L3));
+                    PushUpsampleCommands(cmd, data, resources.GetTexture(data.lowDepthTex3), resources.GetTexture(data.combinedTex3), resources.GetTexture(data.lowDepthTex2), resources.GetTexture(data.occlusionTex2), resources.GetTexture(data.combinedTex2), GetSize(MipLevel.L3), GetSize(MipLevel.L2));
+                    PushUpsampleCommands(cmd, data, resources.GetTexture(data.lowDepthTex2), resources.GetTexture(data.combinedTex2), resources.GetTexture(data.lowDepthTex1), resources.GetTexture(data.occlusionTex1), resources.GetTexture(data.combinedTex1), GetSize(MipLevel.L2), GetSize(MipLevel.L1));
+                    PushUpsampleCommands(cmd, data, resources.GetTexture(data.lowDepthTex1), resources.GetTexture(data.combinedTex1), resources.GetTexture(data.linearDepthTex), null, resources.GetTexture(data.output), GetSize(MipLevel.L1), GetSize(MipLevel.Original));
                 });
 
                 return renderPassData.output;
@@ -410,7 +409,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.DispatchCompute(cs, kernel, xcount, ycount, XRGraphics.computePassCount);
         }
 
-        protected class AOPostPassData : RenderPassData
+        protected class AOPostPassData
         {
             public bool enableMSAA;
             public bool isActive; // Temporary
@@ -445,26 +444,25 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
 
                 builder.SetRenderFunc(
-                (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                (AOPostPassData data, RenderGraphContext renderGraphContext) =>
                 {
-                    AOPostPassData passData = (AOPostPassData)data;
                     var cmd = renderGraphContext.cmd;
                     var renderGraphPool = renderGraphContext.renderGraphPool;
                     var resources = renderGraphContext.resources;
 
                     // MSAA Resolve
-                    if (passData.enableMSAA)
+                    if (data.enableMSAA)
                     {
                         MaterialPropertyBlock mpb = renderGraphPool.GetTempMaterialPropertyBlock();
-                        HDUtils.SetRenderTarget(cmd, passData.camera, resources.GetTexture(passData.output));
-                        mpb.SetTexture(HDShaderIDs._DepthValuesTexture, resources.GetTexture(passData.inputDepth));
-                        mpb.SetTexture(HDShaderIDs._MultiAmbientOcclusionTexture, resources.GetTexture(passData.inputAO));
-                        cmd.DrawProcedural(Matrix4x4.identity, passData.resolveMaterial, 0, MeshTopology.Triangles, 3, 1, mpb);
+                        HDUtils.SetRenderTarget(cmd, data.camera, resources.GetTexture(data.output));
+                        mpb.SetTexture(HDShaderIDs._DepthValuesTexture, resources.GetTexture(data.inputDepth));
+                        mpb.SetTexture(HDShaderIDs._MultiAmbientOcclusionTexture, resources.GetTexture(data.inputAO));
+                        cmd.DrawProcedural(Matrix4x4.identity, data.resolveMaterial, 0, MeshTopology.Triangles, 3, 1, mpb);
                     }
 
                     // TODO: This pass should only do MSAA resolve.
                     // Change this to "move resource" a black texture to AO output outside this function and implement SetGlobalTexture on TextureRead
-                    if (!passData.isActive)
+                    if (!data.isActive)
                     {
                         // No AO applied - neutral is black, see the comment in the shaders
                         cmd.SetGlobalTexture(HDShaderIDs._AmbientOcclusionTexture, TextureXR.GetBlackTexture());
@@ -472,8 +470,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     }
                     else
                     {
-                        cmd.SetGlobalTexture(HDShaderIDs._AmbientOcclusionTexture, resources.GetTexture(passData.enableMSAA ? passData.output : passData.finalOutput));
-                        cmd.SetGlobalVector(HDShaderIDs._AmbientOcclusionParam, new Vector4(0f, 0f, 0f, passData.settings.directLightingStrength.value));
+                        cmd.SetGlobalTexture(HDShaderIDs._AmbientOcclusionTexture, resources.GetTexture(data.enableMSAA ? data.output : data.finalOutput));
+                        cmd.SetGlobalVector(HDShaderIDs._AmbientOcclusionParam, new Vector4(0f, 0f, 0f, data.settings.directLightingStrength.value));
                     }
                 });
 

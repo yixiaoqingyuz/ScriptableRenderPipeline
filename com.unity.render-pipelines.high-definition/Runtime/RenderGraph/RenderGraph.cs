@@ -9,10 +9,11 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 
     public ref struct RenderGraphContext
     {
-        public ScriptableRenderContext renderContext;
-        public CommandBuffer cmd;
-        public RenderGraphObjectPool renderGraphPool;
-        public RenderGraphResourceRegistry resources;
+        public ScriptableRenderContext      renderContext;
+        public CommandBuffer                cmd;
+        public RenderGraphObjectPool        renderGraphPool;
+        public RenderGraphResourceRegistry  resources;
+        public RTHandleProperties           rtHandleProperties;
     }
 
     public struct RenderGraphExecuteParams
@@ -22,39 +23,36 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         public MSAASamples msaaSamples;
     }
 
-    public ref struct RenderGraphGlobalParams
-    {
-        public RTHandleProperties rtHandleProperties;
-    }
-
-    public class RenderPassData { }
-    public delegate void RenderFunc(RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext);
+    public delegate void RenderFunc<PassData>(PassData data, RenderGraphContext renderGraphContext) where PassData : class, new();
 
     public class RenderGraph
     {
-        internal class RenderPass
+        internal abstract class RenderPass
         {
-            public string                           passName;
-            public RenderFunc                       renderFunc;
-            public RenderPassData                   passData;
-            public CustomSampler                    customSampler;
-            public List<RenderGraphResource>        resourceReadList = new List<RenderGraphResource>();
-            public List<RenderGraphMutableResource> resourceWriteList = new List<RenderGraphMutableResource>();
-            public List<RenderGraphResource>        usedRendererListList = new List<RenderGraphResource>();
-            public bool                             enableAsyncCompute;
-            public RenderGraphMutableResource       depthBuffer { get { return m_DepthBuffer; } }
-            public RenderGraphMutableResource[]     colorBuffers { get { return m_ColorBuffers; } }
-            public int                              colorBufferMaxIndex { get { return m_MaxColorBufferIndex; } }
+            internal RenderFunc<PassData> GetExecuteDelegate<PassData>()
+                where PassData : class, new() => ((RenderPass<PassData>)this).renderFunc;
 
-            RenderGraphMutableResource[]            m_ColorBuffers = new RenderGraphMutableResource[RenderGraphUtils.kMaxMRTCount];
-            RenderGraphMutableResource              m_DepthBuffer;
-            int                                     m_MaxColorBufferIndex = -1;
+            internal abstract void Execute(RenderGraphContext renderGraphContext);
+            internal abstract void Release(RenderGraphContext renderGraphContext);
+            internal abstract bool HasRenderFunc();
+
+            internal string                           passName;
+            internal CustomSampler                    customSampler;
+            internal List<RenderGraphResource>        resourceReadList = new List<RenderGraphResource>();
+            internal List<RenderGraphMutableResource> resourceWriteList = new List<RenderGraphMutableResource>();
+            internal List<RenderGraphResource>        usedRendererListList = new List<RenderGraphResource>();
+            internal bool                             enableAsyncCompute;
+            internal RenderGraphMutableResource       depthBuffer { get { return m_DepthBuffer; } }
+            internal RenderGraphMutableResource[]     colorBuffers { get { return m_ColorBuffers; } }
+            internal int                              colorBufferMaxIndex { get { return m_MaxColorBufferIndex; } }
+
+            protected RenderGraphMutableResource[]    m_ColorBuffers = new RenderGraphMutableResource[RenderGraphUtils.kMaxMRTCount];
+            protected RenderGraphMutableResource      m_DepthBuffer;
+            protected int                             m_MaxColorBufferIndex = -1;
 
             internal void Clear()
             {
                 passName = "";
-                renderFunc = null;
-                passData = null;
                 customSampler = null;
                 resourceReadList.Clear();
                 resourceWriteList.Clear();
@@ -84,14 +82,44 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
                 resourceWriteList.Add(resource);
             }
         }
+        internal sealed class RenderPass<PassData> : RenderPass
+            where PassData : class, new()
+        {
+            internal PassData data;
+            internal RenderFunc<PassData> renderFunc;
 
-        RenderGraphResourceRegistry             m_Resources = new RenderGraphResourceRegistry();
-        RenderGraphObjectPool                   m_RenderGraphPool = new RenderGraphObjectPool();
-        List<RenderPass>                        m_RenderPasses = new List<RenderPass>();
-        List<RenderGraphResource>               m_RendererLists = new List<RenderGraphResource>();
-        Dictionary<Type, Queue<RenderPassData>> m_RenderPassDataPool = new Dictionary<Type, Queue<RenderPassData>>();
+            internal override void Execute(RenderGraphContext renderGraphContext)
+            {
+                GetExecuteDelegate<PassData>()(data, renderGraphContext);
+            }
+
+            internal override void Release(RenderGraphContext renderGraphContext)
+            {
+                Clear();
+                renderGraphContext.renderGraphPool.Release(data);
+                data = null;
+                renderFunc = null;
+                renderGraphContext.renderGraphPool.Release(this);
+            }
+
+            internal override bool HasRenderFunc()
+            {
+                return renderFunc != null;
+            }
+        }
+
+
+        RenderGraphResourceRegistry m_Resources;
+        RenderGraphObjectPool       m_RenderGraphPool = new RenderGraphObjectPool();
+        List<RenderPass>            m_RenderPasses = new List<RenderPass>();
+        List<RenderGraphResource>   m_RendererLists = new List<RenderGraphResource>();
 
         #region Public Interface
+
+        public RenderGraph(bool supportMSAA, MSAASamples initialSampleCount)
+        {
+            m_Resources = new RenderGraphResourceRegistry(supportMSAA, initialSampleCount);
+        }
 
         public void Cleanup()
         {
@@ -109,29 +137,25 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             return m_Resources.CreateTexture(desc, shaderProperty);
         }
 
-        public RenderGraphBuilder AddRenderPass<PassData>(string passName, out PassData passData, CustomSampler customSampler = null) where PassData : RenderPassData, new()
+        public RenderGraphBuilder AddRenderPass<PassData>(string passName, out PassData passData, CustomSampler customSampler = null) where PassData : class, new()
         {
-            // WARNING: Currently pooling won't re-init the data inside PassData... this could lead to problems if users don't fill all the members properly (like having stale resource handles for example)
-            passData = AllocatePassData<PassData>();
-
-            var renderPass = m_RenderGraphPool.Get<RenderPass>();
+            var renderPass = m_RenderGraphPool.Get<RenderPass<PassData>>();
             renderPass.Clear();
+            renderPass.data = m_RenderGraphPool.Get<PassData>();
             renderPass.passName = passName;
-            renderPass.renderFunc = null;
-            renderPass.passData = passData;
             renderPass.customSampler = customSampler;
+
+            passData = renderPass.data;
 
             m_RenderPasses.Add(renderPass);
 
-            return new RenderGraphBuilder(this, m_Resources, renderPass);
+            return new RenderGraphBuilder(m_Resources, renderPass);
         }
 
         public void Execute(ScriptableRenderContext renderContext, CommandBuffer cmd, RenderGraphExecuteParams parameters)
         {
             // Update RTHandleSystem with size for this rendering pass.
             m_Resources.SetRTHandleReferenceSize(parameters.renderingWidth, parameters.renderingHeight, parameters.msaaSamples);
-            RenderGraphGlobalParams globalParameters = new RenderGraphGlobalParams();
-            globalParameters.rtHandleProperties = m_Resources.GetRTHandleProperties();
 
             // First pass, traversal and pruning
             for (int passIndex = 0; passIndex < m_RenderPasses.Count; ++passIndex)
@@ -167,6 +191,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             rgContext.renderContext = renderContext;
             rgContext.renderGraphPool = m_RenderGraphPool;
             rgContext.resources = m_Resources;
+            rgContext.rtHandleProperties = m_Resources.GetRTHandleProperties();
 
             try
             {
@@ -175,9 +200,9 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
                     var pass = m_RenderPasses[passIndex];
                     using (new ProfilingSample(cmd, pass.passName, pass.customSampler))
                     {
-                        PreRenderPassExecute(passIndex, pass, rgContext, globalParameters);
-                        pass.renderFunc(pass.passData, globalParameters, rgContext);
-                        PostRenderPassExecute(passIndex, pass);
+                        PreRenderPassExecute(passIndex, pass, rgContext);
+                        pass.Execute(rgContext);
+                        PostRenderPassExecute(passIndex, pass, rgContext);
                     }
                 }
             }
@@ -196,7 +221,12 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         #endregion
 
         #region Internal Interface
-        void PreRenderPassCreateAndClearRenderTargets(int passIndex, in RenderPass pass, RenderGraphContext rgContext, RenderGraphGlobalParams parameters)
+        private RenderGraph()
+        {
+
+        }
+
+        void PreRenderPassCreateAndClearRenderTargets(int passIndex, in RenderPass pass, RenderGraphContext rgContext)
         {
             foreach (var resource in pass.resourceWriteList)
             {
@@ -211,14 +241,14 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
                         using (new ProfilingSample(rgContext.cmd, "RenderGraph: Clear Buffer"))
                         {
                             var clearFlag = resourceDesc.desc.depthBufferBits != DepthBits.None ? ClearFlag.Depth : ClearFlag.Color;
-                            HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.rtHandleProperties, m_Resources.GetTexture(resource), clearFlag, resourceDesc.desc.clearColor);
+                            HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, rgContext.rtHandleProperties, m_Resources.GetTexture(resource), clearFlag, resourceDesc.desc.clearColor);
                         }
                     }
                 }
             }
         }
 
-        void PreRenderPassSetRenderTargets(in RenderPass pass, RenderGraphContext rgContext, RenderGraphGlobalParams parameters)
+        void PreRenderPassSetRenderTargets(in RenderPass pass, RenderGraphContext rgContext)
         {
             if (pass.depthBuffer.IsValid() || pass.colorBufferMaxIndex != -1)
             {
@@ -236,7 +266,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 
                     if (pass.depthBuffer.IsValid())
                     {
-                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.rtHandleProperties, mrtArray, m_Resources.GetTexture(pass.depthBuffer));
+                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, rgContext.rtHandleProperties, mrtArray, m_Resources.GetTexture(pass.depthBuffer));
                     }
                     else
                     {
@@ -247,11 +277,11 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
                 {
                     if (pass.depthBuffer.IsValid())
                     {
-                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.rtHandleProperties, m_Resources.GetTexture(pass.colorBuffers[0]), m_Resources.GetTexture(pass.depthBuffer));
+                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, rgContext.rtHandleProperties, m_Resources.GetTexture(pass.colorBuffers[0]), m_Resources.GetTexture(pass.depthBuffer));
                     }
                     else
                     {
-                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, parameters.rtHandleProperties, m_Resources.GetTexture(pass.colorBuffers[0]));
+                        HDPipeline.HDUtils.SetRenderTarget(rgContext.cmd, rgContext.rtHandleProperties, m_Resources.GetTexture(pass.colorBuffers[0]));
                     }
 
                 }
@@ -270,17 +300,16 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             }
         }
 
-        void PreRenderPassExecute(int passIndex, in RenderPass pass, RenderGraphContext rgContext, RenderGraphGlobalParams parameters)
+        void PreRenderPassExecute(int passIndex, in RenderPass pass, RenderGraphContext rgContext)
         {
             // TODO merge clear and setup here if possible
-            PreRenderPassCreateAndClearRenderTargets(passIndex, pass, rgContext, parameters);
-            PreRenderPassSetRenderTargets(pass, rgContext, parameters);
+            PreRenderPassCreateAndClearRenderTargets(passIndex, pass, rgContext);
+            PreRenderPassSetRenderTargets(pass, rgContext);
             PreRenderPassSetGlobalTextures(pass, rgContext);
         }
 
-        void PostRenderPassExecute(int passIndex, in RenderPass pass)
+        void PostRenderPassExecute(int passIndex, in RenderPass pass, RenderGraphContext renderGraphContext)
         {
-            ReleasePassData(pass.passData);
             m_RenderGraphPool.ReleaseAllTempAlloc();
 
             foreach (var resource in pass.resourceReadList)
@@ -304,43 +333,13 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
                 }
             }
 
+            pass.Release(renderGraphContext);
         }
 
         void ClearRenderPasses()
         {
-            foreach(var pass in m_RenderPasses)
-            {
-                m_RenderGraphPool.Release(pass);
-            }
             m_RenderPasses.Clear();
         }
-
-        PassData AllocatePassData<PassData>() where PassData : RenderPassData, new()
-        {
-            Type t = typeof(PassData);
-            Queue<RenderPassData> pool = null;
-            if (!m_RenderPassDataPool.TryGetValue(t, out pool))
-            {
-                return new PassData();
-            }
-            else
-            {
-                return (pool.Count != 0) ? (PassData)pool.Dequeue() : new PassData();
-            }
-        }
-
-        void ReleasePassData(RenderPassData data)
-        {
-            Type t = data.GetType();
-            if (!m_RenderPassDataPool.TryGetValue(t, out Queue<RenderPassData> pool))
-            {
-                pool = new Queue<RenderPassData>();
-                m_RenderPassDataPool.Add(t, pool);
-            }
-
-            pool.Enqueue(data);
-        }
-
 
         #endregion
     }

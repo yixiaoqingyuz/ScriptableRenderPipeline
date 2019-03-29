@@ -74,7 +74,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return result;
         }
 
-        protected class DepthPrepassData : RenderPassData
+        protected class DepthPrepassData
         {
             public FrameSettings frameSettings;
             public bool msaaEnabled;
@@ -144,10 +144,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                             }));
 
                         builder.SetRenderFunc(
-                        (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                        (DepthPrepassData data, RenderGraphContext context) =>
                         {
-                            DepthPrepassData prepassData = (DepthPrepassData)data;
-                            DrawOpaqueRendererList(prepassData.frameSettings, renderGraphContext.resources.GetRendererList(prepassData.rendererList1), renderGraphContext.renderContext, renderGraphContext.cmd);
+                            DrawOpaqueRendererList(data.frameSettings, context.resources.GetRendererList(data.rendererList1), context);
                         });
                     }
                     break;
@@ -187,22 +186,20 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                             passData.depthAsColorBuffer = builder.WriteTexture(GetDepthTexture(true));
 
                         builder.SetRenderFunc(
-                        (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                        (DepthPrepassData data, RenderGraphContext context) =>
                         {
-                            DepthPrepassData prepassData = (DepthPrepassData)data;
-
-                            HDUtils.SetRenderTarget(renderGraphContext.cmd, globalParams.rtHandleProperties, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
+                            HDUtils.SetRenderTarget(context.cmd, context.rtHandleProperties, context.resources.GetTexture(data.depthBuffer));
                             // XRTODO: wait for XR SDK integration and implement custom version in HDUtils with dynamic resolution support
                             //XRUtils.DrawOcclusionMesh(cmd, hdCamera.camera, hdCamera.camera.stereoEnabled);
-                            DrawOpaqueRendererList(prepassData.frameSettings, renderGraphContext.resources.GetRendererList(prepassData.rendererList1), renderGraphContext.renderContext, renderGraphContext.cmd);
+                            DrawOpaqueRendererList(data.frameSettings, context.resources.GetRendererList(data.rendererList1), context);
 
-                            var mrt = RenderGraphUtils.GetMRTArray(prepassData.msaaEnabled ? 2 : 1);
-                            mrt[0] = renderGraphContext.resources.GetTexture(prepassData.normalBuffer);
-                            if (prepassData.msaaEnabled)
-                                mrt[1] = renderGraphContext.resources.GetTexture(prepassData.depthAsColorBuffer);
+                            var mrt = RenderGraphUtils.GetMRTArray(data.msaaEnabled ? 2 : 1);
+                            mrt[0] = context.resources.GetTexture(data.normalBuffer);
+                            if (data.msaaEnabled)
+                                mrt[1] = context.resources.GetTexture(data.depthAsColorBuffer);
 
-                            HDUtils.SetRenderTarget(renderGraphContext.cmd, globalParams.rtHandleProperties, mrt, renderGraphContext.resources.GetTexture(prepassData.depthBuffer));
-                            DrawOpaqueRendererList(prepassData.frameSettings, renderGraphContext.resources.GetRendererList(prepassData.rendererList2), renderGraphContext.renderContext, renderGraphContext.cmd);
+                            HDUtils.SetRenderTarget(context.cmd, context.rtHandleProperties, mrt, context.resources.GetTexture(data.depthBuffer));
+                            DrawOpaqueRendererList(data.frameSettings, context.resources.GetRendererList(data.rendererList2), context);
                         });
                     }
                     break;
@@ -221,7 +218,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return shouldRenderMotionVectorAfterGBuffer;
         }
 
-        protected class ObjectVelocityPassData : RenderPassData
+        protected class ObjectVelocityPassData
         {
             public FrameSettings                frameSettings;
             public RenderGraphMutableResource   depthBuffer;
@@ -256,15 +253,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     }));
 
                 builder.SetRenderFunc(
-                (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                (ObjectVelocityPassData data, RenderGraphContext context) =>
                 {
-                    ObjectVelocityPassData prepassData = (ObjectVelocityPassData)data;
-                    DrawOpaqueRendererList(prepassData.frameSettings, renderGraphContext.resources.GetRendererList(prepassData.rendererList), renderGraphContext.renderContext, renderGraphContext.cmd);
+                    DrawOpaqueRendererList(data.frameSettings, context.resources.GetRendererList(data.rendererList), context);
                 });
             }
         }
 
-        protected class GBufferPassData : RenderPassData
+        protected class GBufferPassData
         {
             public FrameSettings                frameSettings;
             public RenderGraphResource          rendererList;
@@ -335,17 +331,16 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     }));
 
                 builder.SetRenderFunc(
-                (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                (GBufferPassData data, RenderGraphContext context) =>
                 {
-                    GBufferPassData gbufferPassData = (GBufferPassData)data;
-                    DrawOpaqueRendererList(gbufferPassData.frameSettings, renderGraphContext.resources.GetRendererList(gbufferPassData.rendererList), renderGraphContext.renderContext, renderGraphContext.cmd);
+                    DrawOpaqueRendererList(data.frameSettings, context.resources.GetRendererList(data.rendererList), context);
                 });
             }
 
             return output;
         }
 
-        protected class ResolvePrepassData : RenderPassData
+        protected class ResolvePrepassData
         {
             public RenderGraphMutableResource   depthBuffer;
             public RenderGraphMutableResource   depthValuesBuffer;
@@ -378,17 +373,16 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 passData.depthAsColorBufferMSAA = builder.ReadTexture(GetDepthTexture(true));
 
                 builder.SetRenderFunc(
-                (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                (ResolvePrepassData data, RenderGraphContext context) =>
                 {
-                    ResolvePrepassData resolvePrepassData = (ResolvePrepassData)data;
-                    renderGraphContext.cmd.DrawProcedural(Matrix4x4.identity, resolvePrepassData.depthResolveMaterial, resolvePrepassData.depthResolvePassIndex, MeshTopology.Triangles, 3, 1);
+                    context.cmd.DrawProcedural(Matrix4x4.identity, data.depthResolveMaterial, data.depthResolvePassIndex, MeshTopology.Triangles, 3, 1);
                 });
 
                 return depthValuesBuffer;
             }
         }
 
-        protected class CopyDepthPassData : RenderPassData
+        protected class CopyDepthPassData
         {
             public RenderGraphResource          inputDepth;
             public RenderGraphMutableResource   outputDepth;
@@ -410,10 +404,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     passData.height = hdCamera.actualHeight;
 
                     builder.SetRenderFunc(
-                    (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                    (CopyDepthPassData data, RenderGraphContext context) =>
                     {
-                        CopyDepthPassData copyDepthPassData = (CopyDepthPassData)data;
-                        RenderGraphResourceRegistry resources = renderGraphContext.resources;
+                        RenderGraphResourceRegistry resources = context.resources;
                         // TODO: maybe we don't actually need the top MIP level?
                         // That way we could avoid making the copy, and build the MIP hierarchy directly.
                         // The downside is that our SSR tracing accuracy would decrease a little bit.
@@ -422,7 +415,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         // TODO: reading the depth buffer with a compute shader will cause it to decompress in place.
                         // On console, to preserve the depth test performance, we must NOT decompress the 'm_CameraDepthStencilBuffer' in place.
                         // We should call decompressDepthSurfaceToCopy() and decompress it to 'm_CameraDepthBufferMipChain'.
-                        copyDepthPassData.GPUCopy.SampleCopyChannel_xyzw2x(renderGraphContext.cmd, resources.GetTexture(copyDepthPassData.inputDepth), resources.GetTexture(copyDepthPassData.outputDepth), new RectInt(0, 0, copyDepthPassData.width, copyDepthPassData.height));
+                        data.GPUCopy.SampleCopyChannel_xyzw2x(context.cmd, resources.GetTexture(data.inputDepth), resources.GetTexture(data.outputDepth), new RectInt(0, 0, data.width, data.height));
                     });
                 }
 
@@ -430,7 +423,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        protected class GenerateDepthPyramidPassData : RenderPassData
+        protected class GenerateDepthPyramidPassData
         {
             public RenderGraphMutableResource   depthTexture;
             public HDUtils.PackedMipChainInfo   mipInfo;
@@ -449,10 +442,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 passData.mipGenerator = m_MipGenerator;
 
                 builder.SetRenderFunc(
-                (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                (GenerateDepthPyramidPassData data, RenderGraphContext context) =>
                 {
-                    var depthPyramidData = (GenerateDepthPyramidPassData)data;
-                    depthPyramidData.mipGenerator.RenderMinDepthPyramid(renderGraphContext.cmd, renderGraphContext.resources.GetTexture(depthPyramidData.depthTexture), depthPyramidData.mipInfo);
+                    data.mipGenerator.RenderMinDepthPyramid(context.cmd, context.resources.GetTexture(data.depthTexture), data.mipInfo);
                 });
             }
 
@@ -469,7 +461,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             //PushFullScreenDebugTextureMip(hdCamera, cmd, m_SharedRTManager.GetDepthTexture(), mipCount, m_PyramidScale, debugMode);
         }
 
-        protected class CameraVelocityPassData : RenderPassData
+        protected class CameraVelocityPassData
         {
             public Material cameraMotionVectorMaterial;
             public RenderGraphMutableResource velocityBuffer;
@@ -492,11 +484,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 passData.velocityBuffer = builder.WriteTexture(GetVelocityBuffer());
 
                 builder.SetRenderFunc(
-                (RenderPassData data, RenderGraphGlobalParams globalParams, RenderGraphContext renderGraphContext) =>
+                (CameraVelocityPassData data, RenderGraphContext context) =>
                 {
-                    var cameraVelocityData = (CameraVelocityPassData)data;
-                    var res = renderGraphContext.resources;
-                    HDUtils.DrawFullScreen(renderGraphContext.cmd, globalParams.rtHandleProperties, cameraVelocityData.cameraMotionVectorMaterial, res.GetTexture(cameraVelocityData.velocityBuffer), res.GetTexture(cameraVelocityData.depthBuffer), null, 0);
+                    var res = context.resources;
+                    HDUtils.DrawFullScreen(context.cmd, context.rtHandleProperties, data.cameraMotionVectorMaterial, res.GetTexture(data.velocityBuffer), res.GetTexture(data.depthBuffer), null, 0);
                 });
             }
 

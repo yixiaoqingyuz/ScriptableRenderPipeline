@@ -5,11 +5,9 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 {
     public struct RenderGraphBuilder : IDisposable
     {
-
-        RenderGraph                         m_RenderGraph;
-        RenderGraphResourceRegistry         m_RenderGraphResources;
-        RenderGraph.RenderPass              m_RenderPass;
-        bool                                m_Disposed;
+        RenderGraphResourceRegistry m_RenderGraphResources;
+        RenderGraph.RenderPass      m_RenderPass;
+        bool                        m_Disposed;
 
         #region Public Interface
         public RenderGraphMutableResource CreateTexture( in TextureDesc desc, int shaderProperty = 0)
@@ -64,10 +62,9 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
             m_RenderPass.usedRendererListList.Add(resource);
             return resource;
         }
-
-        public void SetRenderFunc(RenderFunc renderFunc)
+        public void SetRenderFunc<PassData>(RenderFunc<PassData> renderFunc) where PassData : class, new()
         {
-            m_RenderPass.renderFunc = renderFunc;
+            ((RenderGraph.RenderPass<PassData>)m_RenderPass).renderFunc = renderFunc;
         }
 
         public void EnableAsyncCompute(bool value)
@@ -82,11 +79,10 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         #endregion
 
         #region Internal Interface
-        internal RenderGraphBuilder(RenderGraph renderGraph, RenderGraphResourceRegistry resources, RenderGraph.RenderPass renderPass)
+        internal RenderGraphBuilder(RenderGraphResourceRegistry resources, RenderGraph.RenderPass renderPass)
         {
             m_RenderPass = renderPass;
             m_Disposed = false;
-            m_RenderGraph = renderGraph;
             m_RenderGraphResources = resources;
         }
 
@@ -97,7 +93,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 
             if (disposing)
             {
-                if (m_RenderPass.renderFunc == null)
+                if (!m_RenderPass.HasRenderFunc())
                 {
                     throw new InvalidOperationException("AddRenderPass was not provided with an execute function.");
                 }

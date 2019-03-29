@@ -507,7 +507,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             var cameraPosition = camera.transform.position;
 
             // XR multipass support
-            if (camera.stereoEnabled && viewCount == 1)
+            if (xr.enabled && viewCount == 1)
                 GetXrViewParameters(0, out proj, out view, out cameraPosition);
 
             UpdateViewConstants(ref mainViewConstants, proj, view, cameraPosition, jitterProjectionMatrix);

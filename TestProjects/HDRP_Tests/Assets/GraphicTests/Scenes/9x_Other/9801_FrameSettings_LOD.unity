@@ -916,7 +916,7 @@ GameObject:
   - component: {fileID: 174013717}
   - component: {fileID: 174013716}
   m_Layer: 0
-  m_Name: Camera_BS_0_5__MO_2
+  m_Name: Camera_BS_0_25__MO_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -978,7 +978,7 @@ MonoBehaviour:
     bitDatas:
       data1: 69284255760157
       data2: 4539628424389459968
-    lodBias: 0.5
+    lodBias: 0.25
     lodBiasMode: 1
     maximumLODLevel: 2
     maximumLODLevelMode: 1
@@ -1435,7 +1435,7 @@ GameObject:
   - component: {fileID: 238838736}
   - component: {fileID: 238838735}
   m_Layer: 0
-  m_Name: Camera_BS_0_5__MQ_*
+  m_Name: Camera_BS_0_25__MQ_*
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1483,7 +1483,7 @@ MonoBehaviour:
     bitDatas:
       data1: 69284255760157
       data2: 4539628424389459968
-    lodBias: 0.5
+    lodBias: 0.25
     lodBiasMode: 1
     maximumLODLevel: 2
     maximumLODLevelMode: 0
@@ -2602,7 +2602,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 447705153}
-  m_Text: Scale 0.5
+  m_Text: Scale 0.25
   m_OffsetZ: 0
   m_CharacterSize: 0.015
   m_LineSpacing: 1
@@ -3858,7 +3858,7 @@ GameObject:
   - component: {fileID: 732034766}
   - component: {fileID: 732034765}
   m_Layer: 0
-  m_Name: Camera_BS_0_5__MF_1
+  m_Name: Camera_BS_0_25__MF_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3920,7 +3920,7 @@ MonoBehaviour:
     bitDatas:
       data1: 69284255760157
       data2: 4539628424389459968
-    lodBias: 0.5
+    lodBias: 0.25
     lodBiasMode: 1
     maximumLODLevel: 1
     maximumLODLevelMode: 2
@@ -4411,7 +4411,7 @@ GameObject:
   - component: {fileID: 894061474}
   - component: {fileID: 894061473}
   m_Layer: 0
-  m_Name: Camera_BS_0_5__MF_3
+  m_Name: Camera_BS_0_25__MF_3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4473,7 +4473,7 @@ MonoBehaviour:
     bitDatas:
       data1: 69284255760157
       data2: 4539628424389459968
-    lodBias: 0.5
+    lodBias: 0.25
     lodBiasMode: 1
     maximumLODLevel: 3
     maximumLODLevelMode: 2
@@ -7251,7 +7251,7 @@ GameObject:
   - component: {fileID: 2116227533}
   - component: {fileID: 2116227532}
   m_Layer: 0
-  m_Name: Camera_BS_0_5__MO_1
+  m_Name: Camera_BS_0_25__MO_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7313,7 +7313,7 @@ MonoBehaviour:
     bitDatas:
       data1: 69284255760157
       data2: 4539628424389459968
-    lodBias: 0.5
+    lodBias: 0.25
     lodBiasMode: 1
     maximumLODLevel: 1
     maximumLODLevelMode: 1

@@ -45,6 +45,26 @@ namespace UnityEditor.Rendering.LookDev
 
         public CameraState GetCameraState(ViewIndex index)
             => m_Cameras[(int)index];
+
+        internal void Validate()
+        {
+            if (m_Views == null || m_Views.Length != 2)
+            {
+                m_Views = new ViewContext[2]
+                {
+                    new ViewContext(),
+                    new ViewContext()
+                };
+            }
+            if (m_Cameras == null || m_Cameras.Length != 2)
+            {
+                m_Cameras = new CameraState[2]
+                {
+                    new CameraState(),
+                    new CameraState()
+                };
+            }
+        }
     }
     
     [System.Serializable]

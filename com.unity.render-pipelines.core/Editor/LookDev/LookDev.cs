@@ -53,7 +53,10 @@ namespace UnityEditor.Rendering.LookDev
         {
             var last = LoadConfigInternal(path);
             if (last != null)
+            {
+                last.Validate();
                 currentContext = last;
+            }
         }
 
         public static void SaveConfig(string path = lastRenderingDataSavePath)

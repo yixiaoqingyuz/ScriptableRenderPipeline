@@ -13,6 +13,8 @@ namespace UnityEditor.Rendering.LookDev
         void SetTexture(ViewIndex index, Texture texture);
 
         event Action<Layout> OnLayoutChanged;
+
+        event Action OnRenderDocAcquisitionTriggered;
     }
 
     /// <summary>
@@ -49,6 +51,7 @@ namespace UnityEditor.Rendering.LookDev
         VisualElement m_EnvironmentContainer;
 
         Image[] m_Views = new Image[2];
+        
 
         Layout layout
         {
@@ -115,6 +118,13 @@ namespace UnityEditor.Rendering.LookDev
             remove => OnLayoutChangedInternal -= value;
         }
 
+        event Action OnRenderDocAcquisitionTriggeredInternal;
+        event Action IDisplayer.OnRenderDocAcquisitionTriggered
+        {
+            add => OnRenderDocAcquisitionTriggeredInternal += value;
+            remove => OnRenderDocAcquisitionTriggeredInternal -= value;
+        }
+
         public event Action OnWindowClosed;
 
         void OnEnable()
@@ -171,6 +181,13 @@ namespace UnityEditor.Rendering.LookDev
 
 
             toolbar.Add(new ToolbarSpacer() { flex = true });
+
+            //TODO: better RenderDoc integration
+            toolbar.Add(new ToolbarButton(() => OnRenderDocAcquisitionTriggeredInternal?.Invoke())
+            {
+                text = "RenderDoc Content"
+            });
+            
             toolbar.Add(toolbarEnvironment);
             rootVisualElement.Add(toolbar);
         }

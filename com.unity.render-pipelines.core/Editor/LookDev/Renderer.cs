@@ -1,5 +1,10 @@
+//#define TEMPORARY_RENDERDOC_INTEGRATION //require specific c++
+
 using System;
+using System.Linq.Expressions;
+using System.Reflection;
 using UnityEditor.SceneManagement;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
@@ -90,22 +95,30 @@ namespace UnityEditor.Rendering.LookDev
 
         Color m_AmbientColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
         bool m_PixelPerfect;
+        bool m_RenderDocAcquisitionRequested;
 
         public Renderer(
             IDisplayer displayer,
             Context contexts)
         {
-            this.m_Displayer = displayer;
-            this.m_Contexts = contexts;
+            m_Displayer = displayer;
+            m_Contexts = contexts;
 
             //TODO: add a second stage
             m_Stage = new Stage("LookDevViewA");
 
+            m_Displayer.OnRenderDocAcquisitionTriggered += RenderDocAcquisitionRequested;
             EditorApplication.update += Render;
         }
 
+        void RenderDocAcquisitionRequested()
+            => m_RenderDocAcquisitionRequested = true;
+
         void CleanUp()
-            => EditorApplication.update -= Render;
+        {
+            m_Displayer.OnRenderDocAcquisitionTriggered -= RenderDocAcquisitionRequested;
+            EditorApplication.update -= Render;
+        }
         public void Dispose()
         {
             CleanUp();
@@ -147,6 +160,11 @@ namespace UnityEditor.Rendering.LookDev
                     RenderDualView();
                     break;
             }
+
+            //stating that RenderDoc do not need to acquire anymore should
+            //allows to gather both view and composition in render doc at once
+            //TODO: check this
+            m_RenderDocAcquisitionRequested = false;
         }
 
         bool IsNullArea(Rect r)
@@ -221,10 +239,25 @@ namespace UnityEditor.Rendering.LookDev
             //ShaderUtil.rawViewportRect = new Rect(0, 0, m_RenderTexture.width, m_RenderTexture.height);
             //ShaderUtil.rawScissorRect = new Rect(0, 0, m_RenderTexture.width, m_RenderTexture.height);
             //GL.Clear(true, true, camera.backgroundColor);
+            
+            m_Stage.camera.enabled = true;
+
+#if TEMPORARY_RENDERDOC_INTEGRATION
+            //TODO: make integration EditorWindow agnostic!
+            if (RenderDoc.IsLoaded() && RenderDoc.IsSupported() && m_RenderDocAcquisitionRequested)
+                RenderDoc.BeginCaptureRenderDoc(m_Displayer as EditorWindow);
+#endif
         }
 
         RenderTexture EndPreview(ViewCompositionIndex index)
         {
+#if TEMPORARY_RENDERDOC_INTEGRATION
+            //TODO: make integration EditorWindow agnostic!
+            if (RenderDoc.IsLoaded() && RenderDoc.IsSupported() && m_RenderDocAcquisitionRequested)
+                RenderDoc.EndCaptureRenderDoc(m_Displayer as EditorWindow);
+#endif
+
+            m_Stage.camera.enabled = false;
 
             if (index != ViewCompositionIndex.Composite)
                 //TODO: handle multi-stage

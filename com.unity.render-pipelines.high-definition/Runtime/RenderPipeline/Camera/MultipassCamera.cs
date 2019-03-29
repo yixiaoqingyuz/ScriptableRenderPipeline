@@ -4,19 +4,21 @@ using UnityEngine.Rendering;
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
+    // Empty interface used to override pass behavior and hash code
+    public interface ICameraPass {}
+
     // Used as key in Dictionary
     public struct MultipassCamera : IEquatable<MultipassCamera>
     {
-        public readonly Camera camera;
-        public readonly XRPass pass;
+        public  readonly Camera      camera;
+        public  readonly ICameraPass cameraPass;
+        private readonly int         cachedHashCode;
 
-        readonly int cachedHashCode;
-
-        public MultipassCamera(Camera camera, XRPass pass)
+        public MultipassCamera(Camera camera, ICameraPass cameraPass = null)
         {
-            this.camera = camera;
-            this.pass = pass;
-            cachedHashCode = ComputeHashCode(camera, pass);
+            this.camera     = camera;
+            this.cameraPass = cameraPass;
+            cachedHashCode  = ComputeHashCode(camera, cameraPass);
         }
 
         public static bool operator ==(MultipassCamera x, MultipassCamera y) => x.cachedHashCode == y.cachedHashCode;
@@ -25,14 +27,16 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public override bool Equals(object obj) => obj is MultipassCamera && ((MultipassCamera)obj).cachedHashCode == cachedHashCode;
         public override int GetHashCode() => cachedHashCode;
 
-        static int ComputeHashCode(Camera camera, XRPass pass)
+        static int ComputeHashCode(Camera camera, ICameraPass cameraPass)
         {
             int hash = 13;
 
             unchecked
             {
                 hash = hash * 23 + camera.GetHashCode();
-                hash = hash * 23 + pass.GetHashCode();
+
+                if (cameraPass != null)
+                    hash = hash * 23 + cameraPass.GetHashCode();
             }
 
             return hash;

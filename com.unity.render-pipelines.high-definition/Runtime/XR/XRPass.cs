@@ -48,7 +48,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 #endif
     }
 
-    public class XRPass
+    public class XRPass : ICameraPass
     {
         readonly List<XRView> views = new List<XRView>(2);
 

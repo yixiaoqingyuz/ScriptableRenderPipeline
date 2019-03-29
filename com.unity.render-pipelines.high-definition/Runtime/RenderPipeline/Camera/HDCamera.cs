@@ -236,16 +236,18 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         int numColorPyramidBuffersAllocated = 0;
         int numVolumetricBuffersAllocated   = 0;
 
-        public HDCamera(Camera cam, XRPass xrPass)
+        public HDCamera(Camera cam, ICameraPass pass)
         {
             camera = cam;
-            xr = xrPass;
 
             frustum = new Frustum();
             frustum.planes = new Plane[6];
             frustum.corners = new Vector3[8];
 
             frustumPlaneEquations = new Vector4[6];
+
+            // Always use a valid XR pass to simplify logic
+            xr = (pass as XRPass) ?? XRSystem.emptyPass;
 
             Reset();
         }
@@ -788,11 +790,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
         // Will return NULL if the camera does not exist.
-        public static HDCamera Get(Camera camera, XRPass xrPass)
+        public static HDCamera Get(MultipassCamera multipassCamera)
         {
             HDCamera hdCamera;
 
-            if (!s_Cameras.TryGetValue(new MultipassCamera(camera, xrPass), out hdCamera))
+            if (!s_Cameras.TryGetValue(multipassCamera, out hdCamera))
             {
                 hdCamera = null;
             }
@@ -813,10 +815,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // Pass all the systems that may want to initialize per-camera data here.
         // That way you will never create an HDCamera and forget to initialize the data.
-        public static HDCamera Create(Camera camera, XRPass xrPass)
+        public static HDCamera Create(MultipassCamera multipassCamera)
         {
-            HDCamera hdCamera = new HDCamera(camera, xrPass);
-            s_Cameras.Add(new MultipassCamera(camera, xrPass), hdCamera);
+            HDCamera hdCamera = new HDCamera(multipassCamera.camera, multipassCamera.cameraPass);
+            s_Cameras.Add(multipassCamera, hdCamera);
 
             return hdCamera;
         }

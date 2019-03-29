@@ -19,7 +19,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
     public class XRSystem
     {
-        public XRPass emptyPass { get; private set; } = new XRPass();
+        // Default empty but valid pass
+        public static XRPass emptyPass { get; private set; } = new XRPass();
+
         List<XRPass> passList = new List<XRPass>();
 
 #if USE_XR_SDK
@@ -59,7 +61,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 // XRTODO: support render to texture
                 if (camera.cameraType != CameraType.Game || camera.targetTexture != null || !xrEnabled)
                 {
-                    multipassCameras.Add(new MultipassCamera(camera, emptyPass));
+                    multipassCameras.Add(new MultipassCamera(camera));
                     continue;
                 }
 
@@ -136,7 +138,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         internal void ClearAll()
         {
-            emptyPass = null;
             passList = null;
             displayList = null;
             display = null;

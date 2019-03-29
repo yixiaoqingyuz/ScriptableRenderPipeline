@@ -20,7 +20,7 @@ namespace UnityEditor.Rendering.LookDev
         public float distanceFromPivot => viewSize.value * distanceCoef;
         public Vector3 position
             => pivot.value + rotation.value * new Vector3(0, 0, -distanceFromPivot);
-        public float fov => kDefaultFoV;
+        public float fieldOfView => kDefaultFoV;
         public float farClip => Mathf.Max(1000f, 2000f * viewSize.value);
 
         public void UpdateCamera(Camera camera)
@@ -31,6 +31,8 @@ namespace UnityEditor.Rendering.LookDev
             float farClip = this.farClip;
             camera.nearClipPlane = farClip * 0.000005f;
             camera.farClipPlane = farClip;
+
+            camera.fieldOfView = fieldOfView;
         }
     }
 }

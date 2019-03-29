@@ -54,20 +54,20 @@ namespace UnityEditor.Rendering.LookDev
             camGO.layer = k_PreviewCullingLayerIndex;
 
             m_Camera = camGO.GetComponent<Camera>();
-            m_Camera.cameraType = CameraType.Preview;
+            m_Camera.cameraType = CameraType.Game;
             m_Camera.enabled = false;
             m_Camera.clearFlags = CameraClearFlags.Depth;
             m_Camera.fieldOfView = 15;
             m_Camera.farClipPlane = 10.0f;
             m_Camera.nearClipPlane = 2.0f;
-            m_Camera.cullingMask = k_PreviewCullingLayerIndex;
+            m_Camera.cullingMask = 1 << k_PreviewCullingLayerIndex;
             m_Camera.transform.position = new Vector3(0, 0, -6);
             
             m_Camera.renderingPath = RenderingPath.DeferredShading;
             m_Camera.useOcclusionCulling = false;
             m_Camera.scene = m_PreviewScene;
 
-            m_Camera.backgroundColor = Color.white; // new Color(49.0f / 255.0f, 49.0f / 255.0f, 49.0f / 255.0f, 1.0f);
+            m_Camera.backgroundColor = Color.magenta; // new Color(49.0f / 255.0f, 49.0f / 255.0f, 49.0f / 255.0f, 1.0f);
             if (QualitySettings.activeColorSpace == ColorSpace.Linear)
                 m_Camera.backgroundColor = m_Camera.backgroundColor.linear;
 

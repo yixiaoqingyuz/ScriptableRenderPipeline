@@ -194,21 +194,11 @@ namespace UnityEditor.Rendering.LookDev
         RenderTexture RenderScene(Rect previewRect, CameraState cameraState, ViewCompositionIndex index)
         {
             BeginPreview(previewRect, index);
-            
-            m_Stage.camera.transform.position = cameraState.position;
-            m_Stage.camera.transform.rotation = cameraState.rotation.value;
-            m_Stage.camera.fieldOfView = cameraState.fov;
-            m_Stage.camera.nearClipPlane = 2.0f; // must be >0
-            m_Stage.camera.farClipPlane = cameraState.farClip;
+
+            cameraState.UpdateCamera(m_Stage.camera);
             m_Stage.camera.aspect = previewRect.width / previewRect.height;
-
-
-            m_Stage.camera.enabled = true;
-            var oldAllowPipes = Unsupported.useScriptableRenderPipeline;
-            Unsupported.useScriptableRenderPipeline = true;
+            
             m_Stage.camera.Render();
-            Unsupported.useScriptableRenderPipeline = oldAllowPipes;
-            m_Stage.camera.enabled = false;
 
             return EndPreview(index);
         }

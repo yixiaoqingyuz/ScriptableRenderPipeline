@@ -2,7 +2,7 @@ using System;
 using UnityEngine.Rendering;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.VoxelizedShadowMaps; //seongdae;vxsm
+using UnityEngine.Experimental.VoxelizedShadows; //seongdae;vxsm
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {

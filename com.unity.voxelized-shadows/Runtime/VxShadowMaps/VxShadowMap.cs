@@ -1,5 +1,5 @@
 
-namespace UnityEngine.Experimental.VoxelizedShadowMaps
+namespace UnityEngine.Experimental.VoxelizedShadows
 {
     public enum VoxelResolution
     {

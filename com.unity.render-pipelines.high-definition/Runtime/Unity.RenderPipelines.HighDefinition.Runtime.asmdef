@@ -2,7 +2,7 @@
     "name": "Unity.RenderPipelines.HighDefinition.Runtime",
     "references": [
         "Unity.RenderPipelines.Core.Runtime",
-        "Unity.VoxelizedShadowMaps.Runtime"
+        "Unity.VoxelizedShadows.Runtime"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

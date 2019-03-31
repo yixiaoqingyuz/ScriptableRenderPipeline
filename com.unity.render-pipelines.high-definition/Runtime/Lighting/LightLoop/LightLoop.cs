@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine.Experimental.VoxelizedShadowMaps; //seongdae;vxsm
+using UnityEngine.Experimental.VoxelizedShadows; //seongdae;vxsm
 using UnityEngine.Rendering;
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline

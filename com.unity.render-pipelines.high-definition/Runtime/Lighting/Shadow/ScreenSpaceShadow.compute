@@ -13,7 +13,7 @@
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Material/NormalBuffer.hlsl"
-#include "Packages/com.unity.voxelized-shadowmaps/Runtime/ShaderLibrary/Common.hlsl" //seongdae;vxsm
+#include "Packages/com.unity.voxelized-shadows/Runtime/ShaderLibrary/Common.hlsl" //seongdae;vxsm
 
 #pragma only_renderers d3d11 ps4 xboxone vulkan metal switch
 

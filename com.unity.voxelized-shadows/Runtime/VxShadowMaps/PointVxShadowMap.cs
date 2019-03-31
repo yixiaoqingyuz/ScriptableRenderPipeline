@@ -1,7 +1,7 @@
 
-namespace UnityEngine.Experimental.VoxelizedShadowMaps
+namespace UnityEngine.Experimental.VoxelizedShadows
 {
-    public sealed class SpotVxShadowMap : VxShadowMap
+    public sealed class PointVxShadowMap : VxShadowMap
     {
         // TODO :
         public override int voxelResolutionInt => (int)VoxelResolution._4096;

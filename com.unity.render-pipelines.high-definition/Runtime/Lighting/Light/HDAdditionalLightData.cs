@@ -1,6 +1,6 @@
 using System;
 using UnityEngine.Rendering;
-using UnityEngine.Experimental.VoxelizedShadowMaps; //seongdae;vxsm
+using UnityEngine.Experimental.VoxelizedShadows; //seongdae;vxsm
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Experimental.Rendering;

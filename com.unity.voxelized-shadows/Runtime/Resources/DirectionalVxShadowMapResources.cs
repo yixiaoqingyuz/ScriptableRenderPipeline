@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace UnityEngine.Experimental.VoxelizedShadowMaps
+namespace UnityEngine.Experimental.VoxelizedShadows
 {
     public class DirectionalVxShadowMapResources : ScriptableObject
     {

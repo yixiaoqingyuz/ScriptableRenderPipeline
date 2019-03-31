@@ -6,8 +6,7 @@
         "Unity.Postprocessing.Editor",
         "Unity.RenderPipelines.Core.Runtime",
         "Unity.RenderPipelines.Core.Editor",
-        "Unity.ShaderGraph.Editor",
-        "Unity.VoxelizedShadowMaps.Runtime"
+        "Unity.ShaderGraph.Editor"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [

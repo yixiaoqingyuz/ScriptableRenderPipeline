@@ -3,7 +3,7 @@
     "references": [
         "Unity.Postprocessing.Runtime",
         "Unity.RenderPipelines.Core.Runtime",
-        "Unity.VoxelizedShadowMaps.Runtime"
+        "Unity.VoxelizedShadows.Runtime"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

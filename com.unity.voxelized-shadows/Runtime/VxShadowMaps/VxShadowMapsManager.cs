@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace UnityEngine.Experimental.VoxelizedShadowMaps
+namespace UnityEngine.Experimental.VoxelizedShadows
 {
     public enum RenderPipelineType
     {

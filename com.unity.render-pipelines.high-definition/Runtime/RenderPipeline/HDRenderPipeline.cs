@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using UnityEngine.Experimental.GlobalIllumination;
-using UnityEngine.Experimental.VoxelizedShadowMaps; //seongdae;vxsm
+using UnityEngine.Experimental.VoxelizedShadows; //seongdae;vxsm
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
@@ -296,7 +296,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_GbufferManager = new GBufferManager(asset, m_DeferredMaterial);
             m_DbufferManager = new DBufferManager();
 
-            m_VxShadowMapsManager = new VxShadowMapsManager(UnityEngine.Experimental.VoxelizedShadowMaps.RenderPipelineType.HighDefinition); //seongdae;vxsm
+            m_VxShadowMapsManager = new VxShadowMapsManager(UnityEngine.Experimental.VoxelizedShadows.RenderPipelineType.HighDefinition); //seongdae;vxsm
 
             m_SSSBufferManager.Build(asset);
             m_SharedRTManager.Build(asset);

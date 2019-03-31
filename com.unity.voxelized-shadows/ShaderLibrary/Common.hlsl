@@ -1,6 +1,8 @@
 #ifndef UNITY_VX_SHADOWMAPS_COMMON_INCLUDED
 #define UNITY_VX_SHADOWMAPS_COMMON_INCLUDED
 
+#define USE_EMULATE_COUNTBITS
+
 StructuredBuffer<uint> _VxShadowMapsBuffer;
 
 
@@ -19,6 +21,30 @@ uint emulateCLZ(uint x)
     y = x >>  1; if (y != 0) return n - 2;
 
     return n - x;
+}
+
+uint countBits(uint i)
+{
+#ifdef USE_EMULATE_COUNTBITS
+    i = i - ((i >> 1) & 0x55555555);
+    i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+
+    return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+#else
+    return countbits(i);
+#endif
+}
+
+uint4 countBits(uint4 i)
+{
+#ifdef USE_EMULATE_COUNTBITS
+    i = i - ((i >> 1) & 0x55555555);
+    i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+
+    return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+#else
+    return countbits(i);
+#endif
 }
 
 // todo : calculate uint2 and more?
@@ -61,7 +87,7 @@ uint4 TraverseVxShadowMapPosQ(uint begin, uint3 posQ)
         // find next child node
         uint mask = ~(0xFFFFFFFF << cellShift);
         uint childrenbit = childmask & ((childmask & 0x0000AAAA) >> 1);
-        uint childIndex = countbits(childrenbit & mask);
+        uint childIndex = countBits(childrenbit & mask);
 
         // go down to the next node
         nodeIndex = _VxShadowMapsBuffer[attribute + nodeIndex + 1 + childIndex];

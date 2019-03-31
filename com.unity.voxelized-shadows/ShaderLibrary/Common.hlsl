@@ -1,7 +1,6 @@
 #ifndef UNITY_VX_SHADOWMAPS_COMMON_INCLUDED
 #define UNITY_VX_SHADOWMAPS_COMMON_INCLUDED
 
-
 StructuredBuffer<uint> _VxShadowMapsBuffer;
 
 
@@ -22,13 +21,11 @@ uint emulateCLZ(uint x)
     return n - x;
 }
 
-
 // todo : calculate uint2 and more?
 uint CalculateRescale(uint srcPosbit, uint dstPosbit)
 {
     return 32 - emulateCLZ(srcPosbit ^ dstPosbit);
 }
-
 
 uint4 TraverseVxShadowMapPosQ(uint begin, uint3 posQ)
 {
@@ -73,7 +70,6 @@ uint4 TraverseVxShadowMapPosQ(uint begin, uint3 posQ)
     return uint4(nodeIndex, lit, shadowed, intersected);
 }
 
-
 uint2 TraverseVxShadowMapLeaf(uint begin, uint posQ_z, uint4 innerResult)
 {
     uint attribute   = begin + 18;
@@ -97,7 +93,6 @@ uint2 TraverseVxShadowMapLeaf(uint begin, uint posQ_z, uint4 innerResult)
     return uint2(bitmask0, bitmask1);
 }
 
-
 float PointSampleShadowBitmask(uint2 bitmask2, uint3 posQ)
 {
     uint2 posLeaf = posQ.xy % uint2(8, 8);
@@ -111,7 +106,6 @@ float PointSampleShadowBitmask(uint2 bitmask2, uint3 posQ)
     return litRate;
 }
 
-
 float PointSampleShadowBitmask(uint2 bitmask2, uint3 posQ, uint2 offset)
 {
     uint2 posLeaf = (posQ.xy + offset) % uint2(8, 8);
@@ -124,7 +118,6 @@ float PointSampleShadowBitmask(uint2 bitmask2, uint3 posQ, uint2 offset)
 
     return litRate;
 }
-
 
 float PointSampleVxShadowing(uint begin, float3 positionWS)
 {
@@ -168,6 +161,5 @@ float PointSampleVxShadowing(uint begin, float3 positionWS)
 
     return attenuation;
 }
-
 
 #endif // UNITY_VX_SHADOWMAPS_COMMON_INCLUDED

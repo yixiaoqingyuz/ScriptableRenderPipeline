@@ -7,7 +7,7 @@
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/AreaLighting.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ImageBasedLighting.hlsl"
 
-#include "Packages/com.unity.voxelized-shadows/Runtime/ShaderLibrary/Common.hlsl" //seongdae;vxsm
+#include "Packages/com.unity.voxelized-shadows/ShaderLibrary/Common.hlsl" //seongdae;vxsm
 
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/LightDefinition.cs.hlsl"
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/LightLoop/HDShadow.hlsl"

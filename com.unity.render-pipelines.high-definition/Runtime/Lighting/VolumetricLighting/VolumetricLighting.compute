@@ -178,7 +178,7 @@ VoxelLighting EvaluateVoxelLightingDirectional(LightLoopContext context, uint fe
 
         // Pass the light direction as the normal to avoid issues with shadow biasing code.
         context.shadowValue = EvaluateRuntimeSunShadow(context, posInput, light, -light.forward);
-        context.vxShadowValue = EvaluateRuntimeSunVxShadow(posInput, light); //seongdae;vxsm
+        context.vxShadowValue = EvaluateRuntimeSunVxShadow(context, posInput, light); //seongdae;vxsm
     }
     else
     {

@@ -1003,6 +1003,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     case ShadowsBlendMode.OnlyVxShadowMaps:    lightData.vxShadowsType = 1; break;
                     case ShadowsBlendMode.BlendDynamicShadows: lightData.vxShadowsType = 2; break;
                 }
+
+                //
+                if (dirVxsm.shadowsBlendMode == ShadowsBlendMode.OnlyVxShadowMaps)
+                    m_CurrentShadowSortedSunLightIndex = sortedIndex;
             }
             else
             {
@@ -1958,7 +1962,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         if (additionalLightData.WillRenderShadows())
                         #endif
                         {
-                                int shadowRequestCount;
+                            int shadowRequestCount;
                             shadowIndex = additionalLightData.UpdateShadowRequest(hdCamera, m_ShadowManager, light, cullResults, lightIndex, out shadowRequestCount);
 
 #if UNITY_EDITOR
@@ -2521,17 +2525,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
                 else
                 {
-                cmd.SetComputeBufferParam(clearDispatchIndirectShader, s_ClearDispatchIndirectKernel, HDShaderIDs.g_DispatchIndirectBuffer, s_DispatchIndirectBuffer);
-                cmd.DispatchCompute(clearDispatchIndirectShader, s_ClearDispatchIndirectKernel, 1, 1, 1);
+                    cmd.SetComputeBufferParam(clearDispatchIndirectShader, s_ClearDispatchIndirectKernel, HDShaderIDs.g_DispatchIndirectBuffer, s_DispatchIndirectBuffer);
+                    cmd.DispatchCompute(clearDispatchIndirectShader, s_ClearDispatchIndirectKernel, 1, 1, 1);
 
-                // add tiles to indirect buffer
-                cmd.SetComputeBufferParam(buildDispatchIndirectShader, s_BuildDispatchIndirectKernel, HDShaderIDs.g_DispatchIndirectBuffer, s_DispatchIndirectBuffer);
-                cmd.SetComputeBufferParam(buildDispatchIndirectShader, s_BuildDispatchIndirectKernel, HDShaderIDs.g_TileList, s_TileList);
-                cmd.SetComputeBufferParam(buildDispatchIndirectShader, s_BuildDispatchIndirectKernel, HDShaderIDs.g_TileFeatureFlags, s_TileFeatureFlags);
-                cmd.SetComputeIntParam(buildDispatchIndirectShader, HDShaderIDs.g_NumTiles, numTiles);
-                cmd.SetComputeIntParam(buildDispatchIndirectShader, HDShaderIDs.g_NumTilesX, numTilesX);
-                    cmd.DispatchCompute(buildDispatchIndirectShader, s_BuildDispatchIndirectKernel, (numTiles + k_ThreadGroupOptimalSize - 1) / k_ThreadGroupOptimalSize, 1, 1);
-            }
+                    // add tiles to indirect buffer
+                    cmd.SetComputeBufferParam(buildDispatchIndirectShader, s_BuildDispatchIndirectKernel, HDShaderIDs.g_DispatchIndirectBuffer, s_DispatchIndirectBuffer);
+                    cmd.SetComputeBufferParam(buildDispatchIndirectShader, s_BuildDispatchIndirectKernel, HDShaderIDs.g_TileList, s_TileList);
+                    cmd.SetComputeBufferParam(buildDispatchIndirectShader, s_BuildDispatchIndirectKernel, HDShaderIDs.g_TileFeatureFlags, s_TileFeatureFlags);
+                    cmd.SetComputeIntParam(buildDispatchIndirectShader, HDShaderIDs.g_NumTiles, numTiles);
+                    cmd.SetComputeIntParam(buildDispatchIndirectShader, HDShaderIDs.g_NumTilesX, numTilesX);
+                        cmd.DispatchCompute(buildDispatchIndirectShader, s_BuildDispatchIndirectKernel, (numTiles + k_ThreadGroupOptimalSize - 1) / k_ThreadGroupOptimalSize, 1, 1);
+                }
             }
 
             cmd.EndSample("Build Light List");

@@ -119,10 +119,10 @@ float EvaluateRuntimeSunShadow(LightLoopContext lightLoopContext, PositionInputs
 }
 
 //seongdae;vxsm
-float EvaluateRuntimeSunVxShadow(PositionInputs posInput, DirectionalLightData light)
+float EvaluateRuntimeSunVxShadow(LightLoopContext lightLoopContext, PositionInputs posInput, DirectionalLightData light)
 {
 #ifdef SUPPORT_VX_SHADOWING
-    if ((light.lightDimmer > 0) && (light.shadowDimmer > 0))
+    if ((lightLoopContext.shadowValue > 0) && (light.vxShadowsType > 0) && (light.lightDimmer > 0) && (light.shadowDimmer > 0))
     {
         float3 positionWS = posInput.positionWS + _WorldSpaceCameraPos;
 
@@ -210,6 +210,12 @@ void EvaluateLight_Directional(LightLoopContext lightLoopContext, PositionInputs
 
         shadow = lerp(shadowMask, shadow, light.shadowDimmer);
     }
+    //seongdae;vxsm
+    else if (light.shadowDimmer > 0)
+    {
+        shadow = lerp(shadowMask, lightLoopContext.vxShadowValue, light.shadowDimmer);
+    }
+    //seongdae;vxsm
 
     // Transparents have no contact shadow information
 #ifndef _SURFACE_TYPE_TRANSPARENT

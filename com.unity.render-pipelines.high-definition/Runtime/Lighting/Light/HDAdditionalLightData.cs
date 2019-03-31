@@ -250,13 +250,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         int GetShadowRequestCount()
         {
             //seongdae;vxsm
-            // todo : this should be for not only directional vxsm, but also other type light
-            //var dirVxsm = m_Light.gameObject.GetComponent<DirectionalVxShadowMap>();
-            //if (dirVxsm != null && dirVxsm.IsValid())
-            //{
-            //    if (dirVxsm.shadowsBlendMode == ShadowsBlendMode.OnlyVxShadowMaps)
-            //        return 0;
-            //}
+            // todo : this should be for not only directional vxsm, but also other light type
+            var dirVxsm = m_Light.gameObject.GetComponent<DirectionalVxShadowMap>();
+            if (dirVxsm != null && dirVxsm.IsValid())
+            {
+                if (dirVxsm.shadowsBlendMode == ShadowsBlendMode.OnlyVxShadowMaps)
+                    return 0;
+            }
             //seongdae;vxsm
             return (m_Light.type == LightType.Point) ? 6 : (m_Light.type == LightType.Directional) ? m_ShadowSettings.cascadeShadowSplitCount : 1;
         }

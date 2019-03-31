@@ -413,7 +413,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             // TODO: For MSAA, we'll need to add a Draw path in order to support MSAA properly
             // Use RG16 as we only have one deferred directional and one screen space shadow light currently
-            //m_ScreenSpaceShadowsBuffer = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16_UNorm, enableRandomWrite: true, xrInstancing: true, useDynamicScale: true, name: "ScreenSpaceContactShadowsBuffer"); //seongdae;vxsm;origin
+            //m_ScreenSpaceShadowsBuffer = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16_UNorm, enableRandomWrite: true, xrInstancing: true, useDynamicScale: true, name: "ScreenSpaceShadowsBuffer"); //seongdae;vxsm;origin
             m_ScreenSpaceContactShadowsBuffer = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16_UNorm, enableRandomWrite: true, xrInstancing: true, useDynamicScale: true, name: "ScreenSpaceContactShadowsBuffer"); //seongdae;vxsm
             m_ScreenSpaceVxShadowsBuffer = RTHandles.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: GraphicsFormat.R16_UNorm, enableRandomWrite: true, xrInstancing: true, useDynamicScale: true, name: "ScreenSpaceVxShadowsBuffer"); //seongdae;vxsm
 
@@ -1667,8 +1667,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 {
                     HDUtils.CheckRTCreated(m_ScreenSpaceVxShadowsBuffer);
 
-                    m_LightLoop.RenderScreenSpaceVxShadows(hdCamera, m_ScreenSpaceContactShadowsBuffer, hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA) ? m_SharedRTManager.GetDepthValuesTexture() : m_SharedRTManager.GetDepthTexture(), cmd);
-                    m_LightLoop.SetScreenSpaceVxShadowsTexture(hdCamera, m_ScreenSpaceContactShadowsBuffer, cmd);
+                    m_LightLoop.RenderScreenSpaceVxShadows(hdCamera, m_ScreenSpaceVxShadowsBuffer, hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA) ? m_SharedRTManager.GetDepthValuesTexture() : m_SharedRTManager.GetDepthTexture(), cmd);
+                    m_LightLoop.SetScreenSpaceVxShadowsTexture(hdCamera, m_ScreenSpaceVxShadowsBuffer, cmd);
 
                     PushFullScreenDebugTexture(hdCamera, cmd, m_ScreenSpaceVxShadowsBuffer, FullScreenDebugMode.VxShadows);
                 }

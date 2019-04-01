@@ -6,7 +6,7 @@
 
 // XRTODO(2019.3) Deprecate legacy code
 // XRTODO(2020.1) Remove legacy code
-#if UNITY_2019_2_OR_NEWER
+#if UNITY_2019_3_OR_NEWER
     #define USE_XR_SDK
 #endif
 

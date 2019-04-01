@@ -133,7 +133,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         
 
         [Tooltip("LayerMask HDRP uses for Volume interpolation for this Camera.")]
-        public LayerMask volumeLayerMask = -1;
+        public LayerMask volumeLayerMask = 1;
 
         public Transform volumeAnchorOverride;
 

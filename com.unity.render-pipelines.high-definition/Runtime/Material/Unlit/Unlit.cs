@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         [GenerateHLSL(PackingRules.Exact, false, false, true, 300)]
         public struct SurfaceData
         {
-            [FramePassMaterialMapping(MaterialSharedProperty.Albedo)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.Albedo)]
             [SurfaceDataAttributes("Color", false, true)]
             public Vector3 color;
         };

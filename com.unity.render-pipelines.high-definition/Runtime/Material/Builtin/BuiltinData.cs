@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         [GenerateHLSL(PackingRules.Exact, false, false, true, 100)]
         public struct BuiltinData
         {
-            [FramePassMaterialMapping(MaterialSharedProperty.Alpha)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.Alpha)]
             [SurfaceDataAttributes("Opacity")]
             public float opacity;
 

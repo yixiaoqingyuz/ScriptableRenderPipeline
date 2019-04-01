@@ -25,6 +25,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         LightCluster,
         RaytracedAreaShadow,
         IndirectDiffuse,
+        PrimaryVisibility,
         MaxLightingFullScreenDebug,
 
         // Rendering
@@ -68,7 +69,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         static int[] s_CameraNamesValues = null;
 
         static bool needsRefreshingCameraFreezeList = true;
-
+        
         public class DebugData
         {
             public float debugOverlayRatio = 0.33f;
@@ -136,7 +137,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
         Action IDebugData.GetReset() => () => m_Data = new DebugData();
-
+        
         public float[] GetDebugMaterialIndexes()
         {
             return data.materialDebugSettings.GetDebugMaterialIndexes();

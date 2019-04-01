@@ -81,6 +81,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     {
         None,
         VisualizePunctualLightAtlas,
+        VisualizeDirectionalLightAtlas,
         VisualizeAreaLightAtlas,
         VisualizeShadowMap,
         SingleShadow,

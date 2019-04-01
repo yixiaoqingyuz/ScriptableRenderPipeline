@@ -64,15 +64,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             Metal,
             Specular,
             Alpha,
-
-            //[Todo: see for particular properties like aniso...]
         }
 
-        public class FramePassMaterialMappingAttribute : Attribute
+        public class MaterialSharedPropertyMappingAttribute : Attribute
         {
             public readonly MaterialSharedProperty property;
 
-            public FramePassMaterialMappingAttribute(MaterialSharedProperty property)
+            public MaterialSharedPropertyMappingAttribute(MaterialSharedProperty property)
                 => this.property = property;
         }
     }
@@ -319,9 +317,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 int localIndex = 0;
                 foreach (var field in typeof(Builtin.BuiltinData).GetFields())
                 {
-                    if (Attribute.IsDefined(field, typeof(FramePassMaterialMappingAttribute)))
+                    if (Attribute.IsDefined(field, typeof(MaterialSharedPropertyMappingAttribute)))
                     {
-                        var propertyAttr = (FramePassMaterialMappingAttribute[])field.GetCustomAttributes(typeof(FramePassMaterialMappingAttribute), false);
+                        var propertyAttr = (MaterialSharedPropertyMappingAttribute[])field.GetCustomAttributes(typeof(MaterialSharedPropertyMappingAttribute), false);
                         materialPropertyMap[propertyAttr[0].property].Add(materialStartIndex + localIndex);
                     }
                     var surfaceAttributes = (SurfaceDataAttributes[])field.GetCustomAttributes(typeof(SurfaceDataAttributes), false);
@@ -344,9 +342,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     localIndex = 0;
                     foreach (var field in fields)
                     {
-                        if (Attribute.IsDefined(field, typeof(FramePassMaterialMappingAttribute)))
+                        if (Attribute.IsDefined(field, typeof(MaterialSharedPropertyMappingAttribute)))
                         {
-                            var propertyAttr = (FramePassMaterialMappingAttribute[])field.GetCustomAttributes(typeof(FramePassMaterialMappingAttribute), false);
+                            var propertyAttr = (MaterialSharedPropertyMappingAttribute[])field.GetCustomAttributes(typeof(MaterialSharedPropertyMappingAttribute), false);
                             materialPropertyMap[propertyAttr[0].property].Add(materialStartIndex + localIndex);
                         }
                         var surfaceAttributes = (SurfaceDataAttributes[])field.GetCustomAttributes(typeof(SurfaceDataAttributes), false);
@@ -369,9 +367,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     localIndex = 0;
                     foreach (var field in fields)
                     {
-                        if (Attribute.IsDefined(field, typeof(FramePassMaterialMappingAttribute)))
+                        if (Attribute.IsDefined(field, typeof(MaterialSharedPropertyMappingAttribute)))
                         {
-                            var propertyAttr = (FramePassMaterialMappingAttribute[])field.GetCustomAttributes(typeof(FramePassMaterialMappingAttribute), false);
+                            var propertyAttr = (MaterialSharedPropertyMappingAttribute[])field.GetCustomAttributes(typeof(MaterialSharedPropertyMappingAttribute), false);
                             materialPropertyMap[propertyAttr[0].property].Add(materialStartIndex + localIndex++);
                         }
                         var surfaceAttributes = (SurfaceDataAttributes[])field.GetCustomAttributes(typeof(SurfaceDataAttributes), false);
@@ -428,6 +426,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         //buffer must be in float as there is no SetGlobalIntArray in API
         static float[] s_DebugViewMaterialOffsetedBuffer = new float[kDebugViewMaterialBufferLength + 1]; //first is used size
 
+        // Reminder: _DebugViewMaterial[i]
+        //   i==0 -> the size used in the buffer
+        //   i>0  -> the index used (0 value means nothing)
+        // The index stored in this buffer could either be
+        //   - a gBufferIndex (always stored in _DebugViewMaterialArray[1] as only one supported)
+        //   - a property index which is different for each kind of material even if reflecting the same thing (see MaterialSharedProperty)
         int[]                m_DebugViewMaterial = new int[kDebugViewMaterialBufferLength + 1]; // No enum there because everything is generated from materials.
         int                  m_DebugViewEngine = 0;  // No enum there because everything is generated from BSDFData
         DebugViewVarying     m_DebugViewVarying = DebugViewVarying.None;

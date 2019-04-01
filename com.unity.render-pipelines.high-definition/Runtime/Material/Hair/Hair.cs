@@ -9,9 +9,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         [GenerateHLSL(PackingRules.Exact)]
         public enum MaterialFeatureFlags
         {
-            HairKajiyaKay               = 1 << 0,
-            HairSubsurfaceScattering    = 1 << 1,
-            HairTransmission            = 1 << 2
+            HairKajiyaKay = 1 << 0,
         };
 
         //-----------------------------------------------------------------------------
@@ -25,38 +23,33 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             [SurfaceDataAttributes("MaterialFeatures")]
             public uint materialFeatures;
 
-            [FramePassMaterialMapping(MaterialSharedProperty.AmbientOcclusion)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.AmbientOcclusion)]
             [SurfaceDataAttributes("Ambient Occlusion")]
             public float ambientOcclusion;
 
             // Standard
-            [FramePassMaterialMapping(MaterialSharedProperty.Albedo)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.Albedo)]
             [SurfaceDataAttributes("Diffuse", false, true)]
             public Vector3 diffuseColor;
             [SurfaceDataAttributes("Specular Occlusion")]
             public float specularOcclusion;
 
-            [FramePassMaterialMapping(MaterialSharedProperty.Normal)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.Normal)]
             [SurfaceDataAttributes(new string[] {"Normal", "Normal View Space"}, true)]
             public Vector3 normalWS;
 
             [SurfaceDataAttributes(new string[] { "Geometric Normal", "Geometric Normal View Space" }, true)]
             public Vector3 geomNormalWS;
 
-            [FramePassMaterialMapping(MaterialSharedProperty.Smoothness)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.Smoothness)]
             [SurfaceDataAttributes("Smoothness")]
             public float perceptualSmoothness;
 
-            // SSS
-            [SurfaceDataAttributes("Diffusion Profile Hash")]
-            public uint diffusionProfileHash;
-            [SurfaceDataAttributes("Subsurface Mask")]
-            public float subsurfaceMask;
+            [SurfaceDataAttributes("Transmittance")]
+            public Vector3 transmittance;
 
-            // Transmission
-            // + Diffusion Profile
-            [SurfaceDataAttributes("Thickness")]
-            public float thickness;
+            [SurfaceDataAttributes("RimTransmissionIntensity")]
+            public float rimTransmissionIntensity;
 
             // Anisotropic
             [SurfaceDataAttributes("Hair Strand Direction", true)]
@@ -67,7 +60,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public float secondaryPerceptualSmoothness;
 
             // Specular Color
-            [FramePassMaterialMapping(MaterialSharedProperty.Specular)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.Specular)]
             [SurfaceDataAttributes("Specular Tint", false, true)]
             public Vector3 specularTint;
 
@@ -107,15 +100,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             public float perceptualRoughness;
 
-            // SSS
-            public uint diffusionProfileIndex;
-            public float subsurfaceMask;
-
-            // Transmission
-            // + Diffusion Profile
-            public float thickness;
-            public bool useThickObjectMode; // Read from the diffusion profile
-            public Vector3 transmittance;   // Precomputation of transmittance
+            public Vector3 transmittance;
+            public float   rimTransmissionIntensity;
 
             // Anisotropic
             [SurfaceDataAttributes("", true)]

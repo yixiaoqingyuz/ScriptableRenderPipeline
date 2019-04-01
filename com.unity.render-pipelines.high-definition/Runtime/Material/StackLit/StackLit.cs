@@ -53,26 +53,26 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             // Bottom interface (2 lobes BSDF)
             // Standard parametrization
-            [FramePassMaterialMapping(MaterialSharedProperty.Albedo)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.Albedo)]
             [SurfaceDataAttributes("Base Color", false, true)]
             public Vector3 baseColor;
 
-            [FramePassMaterialMapping(MaterialSharedProperty.AmbientOcclusion)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.AmbientOcclusion)]
             [SurfaceDataAttributes("Ambient Occlusion")]
             public float ambientOcclusion;
 
-            [FramePassMaterialMapping(MaterialSharedProperty.Metal)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.Metal)]
             [SurfaceDataAttributes("Metallic")]
             public float metallic;
 
             [SurfaceDataAttributes("Dielectric IOR")]
             public float dielectricIor;
 
-            [FramePassMaterialMapping(MaterialSharedProperty.Specular)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.Specular)]
             [SurfaceDataAttributes("Specular Color", false, true)]
             public Vector3 specularColor;
 
-            [FramePassMaterialMapping(MaterialSharedProperty.Normal)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.Normal)]
             [SurfaceDataAttributes(new string[] {"Normal", "Normal View Space"}, true)]
             public Vector3 normalWS;
 
@@ -85,7 +85,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             [SurfaceDataAttributes(new string[] {"Bent Normal", "Bent Normal View Space"}, true)]
             public Vector3 bentNormalWS;
 
-            [FramePassMaterialMapping(MaterialSharedProperty.Smoothness)]
+            [MaterialSharedPropertyMapping(MaterialSharedProperty.Smoothness)]
             [SurfaceDataAttributes("Smoothness A")]
             public float perceptualSmoothnessA;
 

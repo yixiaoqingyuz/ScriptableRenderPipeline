@@ -67,6 +67,13 @@ Shader "Hidden/HDRP/DebugViewMaterialGBuffer"
                 float3 result = float3(-666.0, 0.0, 0.0);
                 bool needLinearToSRGB = false;
 
+                // Reminder: _DebugViewMaterialArray[i]
+                //   i==0 -> the size used in the buffer
+                //   i>0  -> the index used (0 value means nothing)
+                // The index stored in this buffer could either be
+                //   - a gBufferIndex (always stored in _DebugViewMaterialArray[1] as only one supported)
+                //   - a property index which is different for each kind of material even if reflecting the same thing (see MaterialSharedProperty)
+                // So here if the buffer is of size zero, it is the same as if we give in a 0 buffer index.
                 int bufferIndex = int(_DebugViewMaterialArray[0]) >= 1 ? int(_DebugViewMaterialArray[1]) : 0;
                 if (bufferIndex == DEBUGVIEWGBUFFER_DEPTH)
                 {

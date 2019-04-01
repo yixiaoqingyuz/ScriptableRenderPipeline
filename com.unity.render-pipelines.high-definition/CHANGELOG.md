@@ -4,7 +4,12 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [6.6.0-preview] - 2019-XX-XX
+## [6.7.0-preview] - 2019-XX-XX
+
+### Added
+- Added ViewConstants StructuredBuffer to simplify XR rendering
+
+## [6.6.0-preview] - 2019-04-01
 
 ### Added
 - Added preliminary changes for XR deferred shading
@@ -71,6 +76,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed lens dirt intensity not behaving properly
 - Fixed the Stop NaN feature
 - Fixed some resources to handle more than 2 instanced views for XR
+- Fixed issue with black screen (NaN) produced on old GPU hardware or intel GPU hardware with gaussian pyramid
+- Fixed issue with disabled punctual light would still render when only directional light is present
 
 ### Changed
 - DensityVolume scripting API will no longuer allow to change between advance and normal edition mode

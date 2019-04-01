@@ -799,7 +799,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                         BaseMaterialPropertiesGUI();
                 }
                 MaterialTesselationPropertiesGUI();
-                VertexAnimationPropertiesGUI();
             }
             if (EditorGUI.EndChangeCheck())
             {

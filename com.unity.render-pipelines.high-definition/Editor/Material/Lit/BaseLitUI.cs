@@ -149,20 +149,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         protected MaterialProperty invPrimScale = null;
         protected const string kInvPrimScale = "_InvPrimScale";
 
-        // Wind
-        protected MaterialProperty windEnable = null;
-        protected const string kWindEnabled = "_EnableWind";
-        protected MaterialProperty windInitialBend = null;
-        protected const string kWindInitialBend = "_InitialBend";
-        protected MaterialProperty windStiffness = null;
-        protected const string kWindStiffness = "_Stiffness";
-        protected MaterialProperty windDrag = null;
-        protected const string kWindDrag = "_Drag";
-        protected MaterialProperty windShiverDrag = null;
-        protected const string kWindShiverDrag = "_ShiverDrag";
-        protected MaterialProperty windShiverDirectionality = null;
-        protected const string kWindShiverDirectionality = "_ShiverDirectionality";
-
         // tessellation params
         protected MaterialProperty tessellationMode = null;
         protected const string kTessellationMode = "_TessellationMode";
@@ -225,14 +211,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             tessellationFactorTriangleSize = FindProperty(kTessellationFactorTriangleSize, props, false);
             tessellationShapeFactor = FindProperty(kTessellationShapeFactor, props, false);
             tessellationBackFaceCullEpsilon = FindProperty(kTessellationBackFaceCullEpsilon, props, false);
-
-            // Wind
-            windEnable = FindProperty(kWindEnabled, props, false);
-            windInitialBend = FindProperty(kWindInitialBend, props, false);
-            windStiffness = FindProperty(kWindStiffness, props, false);
-            windDrag = FindProperty(kWindDrag, props, false);
-            windShiverDrag = FindProperty(kWindShiverDrag, props, false);
-            windShiverDirectionality = FindProperty(kWindShiverDirectionality, props, false);
 
             // Decal
             supportDecals = FindProperty(kSupportDecals, props, false);
@@ -417,7 +395,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                         BaseMaterialPropertiesGUI();
                 }
                 MaterialTesselationPropertiesGUI();
-                VertexAnimationPropertiesGUI();
                 MaterialPropertiesGUI(material);
                 using (var header = new HeaderScope(StylesBaseUnlit.advancedText, (uint)Expandable.Advance, this))
                 {
@@ -433,39 +410,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             {
                 foreach (var obj in m_MaterialEditor.targets)
                     SetupMaterialKeywordsAndPassInternal((Material)obj);
-            }
-        }
-
-        protected override void VertexAnimationPropertiesGUI()
-        {
-            if (windEnable == null && enableMotionVectorForVertexAnimation == null)
-                return;
-
-            using (var header = new HeaderScope(StylesBaseLit.vertexAnimation, (uint)Expandable.VertexAnimation, this))
-            {
-                if (header.expanded)
-                {
-                    if (windEnable != null)
-                    {
-                        // Hide wind option. Wind is deprecated and will be remove in the future. Use shader graph instead
-                        /*
-                        m_MaterialEditor.ShaderProperty(windEnable, StylesBaseLit.windText);
-                        if (!windEnable.hasMixedValue && windEnable.floatValue > 0.0f)
-                        {
-                            EditorGUI.indentLevel++;
-                            m_MaterialEditor.ShaderProperty(windInitialBend, StylesBaseLit.windInitialBendText);
-                            m_MaterialEditor.ShaderProperty(windStiffness, StylesBaseLit.windStiffnessText);
-                            m_MaterialEditor.ShaderProperty(windDrag, StylesBaseLit.windDragText);
-                            m_MaterialEditor.ShaderProperty(windShiverDrag, StylesBaseLit.windShiverDragText);
-                            m_MaterialEditor.ShaderProperty(windShiverDirectionality, StylesBaseLit.windShiverDirectionalityText);
-                            EditorGUI.indentLevel--;
-                        }
-                        */
-                    }
-
-                    if (enableMotionVectorForVertexAnimation != null)
-                        m_MaterialEditor.ShaderProperty(enableMotionVectorForVertexAnimation, StylesBaseUnlit.enableMotionVectorForVertexAnimationText);
-                }
             }
         }
 
@@ -568,9 +512,8 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 bool depthOffsetEnable = (material.GetFloat(kDepthOffsetEnable) > 0.0f) && enablePixelDisplacement;
                 CoreUtils.SetKeyword(material, "_DEPTHOFFSET_ON", depthOffsetEnable);
             }
-
-            bool windEnabled = material.HasProperty(kWindEnabled) && material.GetFloat(kWindEnabled) > 0.0f;
-            CoreUtils.SetKeyword(material, "_VERTEX_WIND", windEnabled);
+            
+            CoreUtils.SetKeyword(material, "_VERTEX_WIND", false);
 
             if (material.HasProperty(kTessellationMode))
             {

@@ -154,9 +154,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         protected MaterialProperty enableBlendModePreserveSpecularLighting = null;
         protected const string kEnableBlendModePreserveSpecularLighting = "_EnableBlendModePreserveSpecularLighting";
 
-        protected MaterialProperty enableMotionVectorForVertexAnimation = null;
-        protected const string kEnableMotionVectorForVertexAnimation = "_EnableMotionVectorForVertexAnimation";
-
         protected const string kZTestDepthEqualForOpaque = "_ZTestDepthEqualForOpaque";
         protected const string kZTestGBuffer = "_ZTestGBuffer";
         protected const string kZTestModeDistortion = "_ZTestModeDistortion";
@@ -180,7 +177,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         protected abstract void SetupMaterialKeywordsAndPassInternal(Material material);
         protected abstract void MaterialPropertiesGUI(Material material);
         protected virtual void MaterialPropertiesAdvanceGUI(Material material) {}
-        protected abstract void VertexAnimationPropertiesGUI();
         // This function will say if emissive is used or not regarding enlighten/PVR
         protected virtual bool ShouldEmissionBeEnabled(Material material) { return false; }
 
@@ -221,8 +217,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 
             enableFogOnTransparent = FindProperty(kEnableFogOnTransparent, props, false);
             enableBlendModePreserveSpecularLighting = FindProperty(kEnableBlendModePreserveSpecularLighting, props, false);
-
-            enableMotionVectorForVertexAnimation = FindProperty(kEnableMotionVectorForVertexAnimation, props, false);
         }
 
         protected SurfaceType surfaceTypeValue
@@ -749,7 +743,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 material.SetShaderPassEnabled(HDShaderPassNames.s_ForwardOnlyStr, enablePass);
                 material.SetShaderPassEnabled(HDShaderPassNames.s_GBufferStr, enablePass);
                 material.SetShaderPassEnabled(HDShaderPassNames.s_GBufferWithPrepassStr, enablePass);
-                material.SetShaderPassEnabled(HDShaderPassNames.s_MotionVectorsStr, enablePass);
                 material.SetShaderPassEnabled(HDShaderPassNames.s_DistortionVectorsStr, distortionEnable); // note: use distortionEnable
                 material.SetShaderPassEnabled(HDShaderPassNames.s_TransparentDepthPrepassStr, enablePass);
                 material.SetShaderPassEnabled(HDShaderPassNames.s_TransparentBackfaceStr, enablePass);
@@ -776,15 +769,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 material.SetShaderPassEnabled(HDShaderPassNames.s_TransparentBackfaceStr, backFaceEnable);
             }
 
-            if (material.HasProperty(kEnableMotionVectorForVertexAnimation))
-            {
-                material.SetShaderPassEnabled(HDShaderPassNames.s_MotionVectorsStr, material.GetFloat(kEnableMotionVectorForVertexAnimation) > 0.0f);
-            }
-            else
-            {
-                // In case we have an HDRP material that inherits from this UI but does not have an _EnableMotionVectorForVertexAnimation property, we need to set it to false (default behavior)
-                material.SetShaderPassEnabled(HDShaderPassNames.s_MotionVectorsStr, false);
-            }
+            material.SetShaderPassEnabled(HDShaderPassNames.s_MotionVectorsStr, false);
         }
 
         // Dedicated to emissive - for emissive Enlighten/PVR
@@ -814,7 +799,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                     if (header.expanded)
                         BaseMaterialPropertiesGUI();
                 }
-                VertexAnimationPropertiesGUI();
                 MaterialPropertiesGUI(material);
                 using (var header = new HeaderScope(StylesBaseUnlit.advancedText, (uint)Expandable.Advance, this))
                 {

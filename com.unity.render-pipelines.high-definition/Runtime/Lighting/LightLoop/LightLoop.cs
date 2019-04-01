@@ -2372,7 +2372,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
             var isProjectionOblique = GeometryUtils.IsProjectionMatrixOblique(m_LightListProjMatrices[0]);
 
-            // If we don't need to run the light list, we still run it for the first frame that is not needed in order to clean up all the relevant lists.
+            // If we don't need to run the light list, we still run it for the first frame that is not needed in order to keep the lists in a clean state. 
             if (!runLightList && m_hasRunLightListPrevFrame)
             {
                 m_hasRunLightListPrevFrame = false;

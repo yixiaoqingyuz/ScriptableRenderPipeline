@@ -4,13 +4,16 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [6.6.0] - 2019-XX-XX
+## [6.7.0] - 2019-XX-XX
+
+## [6.6.0] - 2019-04-01
 ### Added
 - You can now add Matrix, Sampler State and Gradient properties to the Blackboard.
 - Added Custom Function node. Use this node to define a custom HLSL function either via string directly in the graph, or via a path to an HLSL file.
 - You can now group nodes by pressing Ctrl + G.
 - Added "Delete Group and Contents" and removed "Ungroup All Nodes" from the context menu for groups.
 - You can now use Sub Graphs in other Sub Graphs.
+- Preview shaders now compile in the background, and only redraw when necessary.
 
 ### Changed
 - Removed Blackboard fields, which had no effect on Sub Graph input ports, from the Sub Graph Blackboard.

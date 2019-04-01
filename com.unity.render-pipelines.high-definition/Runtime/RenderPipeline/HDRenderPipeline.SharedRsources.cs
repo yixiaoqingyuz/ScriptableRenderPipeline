@@ -9,7 +9,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // The render target used when we do not support MSAA
         protected RenderGraphMutableResource    m_DepthBuffer;
         protected RenderGraphMutableResource    m_NormalBuffer;
-        protected RenderGraphMutableResource    m_VelocityBuffer;
+        protected RenderGraphMutableResource    m_MotionVectorsBuffer;
 
         protected RenderGraphMutableResource    m_DepthBufferMipChain;
         protected HDUtils.PackedMipChainInfo    m_DepthBufferMipChainInfo; // This is metadata
@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // MSAA Render targets
         protected RenderGraphMutableResource    m_DepthBufferMSAA;
         protected RenderGraphMutableResource    m_NormalBufferMSAA;
-        protected RenderGraphMutableResource    m_VelocityBufferMSAA;
+        protected RenderGraphMutableResource    m_MotionVectorsBufferMSAA;
         // This texture must be used because reading directly from an MSAA Depth buffer is way to expensive. The solution that we went for is writing the depth in an additional color buffer (10x cheaper to solve on ps4)
         protected RenderGraphMutableResource    m_DepthAsColorBufferMSAA;
 
@@ -50,9 +50,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_NormalBuffer = renderGraph.CreateTexture(normalDesc, HDShaderIDs._NormalBufferTexture);
             m_NormalBufferMSAA = renderGraph.CreateTexture(new TextureDesc(normalDesc) { bindTextureMS = true, enableMSAA = true, enableRandomWrite = false, name = "NormalBufferMSAA" }, HDShaderIDs._NormalTextureMS);
 
-            TextureDesc velocityDesc = new TextureDesc(Vector2.one) { colorFormat = Builtin.GetVelocityBufferFormat(), xrInstancing = true, useDynamicScale = true, name = "Velocity" };
-            m_VelocityBuffer = renderGraph.CreateTexture(velocityDesc, HDShaderIDs._CameraMotionVectorsTexture);
-            m_VelocityBufferMSAA = renderGraph.CreateTexture(new TextureDesc(velocityDesc) { bindTextureMS = true, enableMSAA = true, name = "VelocityMSAA" });
+            TextureDesc motionVectorDesc = new TextureDesc(Vector2.one) { colorFormat = Builtin.GetMotionVectorFormat(), xrInstancing = true, useDynamicScale = true, name = "Motion Vectors" };
+            m_MotionVectorsBuffer = renderGraph.CreateTexture(motionVectorDesc, HDShaderIDs._CameraMotionVectorsTexture);
+            m_MotionVectorsBufferMSAA = renderGraph.CreateTexture(new TextureDesc(motionVectorDesc) { bindTextureMS = true, enableMSAA = true, name = "Motion Vectors MSAA" });
 
             m_IsDepthBufferCopyValid = false;
         }
@@ -72,9 +72,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return isMSAA ? m_DepthAsColorBufferMSAA : m_DepthBufferMipChain;
         }
 
-        protected RenderGraphMutableResource GetVelocityBuffer(bool isMSAA = false)
+        protected RenderGraphMutableResource GetMotionVectorsBuffer(bool isMSAA = false)
         {
-            return isMSAA ? m_VelocityBufferMSAA : m_VelocityBuffer;
+            return isMSAA ? m_MotionVectorsBufferMSAA : m_MotionVectorsBuffer;
         }
 
         protected bool NeedClearGBuffer()

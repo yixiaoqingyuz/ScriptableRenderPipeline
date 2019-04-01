@@ -34,12 +34,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             if (!renderMotionVectorAfterGBuffer)
             {
-                // If objects velocity if enabled, this will render the objects with motion vector into the target buffers (in addition to the depth)
+                // If objects motion vectors are enabled, this will render the objects with motion vector into the target buffers (in addition to the depth)
                 // Note: An object with motion vector must not be render in the prepass otherwise we can have motion vector write that should have been rejected
-                RenderObjectsVelocityPass(renderGraph, cullingResults, hdCamera);
+                RenderObjectsMotionVectors(renderGraph, cullingResults, hdCamera);
             }
 
-            // At this point in forward all objects have been rendered to the prepass (depth/normal/velocity) so we can resolve them
+            // At this point in forward all objects have been rendered to the prepass (depth/normal/motion vectors) so we can resolve them
             result.depthValuesMSAA = ResolvePrepassBuffers(renderGraph, hdCamera);
 
             /*
@@ -63,11 +63,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             if (renderMotionVectorAfterGBuffer)
             {
-                // See the call RenderObjectsVelocity() above and comment
-                RenderObjectsVelocityPass(renderGraph, cullingResults, hdCamera);
+                // See the call RenderObjectsMotionVectors() above and comment
+                RenderObjectsMotionVectors(renderGraph, cullingResults, hdCamera);
             }
 
-            RenderCameraVelocity(renderGraph, hdCamera);
+            RenderCameraMotionVectors(renderGraph, hdCamera);
 
             StopStereoRendering(renderGraph, hdCamera.camera);
 
@@ -134,7 +134,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                             passData.depthAsColorBuffer = builder.UseColorBuffer(GetDepthTexture(true), 1);
 
                         // Full forward: Output normal buffer for both forward and forwardOnly
-                        // Exclude object that render velocity (if motion vector are enabled)
+                        // Exclude object that render motion vectors (if motion vector are enabled)
                         passData.rendererList1 = builder.UseRendererList(
                             builder.CreateRendererList(new RendererListDesc(m_DepthOnlyAndDepthForwardOnlyPassNames, cull, hdCamera.camera)
                             {
@@ -218,28 +218,28 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return shouldRenderMotionVectorAfterGBuffer;
         }
 
-        protected class ObjectVelocityPassData
+        protected class ObjectMotionVectorsPassData
         {
             public FrameSettings                frameSettings;
             public RenderGraphMutableResource   depthBuffer;
-            public RenderGraphMutableResource   velocityBuffer;
+            public RenderGraphMutableResource   motionVectorsBuffer;
             public RenderGraphMutableResource   normalBuffer;
             public RenderGraphMutableResource   depthAsColorMSAABuffer;
             public RenderGraphResource          rendererList;
         }
 
-        protected virtual void RenderObjectsVelocityPass(RenderGraph renderGraph, CullingResults cull, HDCamera hdCamera)
+        protected virtual void RenderObjectsMotionVectors(RenderGraph renderGraph, CullingResults cull, HDCamera hdCamera)
         {
             if (!hdCamera.frameSettings.IsEnabled(FrameSettingsField.ObjectMotionVectors))
                 return;
 
-            using (var builder = renderGraph.AddRenderPass<ObjectVelocityPassData>("Objects Velocity", out var passData, CustomSamplerId.ObjectsVelocity.GetSampler()))
+            using (var builder = renderGraph.AddRenderPass<ObjectMotionVectorsPassData>("Objects Motion Vectors Rendering", out var passData, CustomSamplerId.ObjectsMotionVector.GetSampler()))
             {
                 bool msaa = hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA);
 
                 passData.frameSettings = hdCamera.frameSettings;
                 passData.depthBuffer = builder.UseDepthBuffer(GetDepthStencilBuffer(msaa));
-                passData.velocityBuffer = builder.UseColorBuffer(GetVelocityBuffer(msaa), 0);
+                passData.motionVectorsBuffer = builder.UseColorBuffer(GetMotionVectorsBuffer(msaa), 0);
                 passData.normalBuffer = builder.UseColorBuffer(GetNormalBuffer(msaa), 1);
                 if (msaa)
                     passData.depthAsColorMSAABuffer = builder.UseColorBuffer(GetDepthTexture(msaa), 2);
@@ -253,7 +253,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     }));
 
                 builder.SetRenderFunc(
-                (ObjectVelocityPassData data, RenderGraphContext context) =>
+                (ObjectMotionVectorsPassData data, RenderGraphContext context) =>
                 {
                     DrawOpaqueRendererList(data.frameSettings, context.resources.GetRendererList(data.rendererList), context);
                 });
@@ -461,37 +461,37 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             //PushFullScreenDebugTextureMip(hdCamera, cmd, m_SharedRTManager.GetDepthTexture(), mipCount, m_PyramidScale, debugMode);
         }
 
-        protected class CameraVelocityPassData
+        protected class CameraMotionVectorsPassData
         {
-            public Material cameraMotionVectorMaterial;
-            public RenderGraphMutableResource velocityBuffer;
+            public Material cameraMotionVectorsMaterial;
+            public RenderGraphMutableResource motionVectorsBuffer;
             public RenderGraphMutableResource depthBuffer;
         }
 
-        protected virtual void RenderCameraVelocity(RenderGraph renderGraph, HDCamera hdCamera)
+        protected virtual void RenderCameraMotionVectors(RenderGraph renderGraph, HDCamera hdCamera)
         {
             if (!hdCamera.frameSettings.IsEnabled(FrameSettingsField.MotionVectors))
                 return;
 
-            using (var builder = renderGraph.AddRenderPass<CameraVelocityPassData>("Camera Velocity", out var passData, CustomSamplerId.CameraVelocity.GetSampler()))
+            using (var builder = renderGraph.AddRenderPass<CameraMotionVectorsPassData>("Camera Motion Vectors Rendering", out var passData, CustomSamplerId.CameraMotionVectors.GetSampler()))
             {
                 // These flags are still required in SRP or the engine won't compute previous model matrices...
                 // If the flag hasn't been set yet on this camera, motion vectors will skip a frame.
                 hdCamera.camera.depthTextureMode |= DepthTextureMode.MotionVectors | DepthTextureMode.Depth;
 
-                passData.cameraMotionVectorMaterial = m_CameraMotionVectorsMaterial;
+                passData.cameraMotionVectorsMaterial = m_CameraMotionVectorsMaterial;
                 passData.depthBuffer = builder.WriteTexture(GetDepthStencilBuffer());
-                passData.velocityBuffer = builder.WriteTexture(GetVelocityBuffer());
+                passData.motionVectorsBuffer = builder.WriteTexture(GetMotionVectorsBuffer());
 
                 builder.SetRenderFunc(
-                (CameraVelocityPassData data, RenderGraphContext context) =>
+                (CameraMotionVectorsPassData data, RenderGraphContext context) =>
                 {
                     var res = context.resources;
-                    HDUtils.DrawFullScreen(context.cmd, context.rtHandleProperties, data.cameraMotionVectorMaterial, res.GetTexture(data.velocityBuffer), res.GetTexture(data.depthBuffer), null, 0);
+                    HDUtils.DrawFullScreen(context.cmd, context.rtHandleProperties, data.cameraMotionVectorsMaterial, res.GetTexture(data.motionVectorsBuffer), res.GetTexture(data.depthBuffer), null, 0);
                 });
             }
 
-            //            PushFullScreenDebugTexture(hdCamera, cmd, m_SharedRTManager.GetVelocityBuffer(), FullScreenDebugMode.MotionVectors);
+            //            PushFullScreenDebugTexture(hdCamera, cmd, m_SharedRTManager.GetMotionVectorsBuffer(), FullScreenDebugMode.MotionVectors);
             //#if UNITY_EDITOR
 
             //            // In scene view there is no motion vector, so we clear the RT to black

@@ -99,6 +99,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public float tanHalfFoVHeight;
             public int cameraWidth;
             public int cameraHeight;
+            public int computePassCount;
             public AmbientOcclusion settings;
 
             public ComputeShader downSample1CS;
@@ -186,6 +187,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 renderPassData.downSample2CS = m_Resources.shaders.aoDownsample2CS;
                 renderPassData.renderCS = m_Resources.shaders.aoRenderCS;
                 renderPassData.upSampleCS = m_Resources.shaders.aoUpsampleCS;
+                renderPassData.computePassCount = camera.computePassCount;
 
                 CreateTransientResources(builder, renderPassData, renderPassData.msaaEnabled);
 
@@ -337,7 +339,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.SetComputeTextureParam(cs, kernel, HDShaderIDs._DS4xAtlas, resources.GetTexture(data.tiledDepthTex2));
             cmd.SetComputeTextureParam(cs, kernel, HDShaderIDs._Depth, resources.GetTexture(data.inputDepth), 0);
 
-            cmd.DispatchCompute(cs, kernel, widths[(int)MipLevel.L4], heights[(int)MipLevel.L4], XRGraphics.computePassCount);
+            cmd.DispatchCompute(cs, kernel, widths[(int)MipLevel.L4], heights[(int)MipLevel.L4], data.computePassCount);
 
             // 2nd downsampling pass.
             cs = data.downSample2CS;
@@ -349,7 +351,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.SetComputeTextureParam(cs, kernel, HDShaderIDs._DS8xAtlas, resources.GetTexture(data.tiledDepthTex3));
             cmd.SetComputeTextureParam(cs, kernel, HDShaderIDs._DS16xAtlas, resources.GetTexture(data.tiledDepthTex4));
 
-            cmd.DispatchCompute(cs, kernel, widths[(int)MipLevel.L6], heights[(int)MipLevel.L6], XRGraphics.computePassCount);
+            cmd.DispatchCompute(cs, kernel, widths[(int)MipLevel.L6], heights[(int)MipLevel.L6], data.computePassCount);
         }
 
         protected static void PushRenderCommands(CommandBuffer cmd, AOPassData data, RTHandle source, RTHandle destination, in Vector3 sourceSize, float[] sampleWeightTable, float[] sampleThickness, float[] invThicknessTable)
@@ -374,7 +376,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 cs, kernel,
                 ((int)sourceSize.x + (int)xsize - 1) / (int)xsize,
                 ((int)sourceSize.y + (int)ysize - 1) / (int)ysize,
-                XRGraphics.computePassCount * ((int)sourceSize.z + (int)zsize - 1) / (int)zsize
+                data.computePassCount * ((int)sourceSize.z + (int)zsize - 1) / (int)zsize
             );
         }
 
@@ -406,7 +408,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             int xcount = ((int)highResDepthSize.x + 17) / 16;
             int ycount = ((int)highResDepthSize.y + 17) / 16;
-            cmd.DispatchCompute(cs, kernel, xcount, ycount, XRGraphics.computePassCount);
+            cmd.DispatchCompute(cs, kernel, xcount, ycount, passData.computePassCount);
         }
 
         protected class AOPostPassData

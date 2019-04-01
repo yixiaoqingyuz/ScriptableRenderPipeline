@@ -12,8 +12,8 @@ projects:
   #- name: HDRP_Tests
   - name: PostProcessing
 testplatforms:
-  - name: StandaloneWindows64
-    args: --suite=playmode --platform=StandaloneWindows64
+  - name: Android
+    args: --suite=playmode --platform=Android
   - name: playmode
     args: --suite=playmode
   - name: editmode

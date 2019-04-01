@@ -10,7 +10,7 @@ TEXTURE2D(_DecalAtlas2D);
 SAMPLER(_trilinear_clamp_sampler_DecalAtlas2D);
 
 RW_TEXTURE2D_X(uint, _DecalHTile); 
-Texture2D<uint> _DecalHTileTexture;
+TEXTURE2D_X_UINT(_DecalHTileTexture); //
 
 UNITY_INSTANCING_BUFFER_START(Decal)
 UNITY_DEFINE_INSTANCED_PROP(float4x4, _NormalToWorld)

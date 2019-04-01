@@ -42,7 +42,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public Matrix4x4[]  projMatrixStereo;
         // XRTODO: remove once SinglePassInstanced is working
         public Vector4      textureWidthScaling; // (2.0, 0.5) for SinglePassDoubleWide (stereo) and (1.0, 1.0) otherwise
-        public uint         numEyes; // 2+ when rendering stereo, 1 otherwise
 
         Matrix4x4[] viewProjStereo;
         Matrix4x4[] invViewStereo;
@@ -77,6 +76,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // This is the scale of the camera viewport compared to the reference size of our Render Targets (RTHandle.maxSize)
         Vector2 m_ViewportScaleCurrentFrame;
         Vector2 m_ViewportScalePreviousFrame;
+        Vector2 m_ViewportScaleCurrentFrameHistory;
+        Vector2 m_ViewportScalePreviousFrameHistory;
         // Current mssa sample
         MSAASamples m_msaaSamples;
         FrameSettings m_frameSettings;
@@ -94,6 +95,18 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
 
                 return new Vector4(m_ViewportScaleCurrentFrame.x, m_ViewportScaleCurrentFrame.y, m_ViewportScalePreviousFrame.x, m_ViewportScalePreviousFrame.y);
+            }
+        }
+        public Vector4 doubleBufferedViewportScaleHistory
+        {
+            get
+            {
+                if (HDDynamicResolutionHandler.instance.HardwareDynamicResIsEnabled())
+                {
+                    return new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+                }
+
+                return new Vector4(m_ViewportScaleCurrentFrameHistory.x, m_ViewportScaleCurrentFrameHistory.y, m_ViewportScalePreviousFrameHistory.x, m_ViewportScalePreviousFrameHistory.y);
             }
         }
         public MSAASamples msaaSamples { get { return m_msaaSamples; } }
@@ -142,6 +155,30 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // View-projection matrix from the previous frame (non-jittered).
         public Matrix4x4 prevViewProjMatrix;
         public Matrix4x4 prevViewProjMatrixNoCameraTrans;
+
+        // Helper property to inform how many views are rendered simultaneously
+        public int viewCount
+        {
+            get
+            {
+                if (camera.stereoEnabled && XRGraphics.stereoRenderingMode == XRGraphics.StereoRenderingMode.SinglePassInstanced)
+                    return 2;
+
+                return 1;
+            }
+        }
+
+        public int computePassCount
+        {
+            get
+            {
+                // XRTODO: double-wide cleanup
+                if (camera.stereoEnabled && XRGraphics.stereoRenderingMode == XRGraphics.StereoRenderingMode.SinglePass)
+                    return 1;
+
+                return viewCount;
+            }
+        }
 
         // The only way to reliably keep track of a frame change right now is to compare the frame
         // count Unity gives us. We need this as a single camera could be rendered several times per
@@ -404,13 +441,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 }
             }
 
-            int maxWidth  = RTHandles.maxWidth;
-            int maxHeight = RTHandles.maxHeight;
 
-            Vector2 rcpTextureSize = Vector2.one / new Vector2(maxWidth, maxHeight);
+            Vector2 rcpTextureSize = Vector2.one / new Vector2(RTHandles.maxWidth, RTHandles.maxHeight);
+            Vector2 rcpTextureSizeHistory = Vector2.one / new Vector2(m_HistoryRTSystem.maxWidth, m_HistoryRTSystem.maxHeight);
 
             m_ViewportScalePreviousFrame = m_ViewportSizePrevFrame * rcpTextureSize;
+            m_ViewportScalePreviousFrameHistory = m_ViewportSizePrevFrame * rcpTextureSizeHistory;
             m_ViewportScaleCurrentFrame  = new Vector2Int(m_ActualWidth, m_ActualHeight) * rcpTextureSize;
+            m_ViewportScaleCurrentFrameHistory = m_ViewportSizePrevFrame * rcpTextureSizeHistory;
 
             screenSize = new Vector4(screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
             screenParams = new Vector4(screenSize.x, screenSize.y, 1 + screenSize.z, 1 + screenSize.w);
@@ -486,8 +524,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             var gpuProj = GL.GetGPUProjectionMatrix(cameraProj, true); // Had to change this from 'false'
             var gpuView = camera.worldToCameraMatrix;
             var gpuNonJitteredProj = GL.GetGPUProjectionMatrix(nonJitteredCameraProj, true);
-
-            numEyes = camera.stereoEnabled ? (uint)2 : (uint)1; // TODO VR: Generalize this when support for >2 eyes comes out with XR SDK
 
             if (camera.stereoEnabled)
             {
@@ -902,10 +938,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cmd.SetGlobalMatrix(HDShaderIDs._InvViewProjMatrix,         viewProjMatrix.inverse);
             cmd.SetGlobalMatrix(HDShaderIDs._NonJitteredViewProjMatrix, nonJitteredViewProjMatrix);
             cmd.SetGlobalMatrix(HDShaderIDs._PrevViewProjMatrix,        prevViewProjMatrix);
+            cmd.SetGlobalMatrix(HDShaderIDs._CameraViewProjMatrix,      viewProjMatrix);
             cmd.SetGlobalVector(HDShaderIDs._WorldSpaceCameraPos,       worldSpaceCameraPos);
             cmd.SetGlobalVector(HDShaderIDs._PrevCamPosRWS,             prevWorldSpaceCameraPos);
             cmd.SetGlobalVector(HDShaderIDs._ScreenSize,                screenSize);
             cmd.SetGlobalVector(HDShaderIDs._ScreenToTargetScale,       doubleBufferedViewportScale);
+            cmd.SetGlobalVector(HDShaderIDs._ScreenToTargetScaleHistory, doubleBufferedViewportScaleHistory);
             cmd.SetGlobalVector(HDShaderIDs._ZBufferParams,             zBufferParams);
             cmd.SetGlobalVector(HDShaderIDs._ProjectionParams,          projectionParams);
             cmd.SetGlobalVector(HDShaderIDs.unity_OrthoParams,          unity_OrthoParams);

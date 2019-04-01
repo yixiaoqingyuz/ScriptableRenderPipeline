@@ -1,5 +1,9 @@
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/LightLoop/LightLoop.cs.hlsl"
 
+// We perform scalarization only for forward rendering as for deferred loads will already be scalar since tiles will match waves and therefore all threads will read from the same tile. 
+// More info on scalarization: https://flashypixels.wordpress.com/2018/11/10/intro-to-gpu-scalarization-part-2-scalarize-all-the-lights/
+#define SCALARIZE_LIGHT_LOOP (defined(SUPPORTS_WAVE_INTRINSICS) && !defined(LIGHTLOOP_DISABLE_TILE_AND_CLUSTER) && SHADERPASS == SHADERPASS_FORWARD)
+
 #define DWORD_PER_TILE 16 // See dwordsPerTile in LightLoop.cs, we have roomm for 31 lights and a number of light value all store on 16 bit (ushort)
 
 // LightLoopContext is not visible from Material (user should not use these properties in Material file)
@@ -258,6 +262,48 @@ uint FetchIndex(uint lightStart, uint lightOffset)
 
 #endif // LIGHTLOOP_DISABLE_TILE_AND_CLUSTER
 
+bool IsFastPath(uint lightStart, out uint lightStartLane0)
+{
+    bool fastPath = false;
+    lightStartLane0 = lightStart;
+
+#if SCALARIZE_LIGHT_LOOP
+    // Fast path is when we all pixels in a wave are accessing same tile or cluster.
+    lightStartLane0 = WaveReadLaneFirst(lightStart);
+    fastPath = WaveActiveAllTrue(lightStart == lightStartLane0); 
+#endif
+
+    return fastPath;
+}
+
+bool IsFastPath(uint lightStart)
+{
+    uint unusedLightStartLane0;
+    return IsFastPath(lightStart, unusedLightStartLane0);
+}
+
+uint ScalarizeLightIndex(uint v_lightIdx, bool fastPath = false)
+{
+    uint s_lightIdx = v_lightIdx;
+#if SCALARIZE_LIGHT_LOOP
+    if (!fastPath)
+    {
+        // If we are not in fast path, v_lightIdx is not scalar, so we need to query the Min value across the wave. 
+        s_lightIdx = WaveActiveMin(v_lightIdx);
+        // If WaveActiveMin returns 0xffffffff it means that all lanes are actually dead, so we can safely ignore the loop and move forward.
+        // This could happen as an helper lane could reach this point, hence having a valid v_lightIdx, but their values will be ignored by the WaveActiveMin
+        if (s_lightIdx == -1)
+        {
+            break;
+        }
+    }
+    // Note that the WaveReadLaneFirst should not be needed, but the compiler might insist in putting the result in VGPR.
+    // However, we are certain at this point that the index is scalar.
+    s_lightIdx = WaveReadLaneFirst(s_lightIdx);
+#endif
+    return s_lightIdx;
+}
+
 uint FetchIndexWithBoundsCheck(uint start, uint count, uint i)
 {
     if (i < count)
@@ -325,5 +371,5 @@ void InitContactShadow(PositionInputs posInput, inout LightLoopContext context)
 float GetContactShadow(LightLoopContext lightLoopContext, int contactShadowMask)
 {
     bool occluded = (lightLoopContext.contactShadow & contactShadowMask) != 0;
-    return (occluded) ? 1.0 - lightLoopContext.contactShadowFade : 1.0;
+    return 1.0 - (occluded * lightLoopContext.contactShadowFade);
 }

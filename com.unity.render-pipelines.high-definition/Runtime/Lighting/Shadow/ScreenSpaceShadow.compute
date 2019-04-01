@@ -16,8 +16,6 @@
 
 #pragma only_renderers d3d11 ps4 xboxone vulkan metal switch
 
-#define SCALARIZE_LIGHT_LOOP (defined(SUPPORTS_WAVE_INTRINSICS) && !defined(LIGHTLOOP_DISABLE_TILE_AND_CLUSTER) && SHADERPASS == SHADERPASS_FORWARD)
-
 // #pragma enable_d3d11_debug_symbols
 
 #ifdef ENABLE_MSAA
@@ -225,43 +223,26 @@ void DEFERRED_CONTACT_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uin
 
 #ifndef LIGHTLOOP_DISABLE_TILE_AND_CLUSTER
         GetCountAndStart(posInput, LIGHTCATEGORY_PUNCTUAL, lightStart, lightCount);
-
-    #if SCALARIZE_LIGHT_LOOP
-        // Fast path is when we all pixels in a wave is accessing same tile or cluster.
-        uint startFirstLane = WaveReadLaneFirst(lightStart);
-        fastPath = WaveActiveAllTrue(lightStart == startFirstLane); 
-        if (fastPath)
-        {
-            lightStart = startFirstLane;
-        }
-    #endif
 #else   // LIGHTLOOP_DISABLE_TILE_AND_CLUSTER
         lightCount = _PunctualLightCount;
         lightStart = 0;
 #endif
 
+    #if SCALARIZE_LIGHT_LOOP
+        // Fast path is when we all pixels in a wave is accessing same tile or cluster.
+        uint startFirstLane;
+        fastPath = IsFastPath(lightStart, startFirstLane);
+        if (fastPath)
+        {
+            lightStart = startFirstLane;
+        }
+    #endif
+
+        UNITY_LOOP
         for (uint lightListOffset = 0; lightListOffset < lightCount; lightListOffset++)
         {
             uint v_lightIdx = FetchIndex(lightStart, lightListOffset);
-            uint s_lightIdx = v_lightIdx;
-
-        #if SCALARIZE_LIGHT_LOOP
-            if (!fastPath)
-            {
-                s_lightIdx = WaveActiveMin(v_lightIdx);
-                // If we are not in fast path, s_lightIdx is not scalar
-                // If WaveActiveMin returns 0xffffffff it means that all lanes are actually dead, so we can safely ignore the loop and move forward.
-                // This could happen as an helper lane could reach this point, hence having a valid v_lightIdx, but their values will be ignored by the WaveActiveMin
-                if (s_lightIdx == -1)
-                {
-                    break;
-                }
-            }
-            // Note that the WaveReadLaneFirst should not be needed, but the compiler might insist in putting the result in VGPR.
-            // However, we are certain at this point that the index is scalar.
-            s_lightIdx = WaveReadLaneFirst(s_lightIdx);
-        #endif
-
+            uint s_lightIdx = ScalarizeLightIndex(v_lightIdx, fastPath);
             LightData light = FetchLight(s_lightIdx); // Scalar load
             
             if (light.contactShadowMask == 0)
@@ -277,7 +258,7 @@ void DEFERRED_CONTACT_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uin
             // light.contactShadowMask contains one bit at the position of the contact shadow index that will
             // be tested in the lightloop, so it insert 1 at the index of the contact shadow if there is a contact shadow
             // we take full bits at one multiplied by contact shadow and filter the bit at the contact shadow index.
-            contactShadowMask |= (~0 * occluded) & light.contactShadowMask;
+            contactShadowMask |= light.contactShadowMask * occluded;
         }
     }
 

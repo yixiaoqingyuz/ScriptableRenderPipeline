@@ -8,10 +8,7 @@ void ApplyDecalToSurfaceData(DecalSurfaceData decalSurfaceData, inout SurfaceDat
 
     if (decalSurfaceData.HTileMask & DBUFFERHTILEBIT_NORMAL)
     {
-        if (decalSurfaceData.normalWS.w > 0) // need to check, because of 'normalize' below
-        {
-            surfaceData.normalWS.xyz = normalize(surfaceData.normalWS.xyz * decalSurfaceData.normalWS.w + decalSurfaceData.normalWS.xyz);
-        }
+        surfaceData.normalWS.xyz = normalize(surfaceData.normalWS.xyz * decalSurfaceData.normalWS.w + decalSurfaceData.normalWS.xyz);
     }
 
     if (decalSurfaceData.HTileMask & DBUFFERHTILEBIT_MASK)

@@ -219,15 +219,26 @@ namespace UnityEditor.ShaderGraph.Drawing
 
         public void ToSubGraph()
         {
+            // Checking if you have any invalid nodes selected and prompt the user about them.
+            var graphView = graphEditorView.graphView;
+            var notAllowedNodes = graphView.selection.OfType<IShaderNodeView>().Select(x => x.node).Where(x => !x.allowedInSubGraph).Select(x => x.name).ToArray();
+            if (notAllowedNodes.Any())
+            {
+                var nodeNames = string.Join(System.Environment.NewLine, notAllowedNodes);
+                if (!EditorUtility.DisplayDialog("Create Subgraph?", $"There are some nodes selected that are not allowed in a subgraph. Do you want to unselect them and continue with creating a subgraph?\n\n{nodeNames}", "Unselect and Continue", "Cancel"))
+                {
+                    return;
+                }
+            }
+
             var path = EditorUtility.SaveFilePanelInProject("Save Sub Graph", "New Shader Sub Graph", ShaderSubGraphImporter.Extension, "");
             path = path.Replace(Application.dataPath, "Assets");
             if (path.Length == 0)
                 return;
 
             graphObject.RegisterCompleteObjectUndo("Convert To Subgraph");
-            var graphView = graphEditorView.graphView;
 
-            var nodes = graphView.selection.OfType<IShaderNodeView>().Where(x => !(x.node is PropertyNode)).Select(x => x.node as AbstractMaterialNode).ToArray();
+            var nodes = graphView.selection.OfType<IShaderNodeView>().Where(x => !(x.node is PropertyNode)).Select(x => x.node).Where(x => x.allowedInSubGraph).ToArray();
             var bounds = Rect.MinMaxRect(float.PositiveInfinity, float.PositiveInfinity, float.NegativeInfinity, float.NegativeInfinity);
             foreach (var node in nodes)
             {
@@ -248,7 +259,7 @@ namespace UnityEditor.ShaderGraph.Drawing
             var copyPasteGraph = new CopyPasteGraph(
                     graphView.graph.assetGuid,
                     graphView.selection.OfType<ShaderGroup>().Select(x => x.userData),
-                    graphView.selection.OfType<IShaderNodeView>().Where(x => !(x.node is PropertyNode)).Select(x => x.node as AbstractMaterialNode),
+                    graphView.selection.OfType<IShaderNodeView>().Where(x => !(x.node is PropertyNode)).Select(x => x.node),
                     graphView.selection.OfType<Edge>().Select(x => x.userData as IEdge),
                     graphView.selection.OfType<BlackboardField>().Select(x => x.userData as AbstractShaderProperty),
                     metaProperties);
@@ -447,7 +458,7 @@ namespace UnityEditor.ShaderGraph.Drawing
             }
 
             graphObject.graph.RemoveElements(
-                graphView.selection.OfType<IShaderNodeView>().Select(x => x.node as AbstractMaterialNode),
+                graphView.selection.OfType<IShaderNodeView>().Select(x => x.node).Where(x => x.allowedInSubGraph),
                 Enumerable.Empty<IEdge>(),
                 Enumerable.Empty<GroupData>());
             graphObject.graph.ValidateGraph();

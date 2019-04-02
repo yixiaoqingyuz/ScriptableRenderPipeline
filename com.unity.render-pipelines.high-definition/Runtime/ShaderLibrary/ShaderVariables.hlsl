@@ -209,9 +209,9 @@ CBUFFER_START(UnityGlobal)
     float4 _VBufferResolution;          // { w, h, 1/w, 1/h }
     uint   _VBufferSliceCount;
     float  _VBufferRcpSliceCount;
-    float  _Pad2;
+    float  _VBufferRcpInstancedViewCount;  // Used to remap VBuffer coordinates for XR
     float  _Pad3;
-    float4 _VBufferUvScaleAndLimit;     // Necessary us to work with sub-allocation (resource aliasing) in the RTHandle system
+    float4 _VBufferUvScaleAndLimit;        // Necessary us to work with sub-allocation (resource aliasing) in the RTHandle system
     float4 _VBufferDistanceEncodingParams; // See the call site for description
     float4 _VBufferDistanceDecodingParams; // See the call site for description
 
@@ -236,6 +236,7 @@ CBUFFER_START(UnityGlobal)
     uint _EnableSSRefraction;
 
     uint _OffScreenRendering;
+    uint _OffScreenDownsampleFactor;
 
 CBUFFER_END
 
@@ -269,14 +270,24 @@ float SampleCameraDepth(float2 uv)
     return LoadCameraDepth(uint2(uv * _ScreenSize.xy));
 }
 
+float3 LoadCameraColor(uint2 pixelCoords, uint lod)
+{
+    return LOAD_TEXTURE2D_X_LOD(_ColorPyramidTexture, pixelCoords, lod).rgb;
+}
+
+float3 SampleCameraColor(float2 uv, float lod)
+{
+    return SAMPLE_TEXTURE2D_X_LOD(_ColorPyramidTexture, s_trilinear_clamp_sampler, uv * _ScreenToTargetScaleHistory.xy, lod).rgb;
+}
+
 float3 LoadCameraColor(uint2 pixelCoords)
 {
-    return LOAD_TEXTURE2D_X_LOD(_ColorPyramidTexture, pixelCoords, 0).rgb;
+    return LoadCameraColor(pixelCoords, 0);
 }
 
 float3 SampleCameraColor(float2 uv)
 {
-    return LoadCameraColor(uint2(uv * _ScreenSize.xy));
+    return SampleCameraColor(uv, 0);
 }
 
 float4x4 OptimizeProjectionMatrix(float4x4 M)

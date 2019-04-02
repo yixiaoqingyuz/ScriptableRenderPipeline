@@ -157,7 +157,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             GenericPool<XRPass>.Release(xrPass);
         }
 
-        void AddViewInternal(XRView xrView)
+        internal void AddViewInternal(XRView xrView)
         {
             views.Add(xrView);
 

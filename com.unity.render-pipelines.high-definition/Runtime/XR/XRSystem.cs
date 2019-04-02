@@ -154,7 +154,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             passList.Clear();
         }
 
-        void AddPassToFrame(XRPass pass, Camera camera, ref List<MultipassCamera> multipassCameras)
+        internal void AddPassToFrame(XRPass pass, Camera camera, ref List<MultipassCamera> multipassCameras)
         {
             int passIndex = passList.Count;
             passList.Add(pass);

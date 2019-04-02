@@ -256,10 +256,10 @@ void TraverseVxShadowMapPosQ2x2x2(uint begin, uint3 posQ_0, out uint4 results[8]
         nodeIndex4_0.y = intersected4_0.y ? _VxShadowMapsBuffer[nextIndex4_0.y] : nodeIndex4_0.y;
         nodeIndex4_0.z = intersected4_0.z ? _VxShadowMapsBuffer[nextIndex4_0.z] : nodeIndex4_0.z;
         nodeIndex4_0.w = intersected4_0.w ? _VxShadowMapsBuffer[nextIndex4_0.w] : nodeIndex4_0.w;
-        nodeIndex4_1.x = intersected4_1.x ? _VxShadowMapsBuffer[nextIndex4_1.x] : nodeIndex4_1.x;
-        nodeIndex4_1.y = intersected4_1.y ? _VxShadowMapsBuffer[nextIndex4_1.y] : nodeIndex4_1.y;
-        nodeIndex4_1.z = intersected4_1.z ? _VxShadowMapsBuffer[nextIndex4_1.z] : nodeIndex4_1.z;
-        nodeIndex4_1.w = intersected4_1.w ? _VxShadowMapsBuffer[nextIndex4_1.w] : nodeIndex4_1.w;
+nodeIndex4_1.x = intersected4_1.x ? _VxShadowMapsBuffer[nextIndex4_1.x] : nodeIndex4_1.x;
+nodeIndex4_1.y = intersected4_1.y ? _VxShadowMapsBuffer[nextIndex4_1.y] : nodeIndex4_1.y;
+nodeIndex4_1.z = intersected4_1.z ? _VxShadowMapsBuffer[nextIndex4_1.z] : nodeIndex4_1.z;
+nodeIndex4_1.w = intersected4_1.w ? _VxShadowMapsBuffer[nextIndex4_1.w] : nodeIndex4_1.w;
     }
 
     results[0] = uint4(nodeIndex4_0.x, lit4_0.x, shadowed4_0.x, intersected4_0.x);
@@ -350,9 +350,121 @@ float TraverseBilinearSampleVxShadowMap(uint begin, uint3 posQ_0, uint4 innerRes
 
     float4 attenuation4 = (bitmask4 & mask4) == 0 ? 1.0 : 0.0;
     attenuation4.xy = lerp(attenuation4.xz, attenuation4.yw, lerpWeight.x);
-    attenuation4.x  = lerp(attenuation4.x, attenuation4.y, lerpWeight.y);
+    attenuation4.x  = lerp(attenuation4.x,  attenuation4.y,  lerpWeight.y);
 
     return attenuation4.x;
+}
+
+float TravereTrilinearSampleVxShadowMap(uint begin, uint3 posQ_0, uint4 innerResults[8], float3 lerpWeight)
+{
+    uint attribute = begin + 18;
+    uint4 nodeIndex4_0 = attribute + uint4(
+        innerResults[0].x,
+        innerResults[1].x,
+        innerResults[2].x,
+        innerResults[3].x);
+    uint4 nodeIndex4_1 = attribute + uint4(
+        innerResults[4].x,
+        innerResults[5].x,
+        innerResults[6].x,
+        innerResults[7].x);
+
+    uint3 posQ_1 = posQ_0 + uint3(1, 0, 0);
+    uint3 posQ_2 = posQ_0 + uint3(0, 1, 0);
+    uint3 posQ_3 = posQ_0 + uint3(1, 1, 0);
+    uint3 posQ_4 = posQ_0 + uint3(0, 0, 1);
+    uint3 posQ_5 = posQ_0 + uint3(1, 0, 1);
+    uint3 posQ_6 = posQ_0 + uint3(0, 1, 1);
+    uint3 posQ_7 = posQ_0 + uint3(1, 1, 1);
+
+    uint4 leaf4_x0 = uint4(posQ_0.x % 8, posQ_1.x % 8, posQ_2.x % 8, posQ_3.x % 8);
+    uint4 leaf4_y0 = uint4(posQ_0.y % 8, posQ_1.y % 8, posQ_2.y % 8, posQ_3.y % 8);
+    uint4 leaf4_z0 = uint4(posQ_0.z % 8, posQ_1.z % 8, posQ_2.z % 8, posQ_3.z % 8);
+    uint4 leaf4_x1 = uint4(posQ_4.x % 8, posQ_5.x % 8, posQ_6.x % 8, posQ_7.x % 8);
+    uint4 leaf4_y1 = uint4(posQ_4.y % 8, posQ_5.y % 8, posQ_6.y % 8, posQ_7.y % 8);
+    uint4 leaf4_z1 = uint4(posQ_4.z % 8, posQ_5.z % 8, posQ_6.z % 8, posQ_7.z % 8);
+
+    uint4 leafIndex_0 = attribute + uint4(
+        _VxShadowMapsBuffer[nodeIndex4_0.x + leaf4_z0.x],
+        _VxShadowMapsBuffer[nodeIndex4_0.y + leaf4_z0.y],
+        _VxShadowMapsBuffer[nodeIndex4_0.z + leaf4_z0.z],
+        _VxShadowMapsBuffer[nodeIndex4_0.w + leaf4_z0.w]);
+    uint4 leafIndex_1 = attribute + uint4(
+        _VxShadowMapsBuffer[nodeIndex4_1.x + leaf4_z1.x],
+        _VxShadowMapsBuffer[nodeIndex4_1.y + leaf4_z1.y],
+        _VxShadowMapsBuffer[nodeIndex4_1.z + leaf4_z1.z],
+        _VxShadowMapsBuffer[nodeIndex4_1.w + leaf4_z1.w]);
+
+    uint4 bitmask04_0 = uint4(
+        innerResults[0].y ? 0x00000000 : 0xFFFFFFFF,
+        innerResults[1].y ? 0x00000000 : 0xFFFFFFFF,
+        innerResults[2].y ? 0x00000000 : 0xFFFFFFFF,
+        innerResults[3].y ? 0x00000000 : 0xFFFFFFFF);
+    uint4 bitmask04_1 = uint4(
+        innerResults[4].y ? 0x00000000 : 0xFFFFFFFF,
+        innerResults[5].y ? 0x00000000 : 0xFFFFFFFF,
+        innerResults[6].y ? 0x00000000 : 0xFFFFFFFF,
+        innerResults[7].y ? 0x00000000 : 0xFFFFFFFF);
+    uint4 bitmask14_0 = bitmask04_0;
+    uint4 bitmask14_1 = bitmask04_1;
+
+    if (innerResults[0].w)
+    {
+        bitmask04_0.x = _VxShadowMapsBuffer[leafIndex_0.x];
+        bitmask14_0.x = _VxShadowMapsBuffer[leafIndex_0.x + 1];
+    }
+    if (innerResults[1].w)
+    {
+        bitmask04_0.y = _VxShadowMapsBuffer[leafIndex_0.y];
+        bitmask14_0.y = _VxShadowMapsBuffer[leafIndex_0.y + 1];
+    }
+    if (innerResults[2].w)
+    {
+        bitmask04_0.z = _VxShadowMapsBuffer[leafIndex_0.z];
+        bitmask14_0.z = _VxShadowMapsBuffer[leafIndex_0.z + 1];
+    }
+    if (innerResults[3].w)
+    {
+        bitmask04_0.w = _VxShadowMapsBuffer[leafIndex_0.w];
+        bitmask14_0.w = _VxShadowMapsBuffer[leafIndex_0.w + 1];
+    }
+    if (innerResults[4].w)
+    {
+        bitmask04_1.x = _VxShadowMapsBuffer[leafIndex_1.x];
+        bitmask14_1.x = _VxShadowMapsBuffer[leafIndex_1.x + 1];
+    }
+    if (innerResults[5].w)
+    {
+        bitmask04_1.y = _VxShadowMapsBuffer[leafIndex_1.y];
+        bitmask14_1.y = _VxShadowMapsBuffer[leafIndex_1.y + 1];
+    }
+    if (innerResults[6].w)
+    {
+        bitmask04_1.z = _VxShadowMapsBuffer[leafIndex_1.z];
+        bitmask14_1.z = _VxShadowMapsBuffer[leafIndex_1.z + 1];
+    }
+    if (innerResults[7].w)
+    {
+        bitmask04_1.w = _VxShadowMapsBuffer[leafIndex_1.w];
+        bitmask14_1.w = _VxShadowMapsBuffer[leafIndex_1.w + 1];
+    }
+
+    uint4 bitmask4_0 = leaf4_y0 < 4 ? bitmask04_0 : bitmask14_0;
+    uint4 bitmask4_1 = leaf4_y1 < 4 ? bitmask04_1 : bitmask14_1;
+
+    uint4 maskShift4_0 = leaf4_x0 + 8 * (leaf4_y0 % 4);
+    uint4 maskShift4_1 = leaf4_x1 + 8 * (leaf4_y1 % 4);
+    uint4 mask4_0 = uint4(1, 1, 1, 1) << maskShift4_0;
+    uint4 mask4_1 = uint4(1, 1, 1, 1) << maskShift4_1;
+
+    float4 attenuation4_0 = (bitmask4_0 & mask4_0) == 0 ? 1.0 : 0.0;
+    float4 attenuation4_1 = (bitmask4_1 & mask4_1) == 0 ? 1.0 : 0.0;
+    attenuation4_0.xy = lerp(attenuation4_0.xz, attenuation4_0.yw, lerpWeight.x);
+    attenuation4_0.x  = lerp(attenuation4_0.x,  attenuation4_0.y,  lerpWeight.y);
+    attenuation4_1.xy = lerp(attenuation4_1.xz, attenuation4_1.yw, lerpWeight.x);
+    attenuation4_1.x  = lerp(attenuation4_1.x,  attenuation4_1.y,  lerpWeight.y);
+
+    return lerp(attenuation4_0.x, attenuation4_1.x, lerpWeight.z);
 }
 
 float PointSampleVxShadowing(uint begin, float3 positionWS)

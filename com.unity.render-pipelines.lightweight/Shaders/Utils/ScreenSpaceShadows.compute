@@ -172,23 +172,7 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
         return;
     }
 
-    // todo : implement TraverseTrilinearSampleVxShadowMap
-    uint4 temp0[4];
-    temp0[0] = results[0];
-    temp0[1] = results[1];
-    temp0[2] = results[2];
-    temp0[3] = results[3];
-
-    uint4 temp1[4];
-    temp1[0] = results[4];
-    temp1[1] = results[5];
-    temp1[2] = results[6];
-    temp1[3] = results[7];
-
-    float attenuation0 = TraverseBilinearSampleVxShadowMap(begin, posQ, temp0, lerpWeight.xy);
-    float attenuation1 = TraverseBilinearSampleVxShadowMap(begin, posQ, temp1, lerpWeight.xy);
-
-    attenuation = lerp(attenuation0, attenuation1, lerpWeight.z);
+    attenuation = TravereTrilinearSampleVxShadowMap(begin, posQ, results, lerpWeight);
 #endif
 
     _ScreenSpaceShadowOutput[pixelCoord] = LerpWhiteTo(attenuation, shadowStrength);

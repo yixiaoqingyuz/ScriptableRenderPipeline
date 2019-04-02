@@ -1,2 +1,2 @@
 # Unity assets are always serialized using lf endings
-*.asset text eol=lf
+*.asset binary

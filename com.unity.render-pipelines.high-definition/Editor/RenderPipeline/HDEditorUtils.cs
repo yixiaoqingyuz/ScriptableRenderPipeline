@@ -32,10 +32,13 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 
         /// <summary>
         /// Reset the dedicated Keyword and Pass regarding the shader kind.
-        /// Also reinit the drawers ans set the material dirty for the engine.
-        /// <seealso cref="MaterialUtils.SetupMaterialKeywordsAndPass"/> 
+        /// Also re-init the drawers and set the material dirty for the engine.
         /// </summary>
         /// <param name="material">The material that nees to be setup</param>
+        /// <returns>
+        /// True: managed to do the operation.
+        /// False: unknown shader used in material
+        /// </returns>
         public static bool ResetMaterialKeywords(Material material)
         {
             MaterialResetter resetter;
@@ -51,23 +54,8 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             return false;
         }
 
-        /// <summary>
-        /// Reset the dedicated Keyword and Pass regarding the shader kind.
-        /// It only does this. For also handling full reset of keywords and
-        /// material, see <see cref="ResetMaterialKeywords"/>.
-        /// </summary>
-        /// <param name="material">The material that nees to be setup</param>
-        public static bool SetupMaterialKeywordsAndPass(Material material)
-        {
-            MaterialResetter resetter;
-            if (k_MaterialResetters.TryGetValue(material.shader.name, out resetter))
-            { 
-                resetter(material);
-                return true;
-            }
-            return false;
-        }
-
+        /// <summary>Gather all the shader preprocessors</summary>
+        /// <returns>The list of shader preprocessor</returns>
         public static List<BaseShaderPreprocessor> GetBaseShaderPreprocessorList()
         {
             var baseType = typeof(BaseShaderPreprocessor);
@@ -83,7 +71,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         }
 
         static readonly GUIContent s_OverrideTooltip = EditorGUIUtility.TrTextContent("", "Override this setting in component.");
-        public static bool FlagToggle<TEnum>(TEnum v, SerializedProperty property)
+        internal static bool FlagToggle<TEnum>(TEnum v, SerializedProperty property)
             where TEnum : struct, IConvertible // restrict to ~enum
         {
             var intV = (int)(object)v;
@@ -98,14 +86,14 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             return isOn;
         }
 
-        public static Rect ReserveAndGetFlagToggleRect()
+        internal static Rect ReserveAndGetFlagToggleRect()
         {
             var rect = GUILayoutUtility.GetRect(11, 17, GUILayout.ExpandWidth(false));
             rect.y += 4;
             return rect;
         }
 
-        public static void PropertyFieldWithOptionalFlagToggle<TEnum>(
+        internal static void PropertyFieldWithOptionalFlagToggle<TEnum>(
             TEnum v, SerializedProperty property, GUIContent label,
             SerializedProperty @override, bool showOverrideButton,
             Action<SerializedProperty, GUIContent> drawer = null
@@ -132,7 +120,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             EditorGUILayout.EndHorizontal();
         }
 
-        public static void PropertyFieldWithFlagToggleIfDisplayed<TEnum>(
+        internal static void PropertyFieldWithFlagToggleIfDisplayed<TEnum>(
             TEnum v, SerializedProperty property, GUIContent label,
             SerializedProperty @override,
             TEnum displayed, TEnum overrideable,
@@ -150,13 +138,13 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             }
         }
 
-        public static bool DrawSectionFoldout(string title, bool isExpanded)
+        internal static bool DrawSectionFoldout(string title, bool isExpanded)
         {
             CoreEditorUtils.DrawSplitter(false);
             return CoreEditorUtils.DrawHeaderFoldout(title, isExpanded, false);
         }
 
-        static internal void DrawToolBarButton<TEnum>(
+        internal static void DrawToolBarButton<TEnum>(
             TEnum button, Editor owner,
             Dictionary<TEnum, EditMode.SceneViewEditMode> toolbarMode,
             Dictionary<TEnum, GUIContent> toolbarContent,
@@ -190,6 +178,8 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         /// <summary>
         /// Give a human readable string representing the inputed weight given in byte.
         /// </summary>
+        /// <param name="weightInByte">The weigth in byte</param>
+        /// <returns>Human readable weight</returns>
         public static string HumanizeWeight(long weightInByte)
         {
             if (weightInByte < 500)
@@ -220,16 +210,12 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         /// Helper to get an enum value from a SerializedProperty
         /// </summary>
         public static T GetEnumValue<T>(this SerializedProperty property)
-        {
-            return (T)System.Enum.GetValues(typeof(T)).GetValue(property.enumValueIndex);
-        }
+            => (T)System.Enum.GetValues(typeof(T)).GetValue(property.enumValueIndex);
 
         /// <summary>
         /// Helper to get an enum name from a SerializedProperty
         /// </summary>
         public static T GetEnumName<T>(this SerializedProperty property)
-        {
-            return (T)System.Enum.GetNames(typeof(T)).GetValue(property.enumValueIndex);
-        }
+            => (T)System.Enum.GetNames(typeof(T)).GetValue(property.enumValueIndex);
     }
 }

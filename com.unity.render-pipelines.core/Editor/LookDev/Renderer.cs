@@ -94,6 +94,22 @@ namespace UnityEditor.Rendering.LookDev
         Stage InitStage(string sceneName, IDataProvider dataProvider)
         {
             Stage stage = new Stage(sceneName);
+
+            CustomRenderSettings renderSettings = dataProvider.GetEnvironmentSetup();
+            if (Unsupported.SetOverrideRenderSettings(stage.scene))
+            {
+                RenderSettings.defaultReflectionMode = renderSettings.defaultReflectionMode;
+                RenderSettings.customReflection = renderSettings.customReflection;
+                RenderSettings.skybox = renderSettings.skybox;
+                RenderSettings.ambientMode = renderSettings.ambientMode;
+                Unsupported.useScriptableRenderPipeline = true;
+                Unsupported.RestoreOverrideRenderSettings();
+            }
+            else
+                throw new System.Exception("Stage's scene was not created correctly");
+
+            dataProvider.SetupCamera(stage.camera);
+
             return stage;
         }
 

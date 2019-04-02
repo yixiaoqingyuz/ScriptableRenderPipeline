@@ -5,10 +5,14 @@ using System.Diagnostics;
 using System.Linq;
 using UnityEngine.Experimental.GlobalIllumination;
 using UnityEngine;
+using UnityEngine.Rendering.LookDev;
+using UnityEngine.SceneManagement;
+using UnityEngine.Rendering.LookDev;
+using LookDevEnvironment = UnityEngine.Rendering.LookDev.CustomRenderSettings;
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
-    public class HDRenderPipeline : UnityEngine.Rendering.RenderPipeline, UnityEngine.Rendering.LookDev.IDataProvider
+    public class HDRenderPipeline : UnityEngine.Rendering.RenderPipeline, IDataProvider
     {
         public const string k_ShaderTagName = "HDRenderPipeline";
         const string k_OldQualityShadowKey = "HDRP:oldQualityShadows";
@@ -3502,5 +3506,26 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
+        LookDevEnvironment IDataProvider.GetEnvironmentSetup()
+            => new LookDevEnvironment()
+            {
+                defaultReflectionMode = UnityEngine.Rendering.DefaultReflectionMode.Custom,
+                customReflection = null,
+                skybox = null,
+                ambientMode = AmbientMode.Trilight
+            };
+
+        void IDataProvider.SetupCamera(Camera camera)
+        {
+            if (QualitySettings.activeColorSpace == ColorSpace.Linear)
+                camera.backgroundColor = camera.backgroundColor.linear;
+
+            //TODO: check
+            camera.allowHDR = true;
+
+            var additionalData = camera.gameObject.AddComponent<HDAdditionalCameraData>();
+            additionalData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
+            additionalData.clearDepth = true;
+        }
     }
 }

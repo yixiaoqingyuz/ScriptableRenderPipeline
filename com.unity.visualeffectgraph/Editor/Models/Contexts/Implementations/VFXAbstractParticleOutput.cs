@@ -301,8 +301,8 @@ namespace UnityEditor.VFX
             stencilWriteMask |= (int)UnityEngine.Experimental.Rendering.HDPipeline.HDRenderPipeline.StencilBitMask.DoesntReceiveSSR;
             stencilRef |= !receiveSSR ? (int)UnityEngine.Experimental.Rendering.HDPipeline.HDRenderPipeline.StencilBitMask.DoesntReceiveSSR : 0;
 
-            stencilWriteMask |= useObjectVelocity ? (int)UnityEngine.Experimental.Rendering.HDPipeline.HDRenderPipeline.StencilBitMask.ObjectVelocity : 0;
-            stencilRef |= useObjectVelocity ? (int)UnityEngine.Experimental.Rendering.HDPipeline.HDRenderPipeline.StencilBitMask.ObjectVelocity : 0;
+            stencilWriteMask |= useObjectVelocity ? (int)UnityEngine.Experimental.Rendering.HDPipeline.HDRenderPipeline.StencilBitMask.ObjectMotionVectors : 0;
+            stencilRef |= useObjectVelocity ? (int)UnityEngine.Experimental.Rendering.HDPipeline.HDRenderPipeline.StencilBitMask.ObjectMotionVectors : 0;
         }
 #endif
 

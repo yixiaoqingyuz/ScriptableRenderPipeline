@@ -5,7 +5,7 @@
 
 void VFXEncodeVelocity(float2 velocity, out float4 outBuffer)
 {
-	EncodeVelocity(velocity, outBuffer);
+    EncodeMotionVector(velocity, outBuffer);
 }
 
 float4 VFXTransformPositionWorldToNonJitteredClip(float3 posWS)

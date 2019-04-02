@@ -76,7 +76,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // XRTODO(2019.3) : remove once XRE-445 is done
         // We need an intermediate target to render the mirror view
         public RenderTexture tempRenderTexture { get; private set; } = null;
+#if USE_XR_SDK
         RenderTextureDescriptor tempRenderTextureDesc;
+#endif
 
         // Legacy multipass support
         internal int  legacyMultipassEye      { get => (int)views[0].legacyStereoEye; }
@@ -93,7 +95,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             passInfo.renderTargetDesc = default;
             passInfo.xrSdkEnabled = false;
             passInfo.tempRenderTexture = null;
+#if USE_XR_SDK
             passInfo.tempRenderTextureDesc = default;
+#endif
 
             return passInfo;
         }

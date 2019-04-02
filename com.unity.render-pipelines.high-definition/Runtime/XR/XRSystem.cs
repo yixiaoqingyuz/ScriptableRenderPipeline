@@ -139,8 +139,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         internal void ClearAll()
         {
             passList = null;
+
+#if USE_XR_SDK
             displayList = null;
             display = null;
+#endif
         }
 
         internal void ReleaseFrame()

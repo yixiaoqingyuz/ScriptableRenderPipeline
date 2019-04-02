@@ -14,6 +14,7 @@ namespace UnityEditor.Rendering.LookDev
     {
         const string lastRenderingDataSavePath = "Library/LookDevConfig.asset";
 
+        //TODO: ensure only one displayer at time for the moment
         static DisplayWindow window;
         static Renderer renderer;
         
@@ -27,7 +28,7 @@ namespace UnityEditor.Rendering.LookDev
         /// </summary>
         public static bool supported => dataProvider != null;
         
-        public static Context currentContext { get; set; }
+        public static Context currentContext { get; private set; }
 
         public static IDisplayer currentDisplayer => window;
 
@@ -68,6 +69,9 @@ namespace UnityEditor.Rendering.LookDev
         [MenuItem("Window/Experimental/NEW Look Dev", false, -1)]
         public static void Open()
         {
+            if (!supported)
+                throw new System.Exception("LookDev is not supported by this Scriptable Render Pipeline");
+
             window = EditorWindow.GetWindow<DisplayWindow>();
             ConfigureLookDev();
         }
@@ -84,14 +88,26 @@ namespace UnityEditor.Rendering.LookDev
 
         static void ConfigureLookDev()
         {
+
             open = true;
             LoadConfig();
-            ConfigureRenderer();
+            WaitingSRPReloadForConfiguringRenderer(5);
         }
 
+        static void WaitingSRPReloadForConfiguringRenderer(int maxAttempt, int attemptNumber = 0)
+        {
+            if (supported)
+                ConfigureRenderer();
+            else if (attemptNumber < maxAttempt)
+                EditorApplication.delayCall +=
+                    () => WaitingSRPReloadForConfiguringRenderer(maxAttempt, ++attemptNumber);
+            else
+                window.Close();
+        }
+        
         static void ConfigureRenderer()
         {
-            renderer = new Renderer(window, currentContext);
+            renderer = new Renderer(window, currentContext, dataProvider);
             window.OnWindowClosed += () =>
             {
                 renderer.Dispose();
@@ -103,6 +119,7 @@ namespace UnityEditor.Rendering.LookDev
             };
         }
 
-        public static void PushSceneChangesToRenderer() => renderer?.UpdateScene();
+        public static void PushSceneChangesToRenderer(ViewIndex index)
+            => renderer?.UpdateScene(index);
     }
 }

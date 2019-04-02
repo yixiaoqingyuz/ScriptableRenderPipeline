@@ -7,7 +7,9 @@ using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.LookDev;
 using UnityEngine.SceneManagement;
+using IDataProvider = UnityEngine.Rendering.LookDev.IDataProvider;
 
 namespace UnityEditor.Rendering.LookDev
 {
@@ -66,17 +68,48 @@ namespace UnityEditor.Rendering.LookDev
         }
     }
 
-    //TODO: for automatising environment change
-    // if Unsupported.SetOverrideRenderSettings
-    // do not behave as expected (see Stage)
-    struct EnvironmentScope : IDisposable
+
+    class StageCache
     {
-        public EnvironmentScope(bool b)
+        Stage[] m_Stages;
+        Context m_Contexts;
+
+        public Stage this[ViewIndex index]
+            => m_Stages[(int)index];
+
+        public bool initialized { get; private set; }
+
+        public StageCache(IDataProvider dataProvider, Context contexts)
         {
+            m_Contexts = contexts;
+            m_Stages = new Stage[2]
+            {
+                InitStage("LookDevViewA", dataProvider),
+                InitStage("LookDevViewB", dataProvider)
+            };
+            initialized = true;
         }
 
-        void IDisposable.Dispose()
+
+        Stage InitStage(string sceneName, IDataProvider dataProvider)
         {
+            Stage stage = new Stage(sceneName);
+            return stage;
+        }
+
+        public void UpdateScene(ViewIndex index)
+        {
+            Stage stage = this[index];
+            stage.Clear();
+            var viewContent = m_Contexts.GetViewContent(index);
+            if (viewContent == null)
+            {
+                viewContent.prefabInstanceInPreview = null;
+                return;
+            }
+
+            if (viewContent.contentPrefab != null && !viewContent.contentPrefab.Equals(null))
+                viewContent.prefabInstanceInPreview = stage.InstantiateIntoStage(viewContent.contentPrefab);
         }
     }
 
@@ -90,8 +123,8 @@ namespace UnityEditor.Rendering.LookDev
         IDisplayer m_Displayer;
         Context m_Contexts;
         RenderTextureCache m_RenderTextures = new RenderTextureCache();
-        //TODO: add a second stage
-        Stage m_Stage;
+
+        StageCache m_Stages;
 
         Color m_AmbientColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
         bool m_PixelPerfect;
@@ -99,13 +132,13 @@ namespace UnityEditor.Rendering.LookDev
 
         public Renderer(
             IDisplayer displayer,
-            Context contexts)
+            Context contexts,
+            IDataProvider dataProvider)
         {
             m_Displayer = displayer;
             m_Contexts = contexts;
-
-            //TODO: add a second stage
-            m_Stage = new Stage("LookDevViewA");
+            
+            m_Stages = new StageCache(dataProvider, m_Contexts);
 
             m_Displayer.OnRenderDocAcquisitionTriggered += RenderDocAcquisitionRequested;
             EditorApplication.update += Render;
@@ -127,19 +160,8 @@ namespace UnityEditor.Rendering.LookDev
         ~Renderer() => CleanUp();
 
 
-        public void UpdateScene()
-        {
-            m_Stage.Clear();
-            var viewContent = m_Contexts.GetViewContent(ViewIndex.FirstOrFull);
-            if (viewContent == null)
-            {
-                viewContent.prefabInstanceInPreview = null;
-                return;
-            }
-
-            if (viewContent.contentPrefab != null && !viewContent.contentPrefab.Equals(null))
-                viewContent.prefabInstanceInPreview = m_Stage.InstantiateIntoStage(viewContent.contentPrefab);
-        }
+        public void UpdateScene(ViewIndex index)
+            => m_Stages.UpdateScene(index);
 
         public void Render()
         {
@@ -213,10 +235,11 @@ namespace UnityEditor.Rendering.LookDev
         {
             BeginPreview(previewRect, index);
 
-            cameraState.UpdateCamera(m_Stage.camera);
-            m_Stage.camera.aspect = previewRect.width / previewRect.height;
+            Camera camera = m_Stages[(ViewIndex)index].camera;
+            cameraState.UpdateCamera(camera);
+            camera.aspect = previewRect.width / previewRect.height;
             
-            m_Stage.camera.Render();
+            camera.Render();
 
             return EndPreview(index);
         }
@@ -224,11 +247,10 @@ namespace UnityEditor.Rendering.LookDev
         void BeginPreview(Rect rect, ViewCompositionIndex index)
         {
             if (index != ViewCompositionIndex.Composite)
-                //TODO: handle multi-stage
-                m_Stage.SetGameObjectVisible(true);
+                m_Stages[(ViewIndex)index].SetGameObjectVisible(true);
 
-            //TODO: handle multi-stage
-            m_RenderTextures.UpdateSize(rect, index, m_PixelPerfect, m_Stage.camera);
+            Camera camera = m_Stages[(ViewIndex)index].camera;
+            m_RenderTextures.UpdateSize(rect, index, m_PixelPerfect, camera);
 
             //TODO: check scissor
             //TODO: check default (without style) clear
@@ -240,7 +262,7 @@ namespace UnityEditor.Rendering.LookDev
             //ShaderUtil.rawScissorRect = new Rect(0, 0, m_RenderTexture.width, m_RenderTexture.height);
             //GL.Clear(true, true, camera.backgroundColor);
             
-            m_Stage.camera.enabled = true;
+            camera.enabled = true;
 
 #if TEMPORARY_RENDERDOC_INTEGRATION
             //TODO: make integration EditorWindow agnostic!
@@ -256,12 +278,11 @@ namespace UnityEditor.Rendering.LookDev
             if (RenderDoc.IsLoaded() && RenderDoc.IsSupported() && m_RenderDocAcquisitionRequested)
                 RenderDoc.EndCaptureRenderDoc(m_Displayer as EditorWindow);
 #endif
-
-            m_Stage.camera.enabled = false;
+            Stage stage = m_Stages[(ViewIndex)index];
+            stage.camera.enabled = false;
 
             if (index != ViewCompositionIndex.Composite)
-                //TODO: handle multi-stage
-                m_Stage.SetGameObjectVisible(false);
+                stage.SetGameObjectVisible(false);
 
             //m_SavedState.Restore();
 

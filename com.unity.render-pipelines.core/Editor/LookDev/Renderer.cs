@@ -138,7 +138,7 @@ namespace UnityEditor.Rendering.LookDev
             }
 
             if (viewContent.contentPrefab != null && !viewContent.contentPrefab.Equals(null))
-                viewContent.prefabInstanceInPreview = m_Stage.InstantiateInStage(viewContent.contentPrefab);
+                viewContent.prefabInstanceInPreview = m_Stage.InstantiateIntoStage(viewContent.contentPrefab);
         }
 
         public void Render()

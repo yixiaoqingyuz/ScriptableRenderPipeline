@@ -248,15 +248,16 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
         return;
     }
 
-    uint4 result = TraverseVxShadowMapPosQ(begin, posQ);
+    uint4 result;
+    TraverseVxShadowMapPosQ(begin, posQ, result);
+
     if (result.w == 0)
     {
         _DeferredShadowTextureUAV[pixelCoord] = result.y ? 0.0 : 1.0;
         return;
     }
 
-    uint2 bitmask2 = TraverseVxShadowMapLeaf(begin, posQ.z, result);
-    float attenuation = 1.0 - PointSampleShadowBitmask(bitmask2, posQ);
+    float attenuation = 1.0 - TraversePointSampleVxShadowMap(begin, posQ, result);
 #elif 0 // bilinear filter
 #elif 0 // trilinear filter
 #endif

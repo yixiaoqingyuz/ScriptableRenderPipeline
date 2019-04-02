@@ -31,7 +31,7 @@ namespace UnityEngine.Experimental.Rendering.LWRP
             public static int _MaxScaleID;
             public static int _WorldToShadowMatrixID;
 
-            public static int _VxShadowMapBufferID;
+            public static int _VxShadowMapsBufferID;
             public static int _ScreenSpaceShadowOutputID;
         }
 
@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Rendering.LWRP
             VxShadowMapConstantBuffer._MaxScaleID = Shader.PropertyToID("_MaxScale");
             VxShadowMapConstantBuffer._WorldToShadowMatrixID = Shader.PropertyToID("_WorldToShadowMatrix");
 
-            VxShadowMapConstantBuffer._VxShadowMapBufferID = Shader.PropertyToID("_VxShadowMapBuffer");
+            VxShadowMapConstantBuffer._VxShadowMapsBufferID = Shader.PropertyToID("_VxShadowMapsBuffer");
             VxShadowMapConstantBuffer._ScreenSpaceShadowOutputID = Shader.PropertyToID("_ScreenSpaceShadowOutput");
 
             bool R8_UNorm = SystemInfo.IsFormatSupported(GraphicsFormat.R8_UNorm, FormatUsage.LoadStore);
@@ -247,7 +247,7 @@ namespace UnityEngine.Experimental.Rendering.LWRP
             cmd.SetComputeIntParam(computeShader, VxShadowMapConstantBuffer._MaxScaleID, dirVxShadowMap.maxScale);
             cmd.SetComputeMatrixParam(computeShader, VxShadowMapConstantBuffer._WorldToShadowMatrixID, dirVxShadowMap.worldToShadowMatrix);
 
-            cmd.SetComputeBufferParam(computeShader, kernel, VxShadowMapConstantBuffer._VxShadowMapBufferID, dirVxShadowMap.computeBuffer);
+            cmd.SetComputeBufferParam(computeShader, kernel, VxShadowMapConstantBuffer._VxShadowMapsBufferID, dirVxShadowMap.computeBuffer);
             cmd.SetComputeTextureParam(computeShader, kernel, VxShadowMapConstantBuffer._ScreenSpaceShadowOutputID, colorAttachmentHandle.Identifier());
         }
     }

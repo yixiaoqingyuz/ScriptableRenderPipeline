@@ -67,7 +67,7 @@ All_{{ project.name }}:
   {% for editor in editors %}
   {% for platform in platforms %}
   {% for testplatform in testplatforms %}
-    - .yamato/upm-ci-{{ project.name }}.yml#{{ project.name }}_{{ platform.name }}_{{ testplatform.name }}_{{ editor.version }}
+    - .yamato/upm-ci-{{ project.name | downcase }}.yml#{{ project.name }}_{{ platform.name }}_{{ testplatform.name }}_{{ editor.version }}
   {% endfor %}
   {% endfor %}
   {% endfor %}

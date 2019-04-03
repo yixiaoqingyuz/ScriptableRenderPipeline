@@ -1,4 +1,4 @@
-{% assign project_name = ShaderGraph %}
+{% assign project_name = "ShaderGraph" %}
 
 editors:
   - version: trunk

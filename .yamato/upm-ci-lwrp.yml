@@ -19,6 +19,7 @@ testplatforms:
 projects:
   - name: LWRP
     folder: LWGraphicsTest
+    packagename: com.unity.render-pipelines.lightweight
 ---
 {% for project in projects %}
 {% for editor in editors %}
@@ -51,6 +52,28 @@ projects:
         - "**/upm-ci~/test-results/**/*"
         
 {% endfor %}
+{% endfor %}
+{% endfor %}
+
+{% for editor in editors %}
+{% for platform in platforms %}
+{{ platform.name }}_{{ editor.version }}:
+  name: Pack and Test {{ project.packagename }} version {{ editor.version }} on {{ platform.name }}
+  agent:
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
+  commands:
+  - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
+  - cd {{ project.packagename }} && upm-ci package pack
+  - cd {{ project.packagename }} && upm-ci package test --unity-version {{ editor.version }}
+  artifacts:
+    logs.zip:
+      paths:
+      - "**/upm-ci~/test-results/**/*"
+      - "**/upm-ci~/packages/**/*.tgz"
+
+
 {% endfor %}
 {% endfor %}
 

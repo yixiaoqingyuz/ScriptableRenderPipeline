@@ -420,7 +420,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 #if ENABLE_RAYTRACING
         HDRaytracingManager                 m_RayTracingManager;
 #endif
-        VxShadowMapsManager m_VxShadowMapsManager; //seongdae;vxsm
 
         // Used to shadow shadow maps with use selection enabled in the debug menu
         int m_DebugSelectedLightShadowIndex;
@@ -766,12 +765,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_RayTracingManager = raytracingManager;
         }
 #endif
-        //seongdae;vxsm
-        public void InitVxShadows(VxShadowMapsManager vxShadowMapsManager)
-        {
-            m_VxShadowMapsManager = vxShadowMapsManager;
-        }
-        //seongdae;vxsm
 
         public void NewFrame(FrameSettings frameSettings)
         {
@@ -2684,7 +2677,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public void SetScreenSpaceVxShadowsTexture(HDCamera hdCamera, RTHandleSystem.RTHandle deferredShadowRT, CommandBuffer cmd)
         {
             AdditionalShadowData sunShadowData = m_CurrentSunLight != null ? m_CurrentSunLight.GetComponent<AdditionalShadowData>() : null;
-            DirectionalVxShadowMap dirVxShadowMap = m_VxShadowMapsManager.MainDirVxShadowMap;
+            DirectionalVxShadowMap dirVxShadowMap = m_CurrentSunLight.GetComponent<DirectionalVxShadowMap>();
 
             bool hasSunLight = m_CurrentSunLight != null && sunShadowData != null;
             bool hasSunVxShadow = dirVxShadowMap != null && dirVxShadowMap.IsValid();
@@ -2829,7 +2822,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public void RenderScreenSpaceVxShadows(HDCamera hdCamera, RTHandleSystem.RTHandle deferredShadowRT, RenderTargetIdentifier depthTexture, CommandBuffer cmd)
         {
             AdditionalShadowData sunShadowData = m_CurrentSunLight != null ? m_CurrentSunLight.GetComponent<AdditionalShadowData>() : null;
-            DirectionalVxShadowMap dirVxShadowMap = m_VxShadowMapsManager.MainDirVxShadowMap;
+            DirectionalVxShadowMap dirVxShadowMap = m_CurrentSunLight.GetComponent<DirectionalVxShadowMap>();
 
             bool hasSunLight = m_CurrentSunLight != null && sunShadowData != null;
             bool hasSunVxShadow = dirVxShadowMap != null && dirVxShadowMap.IsValid();

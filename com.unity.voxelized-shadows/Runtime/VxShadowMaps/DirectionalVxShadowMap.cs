@@ -1,6 +1,8 @@
 
 namespace UnityEngine.Experimental.VoxelizedShadows
 {
+    [ExecuteAlways]
+    [AddComponentMenu("Rendering/VxShadows", 100)]
     public sealed class DirectionalVxShadowMap : VxShadowMap
     {
         public DirectionalVxShadowMapResources resource;
@@ -30,29 +32,19 @@ namespace UnityEngine.Experimental.VoxelizedShadows
         [HideInInspector] public Matrix4x4 worldToShadowMatrix = Matrix4x4.identity;
         [HideInInspector] public ComputeBuffer computeBuffer;
 
-        public void Awake()
+        private void OnEnable()
+        {
+            Debug.Log("Register");
+            VxShadowMapsManager.instance.RegisterVxShadowMapComponent(this);
+        }
+        private void OnDisable()
+        {
+            Debug.Log("Unregister");
+            VxShadowMapsManager.instance.UnregisterVxShadowMapComponent(this);
+        }
+        private void OnValidate()
         {
             ValidateResources();
-        }
-
-        public void Start()
-        {
-            ValidateResources();
-        }
-
-        public void OnValidate()
-        {
-            ValidateResources();
-        }
-
-        public void OnDisable()
-        {
-            InvalidateResources();
-        }
-
-        public void OnDestroy()
-        {
-            InvalidateResources();
         }
 
         public bool IsValid()
@@ -74,7 +66,7 @@ namespace UnityEngine.Experimental.VoxelizedShadows
         }
 #endif
 
-        public void ValidateResources()
+        public override void ValidateResources()
         {
             bool needToReload = resource != null && computeBuffer == null;
 
@@ -111,8 +103,7 @@ namespace UnityEngine.Experimental.VoxelizedShadows
                 computeBuffer.SetData(resource.Data);
             }
         }
-
-        public void InvalidateResources()
+        public override void InvalidateResources()
         {
             SafeRelease(computeBuffer);
             computeBuffer = null;

@@ -234,6 +234,9 @@ namespace UnityEngine.Experimental.Rendering.LWRP
             var projMatrix = gpuProj;
             var viewProjMatrix = projMatrix * viewMatrix;
 
+            var vxShadowMapsBuffer = VxShadowMapsManager.instance.VxShadowMapsBuffer;
+
+            int voxelZBias = dirVxShadowMap.voxelZBias;
             float voxelUpBias = dirVxShadowMap.voxelUpBias * (dirVxShadowMap.volumeScale / dirVxShadowMap.voxelResolutionInt);
 
             cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._ShadowData, new Vector4(light.shadowStrength, 0.0f, 0.0f, 0.0f));
@@ -241,13 +244,10 @@ namespace UnityEngine.Experimental.Rendering.LWRP
             cmd.SetComputeMatrixParam(computeShader, VxShadowMapConstantBuffer._InvViewProjMatrixID, viewProjMatrix.inverse);
             cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._ScreenSizeID, new Vector4(screenSizeX, screenSizeY, invScreenSizeX, invScreenSizeY));
 
-            cmd.SetComputeIntParam(computeShader, VxShadowMapConstantBuffer._VoxelResolutionID, dirVxShadowMap.voxelResolutionInt);
-            cmd.SetComputeIntParam(computeShader, VxShadowMapConstantBuffer._VoxelZBiasID, dirVxShadowMap.voxelZBias);
+            cmd.SetComputeIntParam(computeShader, VxShadowMapConstantBuffer._VoxelZBiasID, voxelZBias);
             cmd.SetComputeFloatParam(computeShader, VxShadowMapConstantBuffer._VoxelUpBiasID, voxelUpBias);
-            cmd.SetComputeIntParam(computeShader, VxShadowMapConstantBuffer._MaxScaleID, dirVxShadowMap.maxScale);
-            cmd.SetComputeMatrixParam(computeShader, VxShadowMapConstantBuffer._WorldToShadowMatrixID, dirVxShadowMap.worldToShadowMatrix);
 
-            cmd.SetComputeBufferParam(computeShader, kernel, VxShadowMapConstantBuffer._VxShadowMapsBufferID, dirVxShadowMap.computeBuffer);
+            cmd.SetComputeBufferParam(computeShader, kernel, VxShadowMapConstantBuffer._VxShadowMapsBufferID, vxShadowMapsBuffer);
             cmd.SetComputeTextureParam(computeShader, kernel, VxShadowMapConstantBuffer._ScreenSpaceShadowOutputID, colorAttachmentHandle.Identifier());
         }
     }

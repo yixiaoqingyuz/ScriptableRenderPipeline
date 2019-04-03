@@ -47,7 +47,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         readonly GBufferManager m_GbufferManager;
         readonly DBufferManager m_DbufferManager;
-        readonly VxShadowMapsManager m_VxShadowMapsManager; //seongdae;vxsm
         readonly SubsurfaceScatteringManager m_SSSBufferManager = new SubsurfaceScatteringManager();
         readonly SharedRTManager m_SharedRTManager = new SharedRTManager();
         readonly PostProcessSystem m_PostProcessSystem;
@@ -296,8 +295,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_GbufferManager = new GBufferManager(asset, m_DeferredMaterial);
             m_DbufferManager = new DBufferManager();
 
-            m_VxShadowMapsManager = new VxShadowMapsManager(UnityEngine.Experimental.VoxelizedShadows.RenderPipelineType.HighDefinition); //seongdae;vxsm
-
             m_SSSBufferManager.Build(asset);
             m_SharedRTManager.Build(asset);
             m_PostProcessSystem = new PostProcessSystem(asset);
@@ -378,7 +375,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_LightLoop.InitRaytracing(m_RayTracingManager);
             m_AmbientOcclusionSystem.InitRaytracing(m_RayTracingManager, m_SharedRTManager);
 #endif
-            m_LightLoop.InitVxShadows(m_VxShadowMapsManager); //seongdae;vxsm
         }
 
         void UpgradeResourcesIfNeeded()
@@ -691,7 +687,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             CoreUtils.Destroy(m_CopyDepth);
             CoreUtils.Destroy(m_ErrorMaterial);
 
-            m_VxShadowMapsManager.Cleanup(); //seongdae;vxsm
+            VxShadowMapsManager.instance.Cleanup(); //seongdae;vxsm
             m_SSSBufferManager.Cleanup();
             m_SharedRTManager.Cleanup();
             m_SkyManager.Cleanup();
@@ -1798,8 +1794,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                 // Render the volumetric lighting.
                 // The pass requires the volume properties, the light list and the shadows, and can run async.
-                //m_VolumetricLightingSystem.VolumetricLightingPass(hdCamera, cmd, m_FrameCount); //seongdae;vxsm;origin
-                m_VolumetricLightingSystem.VolumetricLightingPass(hdCamera, cmd, m_VxShadowMapsManager, m_FrameCount); //seongdae;vxsm
+                m_VolumetricLightingSystem.VolumetricLightingPass(hdCamera, cmd, m_FrameCount);
 
                 SetMicroShadowingSettings(cmd);
 

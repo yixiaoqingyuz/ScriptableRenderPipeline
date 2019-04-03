@@ -663,8 +663,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        // public void VolumetricLightingPass(HDCamera hdCamera, CommandBuffer cmd, uint frameIndex) //seongdae;vxsm;origin
-        public void VolumetricLightingPass(HDCamera hdCamera, CommandBuffer cmd, VxShadowMapsManager vxShadowMapsManager, uint frameIndex) //seongdae;vxsm
+        public void VolumetricLightingPass(HDCamera hdCamera, CommandBuffer cmd, uint frameIndex)
         {
             if (!hdCamera.frameSettings.IsEnabled(FrameSettingsField.Volumetrics))
                 return;
@@ -712,12 +711,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 // Currently, we assume that they are completely uncorrelated, but maybe we should correlate them somehow.
                 m_xySeqOffset.Set(m_xySeq[sampleIndex].x, m_xySeq[sampleIndex].y, m_zSeq[sampleIndex], frameIndex);
 
-                //seongdae;vxsm
-                var dirVxShadowMap = vxShadowMapsManager.MainDirVxShadowMap;
-                var vxShadowMapsBuffer = dirVxShadowMap != null ? dirVxShadowMap.computeBuffer : null;
-                if (vxShadowMapsBuffer == null) vxShadowMapsBuffer = vxShadowMapsManager.NullVxShadowMapsBuffer;
-                cmd.SetComputeBufferParam(m_VolumetricLightingCS, kernel, HDShaderIDs._VxShadowMapsBuffer, vxShadowMapsBuffer);
-                //seongdae;vxsm
+                cmd.SetComputeBufferParam(m_VolumetricLightingCS, kernel, HDShaderIDs._VxShadowMapsBuffer, VxShadowMapsManager.instance.VxShadowMapsBuffer); //seongdae;vxsm
 
                 // TODO: set 'm_VolumetricLightingPreset'.
                 // TODO: set the constant buffer data only once.

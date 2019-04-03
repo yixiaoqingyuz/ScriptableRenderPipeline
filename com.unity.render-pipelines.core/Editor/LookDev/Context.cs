@@ -4,7 +4,7 @@ namespace UnityEditor.Rendering.LookDev
 {
     public enum ViewIndex
     {
-        FirstOrFull,
+        First,
         Second
     };
 

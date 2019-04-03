@@ -56,7 +56,6 @@ namespace UnityEditor.Rendering.LookDev
             m_Camera.renderingPath = RenderingPath.DeferredShading;
             m_Camera.useOcclusionCulling = false;
             m_Camera.scene = m_PreviewScene;
-            m_Camera.backgroundColor = Color.magenta;
         }
 
         /// <summary>

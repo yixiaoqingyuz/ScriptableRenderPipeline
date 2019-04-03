@@ -42,8 +42,8 @@ namespace UnityEditor.Rendering.LookDev
         const string k_ToolbarRadioName = "toolbarRadio";
         const string k_ToolbarEnvironmentName = "toolbarEnvironment";
         const string k_SharedContainerClass = "container";
-        const string k_OneViewClass = "oneView";
-        const string k_TwoViewsClass = "twoViews";
+        const string k_FirstViewClass = "firstView";
+        const string k_SecondViewsClass = "secondView";
         const string k_ShowEnvironmentPanelClass = "showEnvironmentPanel";
 
         VisualElement m_MainContainer;
@@ -62,21 +62,34 @@ namespace UnityEditor.Rendering.LookDev
                 {
                     if (value == Layout.HorizontalSplit || value == Layout.VerticalSplit)
                     {
-                        if (m_ViewContainer.ClassListContains(k_OneViewClass))
-                        {
-                            m_ViewContainer.RemoveFromClassList(k_OneViewClass);
-                            m_ViewContainer.AddToClassList(k_TwoViewsClass);
-                        }
+                        if (!m_ViewContainer.ClassListContains(k_FirstViewClass))
+                            m_ViewContainer.AddToClassList(k_FirstViewClass);
+                        if (!m_ViewContainer.ClassListContains(k_SecondViewsClass))
+                            m_ViewContainer.AddToClassList(k_SecondViewsClass);
+                    }
+                    else if (value == Layout.FullA)
+                    {
+                        if (!m_ViewContainer.ClassListContains(k_FirstViewClass))
+                            m_ViewContainer.AddToClassList(k_FirstViewClass);
+                        if (m_ViewContainer.ClassListContains(k_SecondViewsClass))
+                            m_ViewContainer.RemoveFromClassList(k_SecondViewsClass);
+                    }
+                    else if (value == Layout.FullB)
+                    {
+                        if (m_ViewContainer.ClassListContains(k_FirstViewClass))
+                            m_ViewContainer.RemoveFromClassList(k_FirstViewClass);
+                        if (!m_ViewContainer.ClassListContains(k_SecondViewsClass))
+                            m_ViewContainer.AddToClassList(k_SecondViewsClass);
                     }
                     else
                     {
-                        if (m_ViewContainer.ClassListContains(k_TwoViewsClass))
-                        {
-                            m_ViewContainer.RemoveFromClassList(k_TwoViewsClass);
-                            m_ViewContainer.AddToClassList(k_OneViewClass);
-                        }
+                        if (m_ViewContainer.ClassListContains(k_FirstViewClass))
+                            m_ViewContainer.RemoveFromClassList(k_FirstViewClass);
+                        if (m_ViewContainer.ClassListContains(k_SecondViewsClass))
+                            m_ViewContainer.RemoveFromClassList(k_SecondViewsClass);
                     }
 
+                    //Handle flex direction here
                     if (m_ViewContainer.ClassListContains(LookDev.currentContext.layout.viewLayout.ToString()))
                         m_ViewContainer.RemoveFromClassList(LookDev.currentContext.layout.viewLayout.ToString());
                     m_ViewContainer.AddToClassList(value.ToString());
@@ -198,12 +211,12 @@ namespace UnityEditor.Rendering.LookDev
                 throw new System.MemberAccessException("m_MainContainer should be assigned prior CreateViews()");
 
             m_ViewContainer = new VisualElement() { name = k_ViewContainerName };
-            m_ViewContainer.AddToClassList(LookDev.currentContext.layout.isMultiView ? k_TwoViewsClass : k_OneViewClass);
+            m_ViewContainer.AddToClassList(LookDev.currentContext.layout.isMultiView ? k_SecondViewsClass : k_FirstViewClass);
             m_ViewContainer.AddToClassList(k_SharedContainerClass);
             m_MainContainer.Add(m_ViewContainer);
 
-            m_Views[(int)ViewIndex.FirstOrFull] = new Image() { name = k_FirstViewName, image = Texture2D.blackTexture };
-            m_ViewContainer.Add(m_Views[(int)ViewIndex.FirstOrFull]);
+            m_Views[(int)ViewIndex.First] = new Image() { name = k_FirstViewName, image = Texture2D.blackTexture };
+            m_ViewContainer.Add(m_Views[(int)ViewIndex.First]);
             m_Views[(int)ViewIndex.Second] = new Image() { name = k_SecondViewName, image = Texture2D.blackTexture };
             m_ViewContainer.Add(m_Views[(int)ViewIndex.Second]);
         }

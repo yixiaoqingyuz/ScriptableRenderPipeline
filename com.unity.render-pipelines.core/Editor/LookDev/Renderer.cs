@@ -1,4 +1,4 @@
-//#define TEMPORARY_RENDERDOC_INTEGRATION //require specific c++
+#define TEMPORARY_RENDERDOC_INTEGRATION //require specific c++
 
 using System;
 using System.Linq.Expressions;
@@ -15,7 +15,7 @@ namespace UnityEditor.Rendering.LookDev
 {
     enum ViewCompositionIndex
     {
-        First = ViewIndex.FirstOrFull,
+        First = ViewIndex.First,
         Second = ViewIndex.Second,
         Composite
     };
@@ -71,6 +71,9 @@ namespace UnityEditor.Rendering.LookDev
 
     class StageCache
     {
+        const string firstStageName = "LookDevFirstView";
+        const string secondStageName = "LookDevSecondView";
+
         Stage[] m_Stages;
         Context m_Contexts;
 
@@ -84,16 +87,29 @@ namespace UnityEditor.Rendering.LookDev
             m_Contexts = contexts;
             m_Stages = new Stage[2]
             {
-                InitStage("LookDevViewA", dataProvider),
-                InitStage("LookDevViewB", dataProvider)
+                InitStage(ViewIndex.First, dataProvider),
+                InitStage(ViewIndex.Second, dataProvider)
             };
             initialized = true;
         }
 
 
-        Stage InitStage(string sceneName, IDataProvider dataProvider)
+        Stage InitStage(ViewIndex index, IDataProvider dataProvider)
         {
-            Stage stage = new Stage(sceneName);
+            Stage stage;
+            switch (index)
+            {
+                case ViewIndex.First:
+                    stage = new Stage(firstStageName);
+                    stage.camera.backgroundColor = new Color32(0, 154, 154, 255);
+                    break;
+                case ViewIndex.Second:
+                    stage = new Stage(secondStageName);
+                    stage.camera.backgroundColor = new Color32(255, 37, 4, 255);
+                    break;
+                default:
+                    throw new ArgumentException("Unknown ViewIndex: " + index);
+            }
 
             CustomRenderSettings renderSettings = dataProvider.GetEnvironmentSetup();
             if (Unsupported.SetOverrideRenderSettings(stage.scene))
@@ -181,17 +197,24 @@ namespace UnityEditor.Rendering.LookDev
 
         public void Render()
         {
+#if TEMPORARY_RENDERDOC_INTEGRATION
+            //TODO: make integration EditorWindow agnostic!
+            if (RenderDoc.IsLoaded() && RenderDoc.IsSupported() && m_RenderDocAcquisitionRequested)
+                RenderDoc.BeginCaptureRenderDoc(m_Displayer as EditorWindow);
+#endif
+
             switch (m_Contexts.layout.viewLayout)
             {
                 case Layout.FullA:
-                    RenderSingle(ViewIndex.FirstOrFull);
+                    RenderSingle(ViewIndex.First);
                     break;
                 case Layout.FullB:
                     RenderSingle(ViewIndex.Second);
                     break;
                 case Layout.HorizontalSplit:
                 case Layout.VerticalSplit:
-                    RenderSideBySide();
+                    RenderSingle(ViewIndex.First);
+                    RenderSingle(ViewIndex.Second);
                     break;
                 case Layout.CustomSplit:
                 case Layout.CustomCircular:
@@ -199,6 +222,11 @@ namespace UnityEditor.Rendering.LookDev
                     break;
             }
 
+#if TEMPORARY_RENDERDOC_INTEGRATION
+            //TODO: make integration EditorWindow agnostic!
+            if (RenderDoc.IsLoaded() && RenderDoc.IsSupported() && m_RenderDocAcquisitionRequested)
+                RenderDoc.EndCaptureRenderDoc(m_Displayer as EditorWindow);
+#endif
             //stating that RenderDoc do not need to acquire anymore should
             //allows to gather both view and composition in render doc at once
             //TODO: check this
@@ -232,9 +260,7 @@ namespace UnityEditor.Rendering.LookDev
            
             //Graphics.SetRenderTarget(texture);
             //GL.Clear(false, true, Color.cyan);
-            m_Displayer.SetTexture(ViewIndex.FirstOrFull, texture);
-            //m_Displayer.SetTexture(ViewIndex.FirstOrFull, Texture2D.whiteTexture);
-            //m_Displayer.SetTexture(ViewIndex.FirstOrFull, myTexture2D);
+            m_Displayer.SetTexture(index, texture);
         }
 
         void RenderSideBySide()
@@ -279,21 +305,10 @@ namespace UnityEditor.Rendering.LookDev
             //GL.Clear(true, true, camera.backgroundColor);
             
             camera.enabled = true;
-
-#if TEMPORARY_RENDERDOC_INTEGRATION
-            //TODO: make integration EditorWindow agnostic!
-            if (RenderDoc.IsLoaded() && RenderDoc.IsSupported() && m_RenderDocAcquisitionRequested)
-                RenderDoc.BeginCaptureRenderDoc(m_Displayer as EditorWindow);
-#endif
         }
 
         RenderTexture EndPreview(ViewCompositionIndex index)
         {
-#if TEMPORARY_RENDERDOC_INTEGRATION
-            //TODO: make integration EditorWindow agnostic!
-            if (RenderDoc.IsLoaded() && RenderDoc.IsSupported() && m_RenderDocAcquisitionRequested)
-                RenderDoc.EndCaptureRenderDoc(m_Displayer as EditorWindow);
-#endif
             Stage stage = m_Stages[(ViewIndex)index];
             stage.camera.enabled = false;
 

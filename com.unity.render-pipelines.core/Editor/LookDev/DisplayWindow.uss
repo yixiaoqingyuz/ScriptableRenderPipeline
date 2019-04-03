@@ -16,20 +16,15 @@
     flex-shrink: 0;
 }
 
-.oneView > #firstView {
-    flex: 1;
-}
-
-.oneView > #secondView {
+#firstView,
+#secondView {
     flex: 0;
 }
 
-.twoViews > #firstView {
-    flex: 0.5;
-}
-
-.twoViews > #secondView {
-    flex: 0.5;
+/* override as later in document */
+.firstView > #firstView,
+.secondView > #secondView {
+    flex: 1;
 }
 
 .showEnvironmentPanel > #environmentContainer {

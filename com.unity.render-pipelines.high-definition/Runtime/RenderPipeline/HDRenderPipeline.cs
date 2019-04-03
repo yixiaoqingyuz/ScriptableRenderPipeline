@@ -3517,15 +3517,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         void IDataProvider.SetupCamera(Camera camera)
         {
-            if (QualitySettings.activeColorSpace == ColorSpace.Linear)
-                camera.backgroundColor = camera.backgroundColor.linear;
-
-            //TODO: check
             camera.allowHDR = true;
 
             var additionalData = camera.gameObject.AddComponent<HDAdditionalCameraData>();
             additionalData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
             additionalData.clearDepth = true;
+            additionalData.backgroundColorHDR = camera.backgroundColor;
         }
     }
 }

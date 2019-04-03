@@ -2,8 +2,12 @@
 #pragma kernel DeferredContactShadow                DEFERRED_CONTACT_SHADOW_GENERIC=DeferredContactShadow
 #pragma kernel DeferredContactShadowMSAA            DEFERRED_CONTACT_SHADOW_GENERIC=DeferredContactShadowMSAA         ENABLE_MSAA
 //seongdae;vxsm
-#pragma kernel DeferredVxShadow                     DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadow
-#pragma kernel DeferredVxShadowMSAA                 DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowMSAA                   ENABLE_MSAA
+#pragma kernel DeferredVxShadowNoFilter             DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowNoFilter               NO_FILTERING
+#pragma kernel DeferredVxShadowBiFilter             DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowBiFilter               BILINEAR_FILTERING
+#pragma kernel DeferredVxShadowTriFilter            DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowTriFilter              TRILINEAR_FILTERING
+#pragma kernel DeferredVxShadowNoFilterMSAA         DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowNoFilterMSAA           NO_FILTERING        ENABLE_MSAA
+#pragma kernel DeferredVxShadowBiFilterMSAA         DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowBiFilterMSAA           BILINEAR_FILTERING  ENABLE_MSAA
+#pragma kernel DeferredVxShadowTriFilterMSAA        DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowTriFilterMSAA          TRILINEAR_FILTERING ENABLE_MSAA
 //seongdae;vxsm
 
 #ifdef SHADER_API_PSSL
@@ -208,7 +212,6 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
     PositionInputs posInput = GetPositionInput_Stereo(pixelCoord.xy, _ScreenSize.zw, depth, UNITY_MATRIX_I_VP, UNITY_MATRIX_V, tileCoord, unity_StereoEyeIndex);
     float3 positionWS = posInput.positionWS + _WorldSpaceCameraPos;
 
-#if 1 // no filter
     uint begin = 0;
 
     uint voxelResolution = _VxShadowMapsBuffer[begin];
@@ -236,10 +239,14 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
     };
 
     //positionWS.y += _VoxelUpBias;
+    positionWS.y += 0.1;
     float3 posNDC = mul(worldToShadowMatrix, float4(positionWS, 1.0)).xyz;
     float3 posP = posNDC * (float)voxelResolution;
+    float3 posF = floor(posP);
+    float3 lerpWeight = posP - posF;
 
     uint3 posQ = (uint3)posP;
+    posQ.z -= 2;
     //posQ.z -= _VoxelZBias;
 
     if (any(posQ >= (voxelResolution.xxx - 1)))
@@ -248,6 +255,9 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
         return;
     }
 
+    float attenuation = 1.0;
+
+#if NO_FILTERING
     uint4 result;
     TraverseVxShadowMapPosQ(begin, posQ, result);
 
@@ -257,11 +267,32 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
         return;
     }
 
-    float attenuation = 1.0 - TraversePointSampleVxShadowMap(begin, posQ, result);
-#elif 0 // bilinear filter
-#elif 0 // trilinear filter
+    attenuation = TraversePointSampleVxShadowMap(begin, posQ, result);
+#elif BILINEAR_FILTERING
+    uint4 results[4];
+    TraverseVxShadowMapPosQ2x2(begin, posQ, results);
+
+    if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0)
+    {
+        _DeferredShadowTextureUAV[pixelCoord] = results[0].y ? 0.0 : 1.0;
+        return;
+    }
+
+    attenuation = TraverseBilinearSampleVxShadowMap(begin, posQ, results, lerpWeight.xy);
+#elif TRILINEAR_FILTERING
+    uint4 results[8];
+    TraverseVxShadowMapPosQ2x2x2(begin, posQ, results);
+
+    if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0 &&
+        results[4].w == 0 && results[5].w == 0 && results[6].w == 0 && results[7].w == 0)
+    {
+        _DeferredShadowTextureUAV[pixelCoord] = results[0].y ? 0.0 : 1.0;
+        return;
+    }
+
+    attenuation = TravereTrilinearSampleVxShadowMap(begin, posQ, results, lerpWeight);
 #endif
 
-    _DeferredShadowTextureUAV[pixelCoord] = attenuation;
+    _DeferredShadowTextureUAV[pixelCoord] = 1.0 - attenuation;
 }
 //seongdae;vxsm

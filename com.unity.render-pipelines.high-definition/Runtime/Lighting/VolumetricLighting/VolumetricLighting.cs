@@ -714,8 +714,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                 //seongdae;vxsm
                 var dirVxShadowMap = vxShadowMapsManager.MainDirVxShadowMap;
-                var vxShadowMapBuffer = dirVxShadowMap.computeBuffer;
-                cmd.SetComputeBufferParam(m_VolumetricLightingCS, kernel, HDShaderIDs._VxShadowMapsBuffer, vxShadowMapBuffer);
+                var vxShadowMapsBuffer = dirVxShadowMap != null ? dirVxShadowMap.computeBuffer : null;
+                if (vxShadowMapsBuffer == null) vxShadowMapsBuffer = vxShadowMapsManager.NullVxShadowMapsBuffer;
+                cmd.SetComputeBufferParam(m_VolumetricLightingCS, kernel, HDShaderIDs._VxShadowMapsBuffer, vxShadowMapsBuffer);
                 //seongdae;vxsm
 
                 // TODO: set 'm_VolumetricLightingPreset'.

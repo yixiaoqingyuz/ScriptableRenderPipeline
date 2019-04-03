@@ -319,8 +319,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         static int s_deferredContactShadowKernel;
         static int s_deferredContactShadowKernelMSAA;
 
-        static int s_deferredVxShadowKernel; //seongdae;vxsm
-        static int s_deferredVxShadowKernelMSAA; //seongdae;vxsm
+        static int s_deferredVxShadowNoFilterKernel; //seongdae;vxsm
+        static int s_deferredVxShadowBiFilterKernel; //seongdae;vxsm
+        static int s_deferredVxShadowTriFilterKernel; //seongdae;vxsm
+        static int s_deferredVxShadowNoFilterKernelMSAA; //seongdae;vxsm
+        static int s_deferredVxShadowBiFilterKernelMSAA; //seongdae;vxsm
+        static int s_deferredVxShadowTriFilterKernelMSAA; //seongdae;vxsm
 
         static ComputeBuffer s_LightVolumeDataBuffer = null;
         static ComputeBuffer s_ConvexBoundsBuffer = null;
@@ -577,8 +581,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             s_deferredContactShadowKernel = screenSpaceShadowComputeShader.FindKernel("DeferredContactShadow");
             s_deferredContactShadowKernelMSAA = screenSpaceShadowComputeShader.FindKernel("DeferredContactShadowMSAA");
 
-            s_deferredVxShadowKernel = screenSpaceShadowComputeShader.FindKernel("DeferredVxShadow"); //seongdae;vxsm
-            s_deferredVxShadowKernelMSAA = screenSpaceShadowComputeShader.FindKernel("DeferredVxShadowMSAA"); //seongdae;vxsm
+            s_deferredVxShadowNoFilterKernel = screenSpaceShadowComputeShader.FindKernel("DeferredVxShadowNoFilter"); //seongdae;vxsm
+            s_deferredVxShadowBiFilterKernel = screenSpaceShadowComputeShader.FindKernel("DeferredVxShadowBiFilter"); //seongdae;vxsm
+            s_deferredVxShadowTriFilterKernel = screenSpaceShadowComputeShader.FindKernel("DeferredVxShadowTriFilter"); //seongdae;vxsm
+            s_deferredVxShadowNoFilterKernelMSAA = screenSpaceShadowComputeShader.FindKernel("DeferredVxShadowNoFilterMSAA"); //seongdae;vxsm            
+            s_deferredVxShadowBiFilterKernelMSAA = screenSpaceShadowComputeShader.FindKernel("DeferredVxShadowBiFilterMSAA"); //seongdae;vxsm            
+            s_deferredVxShadowTriFilterKernelMSAA = screenSpaceShadowComputeShader.FindKernel("DeferredVxShadowTriFilterMSAA"); //seongdae;vxsm
 
             for (int variant = 0; variant < LightDefinitions.s_NumFeatureVariants; variant++)
             {
@@ -2835,7 +2843,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 Matrix4x4 translatedMatrix = Matrix4x4.Translate(hdCamera.worldSpaceCameraPos);
 
-                int kernel = hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA) ? s_deferredVxShadowKernelMSAA : s_deferredVxShadowKernel;
+                bool msaaEnabled = hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA);
+                int kernel = -1;
+
+                kernel = msaaEnabled ? s_deferredVxShadowBiFilterKernelMSAA : s_deferredVxShadowBiFilterKernel;
 
                 m_ShadowManager.BindResources(cmd);
 

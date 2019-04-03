@@ -1514,7 +1514,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             SetupCameraProperties(camera, renderContext, cmd);
 
             PushGlobalParams(hdCamera, cmd);
-            UnityEngine.Experimental.VFX.VFXManager.ProcessCamera(camera, cmd);
+            UnityEngine.Experimental.VFX.VFXManager.ProcessCameraCommand(camera, cmd);
 
             // TODO: Find a correct place to bind these material textures
             // We have to bind the material specific global parameters in this mode

@@ -16,10 +16,11 @@ testplatforms:
     args: --suite=playmode
   - name: editmode
     args: --suite=editor --platform=editmode
-project:
+projects:
   - name: LWRP
     folder: LWGraphicsTest
 ---
+{% for project in projects %}
 {% for editor in editors %}
 {% for platform in platforms %}
 {% for testplatform in testplatforms %}
@@ -70,3 +71,5 @@ All_{{ project.name }}:
   {% endfor %}
   {% endfor %}
   {% endfor %}
+  
+{% endfor %}

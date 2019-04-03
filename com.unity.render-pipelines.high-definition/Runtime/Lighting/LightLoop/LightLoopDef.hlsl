@@ -1,9 +1,5 @@
 #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/LightLoop/LightLoop.cs.hlsl"
 
-// We perform scalarization only for forward rendering as for deferred loads will already be scalar since tiles will match waves and therefore all threads will read from the same tile. 
-// More info on scalarization: https://flashypixels.wordpress.com/2018/11/10/intro-to-gpu-scalarization-part-2-scalarize-all-the-lights/
-#define SCALARIZE_LIGHT_LOOP (defined(SUPPORTS_WAVE_INTRINSICS) && !defined(LIGHTLOOP_DISABLE_TILE_AND_CLUSTER) && SHADERPASS == SHADERPASS_FORWARD)
-
 #define DWORD_PER_TILE 16 // See dwordsPerTile in LightLoop.cs, we have roomm for 31 lights and a number of light value all store on 16 bit (ushort)
 
 // LightLoopContext is not visible from Material (user should not use these properties in Material file)
@@ -264,16 +260,14 @@ uint FetchIndex(uint lightStart, uint lightOffset)
 
 bool IsFastPath(uint lightStart, out uint lightStartLane0)
 {
-    bool fastPath = false;
-    lightStartLane0 = lightStart;
-
 #if SCALARIZE_LIGHT_LOOP
     // Fast path is when we all pixels in a wave are accessing same tile or cluster.
     lightStartLane0 = WaveReadLaneFirst(lightStart);
-    fastPath = WaveActiveAllTrue(lightStart == lightStartLane0); 
+    return WaveActiveAllTrue(lightStart == lightStartLane0); 
+#else
+    lightStartLane0 = lightStart;
+    return false;
 #endif
-
-    return fastPath;
 }
 
 bool IsFastPath(uint lightStart)
@@ -282,7 +276,7 @@ bool IsFastPath(uint lightStart)
     return IsFastPath(lightStart, unusedLightStartLane0);
 }
 
-uint ScalarizeLightIndex(uint v_lightIdx, bool fastPath = false)
+uint ScalarizeLightIndex(uint v_lightIdx, bool fastPath)
 {
     uint s_lightIdx = v_lightIdx;
 #if SCALARIZE_LIGHT_LOOP
@@ -294,7 +288,7 @@ uint ScalarizeLightIndex(uint v_lightIdx, bool fastPath = false)
         // This could happen as an helper lane could reach this point, hence having a valid v_lightIdx, but their values will be ignored by the WaveActiveMin
         if (s_lightIdx == -1)
         {
-            break;
+            return -1;
         }
     }
     // Note that the WaveReadLaneFirst should not be needed, but the compiler might insist in putting the result in VGPR.

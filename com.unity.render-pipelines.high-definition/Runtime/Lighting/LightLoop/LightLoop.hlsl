@@ -1,5 +1,9 @@
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Macros.hlsl"
 
+// We perform scalarization only for forward rendering as for deferred loads will already be scalar since tiles will match waves and therefore all threads will read from the same tile. 
+// More info on scalarization: https://flashypixels.wordpress.com/2018/11/10/intro-to-gpu-scalarization-part-2-scalarize-all-the-lights/
+#define SCALARIZE_LIGHT_LOOP (defined(SUPPORTS_WAVE_INTRINSICS) && !defined(LIGHTLOOP_DISABLE_TILE_AND_CLUSTER) && SHADERPASS == SHADERPASS_FORWARD)
+
 //-----------------------------------------------------------------------------
 // LightLoop
 // ----------------------------------------------------------------------------
@@ -149,13 +153,12 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
         lightStart = 0;
 #endif
 
-        bool fastPath = IsFastPath(lightStart);
-#if SCALARIZE_LIGHT_LOOP
+        uint lightStartLane0;
+        bool fastPath = IsFastPath(lightStart, lightStartLane0);
         if (fastPath)
         {
             lightStart = lightStartLane0;
         }
-#endif
 
         // Scalarized loop. All lights that are in a tile/cluster touched by any pixel in the wave are loaded (scalar load), only the one relevant to current thread/pixel are processed.
         // For clarity, the following code will follow the convention: variables starting with s_ are meant to be wave uniform (meant for scalar register),
@@ -169,6 +172,9 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
         {
             v_lightIdx = FetchIndex(lightStart, v_lightListOffset);
             uint s_lightIdx = ScalarizeLightIndex(v_lightIdx, fastPath);
+            if (s_lightIdx == -1)
+                break;
+            
             LightData s_lightData = FetchLight(s_lightIdx);
 
             // If current scalar and vector light index match, we process the light. The v_lightListOffset for current thread is increased.
@@ -316,25 +322,9 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
             while (v_envLightListOffset < envLightCount)
             {
                 v_envLightIdx = FetchIndex(envLightStart, v_envLightListOffset);
-                uint s_envLightIdx = v_envLightIdx;
-
-            #if SCALARIZE_LIGHT_LOOP
-                if (!fastPath)
-                {
-                    s_envLightIdx = WaveActiveMin(v_envLightIdx);
-                    // If we are not in fast path, s_envLightIdx is not scalar
-                   // If WaveActiveMin returns 0xffffffff it means that all lanes are actually dead, so we can safely ignore the loop and move forward.
-                   // This could happen as an helper lane could reach this point, hence having a valid v_lightIdx, but their values will be ignored by the WaveActiveMin
-                    if (s_envLightIdx == -1)
-                    {
-                        break;
-                    }
-                }
-                // Note that the WaveReadLaneFirst should not be needed, but the compiler might insist in putting the result in VGPR.
-                // However, we are certain at this point that the index is scalar.
-                s_envLightIdx = WaveReadLaneFirst(s_envLightIdx);
-
-            #endif
+                uint s_envLightIdx = ScalarizeLightIndex(v_envLightIdx, fastPath);
+                if (s_envLightIdx == -1)
+                    break;
 
                 EnvLightData s_envLightData = FetchEnvLight(s_envLightIdx);    // Scalar load.
 

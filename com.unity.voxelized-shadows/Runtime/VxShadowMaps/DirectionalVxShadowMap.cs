@@ -34,12 +34,10 @@ namespace UnityEngine.Experimental.VoxelizedShadows
 
         private void OnEnable()
         {
-            Debug.Log("Register");
             VxShadowMapsManager.instance.RegisterVxShadowMapComponent(this);
         }
         private void OnDisable()
         {
-            Debug.Log("Unregister");
             VxShadowMapsManager.instance.UnregisterVxShadowMapComponent(this);
         }
         private void OnValidate()

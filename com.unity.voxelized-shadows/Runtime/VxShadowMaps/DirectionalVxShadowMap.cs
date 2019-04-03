@@ -2,7 +2,7 @@
 namespace UnityEngine.Experimental.VoxelizedShadows
 {
     [ExecuteAlways]
-    [AddComponentMenu("Rendering/VxShadows", 100)]
+    [AddComponentMenu("Rendering/VxShadowMaps/DirectionalVxShadowMap", 100)]
     public sealed class DirectionalVxShadowMap : VxShadowMap
     {
         public DirectionalVxShadowMapResources resource;

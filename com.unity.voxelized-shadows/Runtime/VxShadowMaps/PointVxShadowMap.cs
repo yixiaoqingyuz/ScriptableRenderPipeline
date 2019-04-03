@@ -2,7 +2,7 @@
 namespace UnityEngine.Experimental.VoxelizedShadows
 {
     [ExecuteAlways]
-    [AddComponentMenu("Rendering/VxShadows", 110)]
+    [AddComponentMenu("Rendering/VxShadowMaps/PointVxShadowMap", 110)]
     public sealed class PointVxShadowMap : VxShadowMap
     {
         // TODO :

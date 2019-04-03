@@ -1063,7 +1063,10 @@ namespace UnityEditor.ShaderGraph
                 if (string.IsNullOrEmpty(m_ActiveOutputNodeGuidSerialized))
                 {
                     var node = (AbstractMaterialNode)GetNodes<IMasterNode>().FirstOrDefault();
-                    m_ActiveOutputNodeGuid = node.guid;
+                    if (node != null)
+                    {
+                        m_ActiveOutputNodeGuid = node.guid;
+                    }
                 }
                 else
                 {

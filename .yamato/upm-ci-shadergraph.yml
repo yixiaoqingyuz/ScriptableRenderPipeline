@@ -44,7 +44,7 @@ ShaderGraph_{{ platform.name }}_{{ editor.version }}_{{ testplatform.name }}:
 {% endfor %}
 {% endfor %}
 {% endfor %}
----
+
 All_ShaderGraph:
   name: All ShaderGraph CI
   agent:

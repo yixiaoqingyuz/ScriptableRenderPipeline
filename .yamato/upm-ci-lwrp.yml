@@ -17,8 +17,8 @@ testplatforms:
   - name: editmode
     args: --suite=editor --platform=editmode
 project:
-  - name: ShaderGraph
-    folder: ShaderGraph
+  - name: LWRP
+    folder: LWGraphicsTest
 ---
 {% for editor in editors %}
 {% for platform in platforms %}

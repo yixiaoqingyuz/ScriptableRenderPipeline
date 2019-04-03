@@ -281,9 +281,10 @@ namespace UnityEditor.ShaderGraph.Drawing
             UpdateShaders();
             UpdateTimedNodeList();
 
+            m_NodesToDraw.UnionWith(m_TimedNodes);
             PropagateNodeList(m_NodesToDraw, PropagationDirection.Downstream);
 
-            foreach (var node in m_TimedNodes.Union(m_NodesToDraw))
+            foreach (var node in m_NodesToDraw)
             {
                 if(node == null || !node.hasPreview || !node.previewExpanded)
                     continue;
@@ -343,7 +344,7 @@ namespace UnityEditor.ShaderGraph.Drawing
             foreach (var renderData in m_RenderList3D)
                 RenderPreview(renderData, m_SceneResources.sphere, Matrix4x4.identity);
 
-            var renderMasterPreview = masterRenderData != null;
+            var renderMasterPreview = masterRenderData != null && m_NodesToDraw.Contains(masterRenderData.shaderData.node);
             if (renderMasterPreview)
             {
                 CollectShaderProperties(masterRenderData.shaderData.node, masterRenderData);
@@ -463,7 +464,6 @@ namespace UnityEditor.ShaderGraph.Drawing
                 m_TimedNodes.Add(timeNode);
             }
 
-            PropagateNodeList(m_TimedNodes, PropagationDirection.Downstream);
             m_RefreshTimedNodes = false;
         }
 
@@ -579,7 +579,6 @@ namespace UnityEditor.ShaderGraph.Drawing
                 m_MasterRenderData = null;
                 if (!m_Graph.isSubGraph && renderData.shaderData.node.guid != m_Graph.activeOutputNodeGuid)
                 {
-                    Debug.Log($"{renderData.shaderData.node.name} {m_Graph.outputNode?.name}");
                     AddPreview(m_Graph.outputNode);
                 }
 

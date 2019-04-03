@@ -298,10 +298,8 @@ namespace UnityEditor.ShaderGraph.Drawing
         void SetMasterAsActive(DropdownMenuAction action)
         {
             node.owner.activeOutputNodeGuid = node.guid;
-            var graphView = GetFirstAncestorOfType<GraphEditorView>();
-            graphView.ChangeMasterPreview(node);
         }
-        
+
         void CopyToClipboard(DropdownMenuAction action)
         {
             GUIUtility.systemCopyBuffer = ConvertToShader((GenerationMode) action.userData);

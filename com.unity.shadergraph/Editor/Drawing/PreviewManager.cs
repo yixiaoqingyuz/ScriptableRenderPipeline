@@ -73,6 +73,18 @@ namespace UnityEditor.ShaderGraph.Drawing
 
         void AddPreview(AbstractMaterialNode node)
         {
+            var isMaster = false;
+
+            if (node is IMasterNode || node is SubGraphOutputNode)
+            {
+                if (masterRenderData != null || (node is IMasterNode && node.guid != node.owner.activeOutputNodeGuid))
+                {
+                    return;
+                }
+
+                isMaster = true;
+            }
+
             var renderData = new PreviewRenderData
             {
                 renderTexture =
@@ -82,7 +94,7 @@ namespace UnityEditor.ShaderGraph.Drawing
                     }
             };
 
-            if (masterRenderData == null || ( (node is IMasterNode && node.guid == node.owner.activeOutputNodeGuid ) || node is SubGraphOutputNode))
+            if (isMaster)
             {
                 m_MasterRenderData = renderData;
                 renderData.renderTexture.width = renderData.renderTexture.height = 400;
@@ -197,6 +209,11 @@ namespace UnityEditor.ShaderGraph.Drawing
 
         public void HandleGraphChanges()
         {
+            if (m_Graph.didActiveOutputNodeChange)
+            {
+                DestroyPreview(masterRenderData.shaderData.node.tempId);
+            }
+
             foreach (var node in m_Graph.removedNodes)
             {
                 DestroyPreview(node.tempId);
@@ -231,12 +248,6 @@ namespace UnityEditor.ShaderGraph.Drawing
                     m_RefreshTimedNodes = true;
                 }
             }
-        }
-
-        public void ChangeMasterPreview(AbstractMaterialNode masterNode)
-        {
-            DestroyPreview(masterNode.tempId);
-            AddPreview(masterNode);
         }
 
         List<PreviewProperty> m_PreviewProperties = new List<PreviewProperty>();
@@ -406,7 +417,7 @@ namespace UnityEditor.ShaderGraph.Drawing
 
             foreach (var node in m_NodesToUpdate)
             {
-                if (node is IMasterNode)
+                if (node is IMasterNode && node == masterRenderData.shaderData.node)
                 {
                     UpdateMasterNodeShader();
                     continue;
@@ -418,6 +429,10 @@ namespace UnityEditor.ShaderGraph.Drawing
                 var results = m_Graph.GetPreviewShader(node);
 
                 var renderData = GetRenderData(node.tempId);
+                if (renderData == null)
+                {
+                    continue;
+                }
                 ShaderUtil.ClearCachedData(renderData.shaderData.shader);
                 // Always explicitly use pass 0 for preview shaders
                 BeginCompile(renderData, results.shader, 0);
@@ -548,27 +563,29 @@ namespace UnityEditor.ShaderGraph.Drawing
         void DestroyPreview(Identifier nodeId)
         {
             var renderData = Get(m_RenderDatas, nodeId);
-            // Check if we're destroying the shader data used by the master preview
-            if (masterRenderData == renderData)
+            if (renderData == null)
             {
-                m_MasterRenderData = m_RenderDatas.First(x => x?.shaderData.node is IMasterNode
-                                                        && x.shaderData.node.guid == x.shaderData.node.owner.activeOutputNodeGuid
-                                                        && x != renderData);
-                ResizeMasterPreview(new Vector2(400, 400));
-
-                if (m_MasterRenderData != null)
-                {
-                    m_NodesToUpdate.Add(m_MasterRenderData.shaderData.node);
-                }
-
-                if (onPrimaryMasterChanged != null)
-                    onPrimaryMasterChanged();
+                return;
             }
 
             DestroyRenderData(renderData);
 
             Set(m_RenderDatas, nodeId, null);
             Set(m_Identifiers, nodeId, default(Identifier));
+
+            // Check if we're destroying the shader data used by the master preview
+            if (masterRenderData == renderData)
+            {
+                m_MasterRenderData = null;
+                if (!m_Graph.isSubGraph && renderData.shaderData.node.guid != m_Graph.activeOutputNodeGuid)
+                {
+                    Debug.Log($"{renderData.shaderData.node.name} {m_Graph.outputNode?.name}");
+                    AddPreview(m_Graph.outputNode);
+                }
+
+                if (onPrimaryMasterChanged != null)
+                    onPrimaryMasterChanged();
+            }
         }
 
         void ReleaseUnmanagedResources()

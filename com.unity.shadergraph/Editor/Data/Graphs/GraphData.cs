@@ -236,8 +236,12 @@ namespace UnityEditor.ShaderGraph
             get { return m_ActiveOutputNodeGuid; }
             set
             {
-                m_ActiveOutputNodeGuid = value;
-                m_OutputNode = null;
+                if (value != m_ActiveOutputNodeGuid)
+                {
+                    m_ActiveOutputNodeGuid = value;
+                    m_OutputNode = null;
+                    didActiveOutputNodeChange = true;
+                }
             }
         }
 
@@ -268,6 +272,8 @@ namespace UnityEditor.ShaderGraph
             }
         }
 
+        public bool didActiveOutputNodeChange { get; set; }
+
         public GraphData()
         {
             m_GroupNodes[Guid.Empty] = new List<AbstractMaterialNode>();
@@ -288,6 +294,7 @@ namespace UnityEditor.ShaderGraph
             m_RemovedProperties.Clear();
             m_MovedProperties.Clear();
             m_MostRecentlyCreatedGroup = null;
+            didActiveOutputNodeChange = false;
         }
 
         public void AddNode(AbstractMaterialNode node)

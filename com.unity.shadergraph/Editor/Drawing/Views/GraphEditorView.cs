@@ -430,11 +430,6 @@ namespace UnityEditor.ShaderGraph.Drawing
             previewManager.ForceShaderUpdate();
         }
 
-        public void ChangeMasterPreview(AbstractMaterialNode masterNode)
-        {
-            previewManager.ChangeMasterPreview(masterNode);
-        }
-
         public void HandleGraphChanges()
         {
             previewManager.HandleGraphChanges();

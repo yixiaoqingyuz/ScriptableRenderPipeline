@@ -298,7 +298,7 @@ namespace UnityEditor.ShaderGraph.Drawing
         DropdownMenuAction.Status ConvertToSubgraphStatus(DropdownMenuAction action)
         {
             if (onConvertToSubgraphClick == null) return DropdownMenuAction.Status.Hidden;
-            return selection.OfType<IShaderNodeView>().Any(v => v.node != null && v.node.allowedInSubGraph) ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Hidden;
+            return selection.OfType<IShaderNodeView>().Any(v => v.node != null && v.node.allowedInSubGraph && !(v.node is SubGraphOutputNode) ) ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Hidden;
         }
 
         void ConvertToSubgraph(DropdownMenuAction action)

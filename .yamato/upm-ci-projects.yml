@@ -37,9 +37,7 @@ all_project_ci_{{ platform.name }}_{{ editor.version }}:
     image: {{ platform.image }}
     flavor: {{ platform.flavor}}
   commands:
-  - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
-  - cd {{ project.packagename }} && upm-ci package pack
-  - cd {{ project.packagename }} && upm-ci package test --unity-version {{ editor.version }}
+  - dir
   dependencies:
     - .yamato/upm-ci-{{ project.name | downcase }}.yml#{{ project.name }}_{{ platform.name }}_{{ testplatform.name }}_{{ editor.version }}   
  #triggers:

@@ -20,16 +20,6 @@ namespace UnityEngine.Experimental.VoxelizedShadows
 #if UNITY_EDITOR
         public float size = 0.0f;
 #endif
-
-        const int k_MaxCascades = 4;
-
-        [HideInInspector] public int cascadesCount;
-        // todo : allocate here not MainLightShadowCasterPass.cs
-        [HideInInspector] public Matrix4x4[] cascadesMatrices = new Matrix4x4[k_MaxCascades + 1];
-        [HideInInspector] public Vector4[] cascadeSplitDistances = new Vector4[k_MaxCascades];
-
-        [HideInInspector] public int maxScale;
-        [HideInInspector] public Matrix4x4 worldToShadowMatrix = Matrix4x4.identity;
         [HideInInspector] public ComputeBuffer computeBuffer;
 
         private void OnEnable()
@@ -89,8 +79,6 @@ namespace UnityEngine.Experimental.VoxelizedShadows
 
                 volumeScale = resource.VolumeScale;
                 voxelResolution = (VoxelResolution)resource.VoxelResolution;
-                maxScale = resource.MaxScale;
-                worldToShadowMatrix = resource.WorldToShadowMatrix;
 
                 SafeRelease(computeBuffer);
 

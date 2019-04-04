@@ -67,6 +67,8 @@ projects:
   - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
   - cd {{ project.packagename }} && upm-ci package pack
   - cd {{ project.packagename }} && upm-ci package test --unity-version {{ editor.version }}
+  dependencies:
+    - .yamato/upm-ci-shadergraph.yml#Pack and Test com.unity.shadergraph version {{ editor.version }} on {{ platform.name }}
   artifacts:
     logs.zip:
       paths:

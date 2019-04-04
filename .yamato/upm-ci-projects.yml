@@ -30,18 +30,24 @@ projects:
 
 all_project_ci:
   name: Run all test projects
+
+  agent:
+    name: whatever
+    type: Unity::VM
+    image: cds-ops/ubuntu-18.04-agent:latest
+    flavor: b1.small
+  commands:
+  - dir
+  dependencies:
   {% for project in projects %}
   {% for editor in editors %}
   {% for platform in platforms %}
   {% for testplatform in testplatforms %}
-  agent:
-    type: {{ platform.type }}
-    image: {{ platform.image }}
-    flavor: {{ platform.flavor}}
-  commands:
-  - dir
-  dependencies:
-    - .yamato/upm-ci-{{ project.name | downcase }}.yml#{{ project.name }}_{{ platform.name }}_{{ testplatform.name }}_{{ editor.version }}   
+    - .yamato/upm-ci-{{ project.name | downcase }}.yml#{{ project.name }}_{{ platform.name }}_{{ testplatform.name }}_{{ editor.version }}
+  {% endfor %}
+  {% endfor %}
+  {% endfor %}
+  {% endfor %}
  #triggers:
    # branches:
      # only:
@@ -50,8 +56,3 @@ all_project_ci:
     logs.zip:
       paths:
       - "**/upm-ci~/test-results/**/*"
-
-{% endfor %}
-{% endfor %}
-{% endfor %}
-{% endfor %}

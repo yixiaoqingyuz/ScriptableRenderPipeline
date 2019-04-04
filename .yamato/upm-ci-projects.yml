@@ -19,18 +19,14 @@ testplatforms:
 projects:
   - name: LWRP
     folder: LWGraphicsTest
-    packagename: com.unity.render-pipelines.lightweight
   - name: ShaderGraph
     folder: ShaderGraph
-    packagename: com.unity.shadergraph
   - name: PostProcessing
     folder: PostProcessing
-    packagename: none
 ---
 
 all_project_ci:
   name: Run all test projects
-
   agent:
     name: whatever
     type: Unity::VM
@@ -48,10 +44,10 @@ all_project_ci:
   {% endfor %}
   {% endfor %}
   {% endfor %}
- #triggers:
-   # branches:
-     # only:
-        #- yamato-master
+  triggers:
+    branches:
+      only:
+        - yamato-master
   artifacts:
     logs.zip:
       paths:

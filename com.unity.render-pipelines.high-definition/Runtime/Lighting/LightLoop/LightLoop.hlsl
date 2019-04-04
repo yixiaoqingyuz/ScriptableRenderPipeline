@@ -8,7 +8,7 @@
 // LightLoop
 // ----------------------------------------------------------------------------
 
-void ApplyDebug(LightLoopContext lightLoopContext, float3 positionWS, inout float3 diffuseLighting, inout float3 specularLighting)
+void ApplyDebug(LightLoopContext lightLoopContext, PositionInputs posInput, BSDFData bsdfData, inout float3 diffuseLighting, inout float3 specularLighting)
 {
 #ifdef DEBUG_DISPLAY
     if (_DebugLightingMode == DEBUGLIGHTINGMODE_DIFFUSE_LIGHTING)
@@ -40,16 +40,24 @@ void ApplyDebug(LightLoopContext lightLoopContext, float3 positionWS, inout floa
         diffuseLighting = float3(1.0, 1.0, 1.0);
         if (_DirectionalShadowIndex >= 0)
         {
-            real  alpha;
+            real alpha;
             int cascadeCount;
 
-            int shadowSplitIndex = EvalShadow_GetSplitIndex(lightLoopContext.shadowContext, _DirectionalShadowIndex, positionWS, alpha, cascadeCount);
+            int shadowSplitIndex = EvalShadow_GetSplitIndex(lightLoopContext.shadowContext, _DirectionalShadowIndex, posInput.positionWS, alpha, cascadeCount);
             if (shadowSplitIndex >= 0)
             {
+                float shadow = 1.0;
+                if (_DirectionalShadowIndex >= 0)
+                {
+                    DirectionalLightData light = _DirectionalLightDatas[_DirectionalShadowIndex];
+                    float3 shadowBiasNormal = GetNormalForShadowBias(bsdfData);
+                    shadow = EvaluateRuntimeSunShadow(lightLoopContext, posInput, light, shadowBiasNormal);
+                }
+
                 float3 cascadeShadowColor = lerp(s_CascadeColors[shadowSplitIndex], s_CascadeColors[shadowSplitIndex + 1], alpha);
                 // We can't mix with the lighting as it can be HDR and it is hard to find a good lerp operation for this case that is still compliant with
                 // exposure. So disable exposure instead and replace color.
-                diffuseLighting = cascadeShadowColor;
+                diffuseLighting = cascadeShadowColor * shadow;
             }
 
         }
@@ -82,7 +90,8 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
 
             // TODO: this will cause us to load from the normal buffer first. Does this cause a performance problem?
             // Also, the light direction is not consistent with the sun disk highlight hack, which modifies the light vector.
-            float  NdotL            = dot(bsdfData.normalWS, -light.forward);
+            float3 L                = -light.forward;
+            float  NdotL            = dot(bsdfData.normalWS, L);
             float3 shadowBiasNormal = GetNormalForShadowBias(bsdfData);
             bool   evaluateShadows  = (NdotL > 0);
 
@@ -96,7 +105,7 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
                     evaluateShadows = true;
 
                     // Care must be taken to bias in the direction of the light.
-                    shadowBiasNormal *= FastSign(NdotL);
+                    shadowBiasNormal *= FastSign(dot(shadowBiasNormal, L));
                 }
                 else
                 {
@@ -402,12 +411,12 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
         }
     }
 #undef EVALUATE_BSDF_ENV
-#undef EVALUATE_BSDF_ENV_SKY    
+#undef EVALUATE_BSDF_ENV_SKY
 
     // Also Apply indiret diffuse (GI)
     // PostEvaluateBSDF will perform any operation wanted by the material and sum everything into diffuseLighting and specularLighting
     PostEvaluateBSDF(   context, V, posInput, preLightData, bsdfData, builtinData, aggregateLighting,
                         diffuseLighting, specularLighting);
 
-    ApplyDebug(context, posInput.positionWS, diffuseLighting, specularLighting);
+    ApplyDebug(context, posInput, bsdfData, diffuseLighting, specularLighting);
 }

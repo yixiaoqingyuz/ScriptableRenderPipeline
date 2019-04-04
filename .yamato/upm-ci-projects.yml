@@ -27,11 +27,12 @@ projects:
     folder: PostProcessing
     packagename: none
 ---
-{% for project in projects %}
-{% for editor in editors %}
-{% for platform in platforms %}
-all_project_ci_{{ platform.name }}_{{ editor.version }}:
+
+all_project_ci:
   name: Run all test projects
+  {% for project in projects %}
+  {% for editor in editors %}
+  {% for platform in platforms %}
   agent:
     type: {{ platform.type }}
     image: {{ platform.image }}

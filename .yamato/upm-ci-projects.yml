@@ -1,0 +1,56 @@
+editors:
+  - version: trunk
+platforms:
+  - name: Windows64
+    type: Unity::VM::GPU
+    image: sdet/gamecode_win10:latest
+    flavor: m1.large
+  - name: OSX
+    type: Unity::VM::osx
+    image: buildfarm/mac:stable
+    flavor: m1.mac
+testplatforms:
+  - name: Standalone
+    args: --suite=playmode --platform=Standalone
+  - name: playmode
+    args: --suite=playmode
+  - name: editmode
+    args: --suite=editor --platform=editmode
+projects:
+  - name: LWRP
+    folder: LWGraphicsTest
+    packagename: com.unity.render-pipelines.lightweight
+  - name: ShaderGraph
+    folder: ShaderGraph
+    packagename: com.unity.shadergraph
+  - name: PostProcessing
+    folder: PostProcessing
+    packagename: none
+---
+{% for project in projects %}
+{% for editor in editors %}
+{% for platform in platforms %}
+all_project_ci:
+  name: Run all test projects
+  agent:
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
+  commands:
+  - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
+  - cd {{ project.packagename }} && upm-ci package pack
+  - cd {{ project.packagename }} && upm-ci package test --unity-version {{ editor.version }}
+  dependencies:
+    - .yamato/upm-ci-{{ project.name | downcase }}.yml#{{ project.name }}_{{ platform.name }}_{{ testplatform.name }}_{{ editor.version }}   
+ #triggers:
+   # branches:
+     # only:
+        #- yamato-master
+  artifacts:
+    logs.zip:
+      paths:
+      - "**/upm-ci~/test-results/**/*"
+
+{% endfor %}
+{% endfor %}
+{% endfor %}

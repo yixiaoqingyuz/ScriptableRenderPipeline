@@ -57,7 +57,6 @@ projects:
 
 {% for editor in editors %}
 {% for platform in platforms %}
-{% for project in projects %}
 {{ project.packagename }}_{{ platform.name }}_{{ editor.version }}:
   name: Pack and Test {{ project.packagename }} version {{ editor.version }} on {{ platform.name }}
   agent:
@@ -77,7 +76,6 @@ projects:
       - "**/upm-ci~/packages/**/*.tgz"
 
 
-{% endfor %}
 {% endfor %}
 {% endfor %}
 

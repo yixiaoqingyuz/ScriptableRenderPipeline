@@ -15,7 +15,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             public AtlasNode m_RightChild = null;
             public AtlasNode m_BottomChild = null;
-            public Vector4 m_Rect = new Vector4(0, 0, 0, 0); // x,y is width and height (scale) z,w offset into atlas (bias)
+            public Vector4 m_Rect = new Vector4(0, 0, 0, 0); // x,y is width and height (scale) z,w offset into atlas (offset)
 
             public AtlasNode Allocate(int width, int height, bool powerOfTwoPadding)
             {
@@ -80,6 +80,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     m_Rect.y = height;
                     return this;
                 }
+                Debug.Log("FAIL");
                 return null;
             }
 
@@ -111,6 +112,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public bool Allocate(ref Vector4 result, int width, int height)
         {
+            Debug.Log()
             AtlasNode node = m_Root.Allocate(width, height, powerOfTwoPadding);
             if (node != null)
             {
@@ -150,7 +152,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        public Texture2DAtlas(int width, int height, GraphicsFormat format, FilterMode filterMode = FilterMode.Point, bool powerOfTwoPadding = false, string name = "")
+        public Texture2DAtlas(int width, int height, GraphicsFormat format, FilterMode filterMode = FilterMode.Point, bool powerOfTwoPadding = false, string name = "", bool useMipMap = true)
         {
             m_Width = width;
             m_Height = height;
@@ -161,7 +163,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 filterMode: filterMode,
                 colorFormat: m_Format,
                 wrapMode: TextureWrapMode.Clamp,
-                useMipMap: true,
+                useMipMap: useMipMap,
                 name: name
             );
 
@@ -199,34 +201,36 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return (texture is Texture2D || (crt != null && crt.dimension == TextureDimension.Tex2D));
         }
 
-        protected void Blit2DTexture(CommandBuffer cmd, Vector4 scaleBias, Texture texture)
+        protected void Blit2DTexture(CommandBuffer cmd, Vector4 scaleOffset, Texture texture)
         {
             int mipCount = GetTextureMipmapCount(texture.width, texture.height);
 
             for (int mipLevel = 0; mipLevel < mipCount; mipLevel++)
             {
                 cmd.SetRenderTarget(m_AtlasTexture, mipLevel);
-                HDUtils.BlitQuad(cmd, texture, new Vector4(1, 1, 0, 0), scaleBias, mipLevel, true);
+                HDUtils.BlitQuad(cmd, texture, new Vector4(1, 1, 0, 0), scaleOffset, mipLevel, true);
             }
         }
 
-        protected virtual void BlitTexture(CommandBuffer cmd, Vector4 scaleBias, Texture texture)
+        protected virtual void BlitTexture(CommandBuffer cmd, Vector4 scaleOffset, Texture texture)
         {
             // This atlas only support 2D texture so we only blit 2D textures
             if (Is2D(texture))
-                Blit2DTexture(cmd, scaleBias, texture);
+                Blit2DTexture(cmd, scaleOffset, texture);
         }
 
-        protected virtual bool AllocateTexture(CommandBuffer cmd, ref Vector4 scaleBias, Texture texture, int width, int height)
+        protected virtual bool AllocateTexture(CommandBuffer cmd, ref Vector4 scaleOffset, Texture texture, int width, int height)
         {
             if (width <= 0 && height <= 0)
                 return false;
+
+            Debug.Log("Alloc " + width + ", " + height);
             
-            if (m_AtlasAllocator.Allocate(ref scaleBias, width, height))
+            if (m_AtlasAllocator.Allocate(ref scaleOffset, width, height))
             {
-                scaleBias.Scale(new Vector4(1.0f / m_Width, 1.0f / m_Height, 1.0f / m_Width, 1.0f / m_Height));
-                BlitTexture(cmd, scaleBias, texture);
-                m_AllocationCache.Add(texture.GetNativeTexturePtr(), scaleBias);
+                scaleOffset.Scale(new Vector4(1.0f / m_Width, 1.0f / m_Height, 1.0f / m_Width, 1.0f / m_Height));
+                BlitTexture(cmd, scaleOffset, texture);
+                m_AllocationCache.Add(texture.GetNativeTexturePtr(), scaleOffset);
                 return true;
             }
             else
@@ -235,13 +239,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        protected bool IsCached(CommandBuffer cmd, out Vector4 scaleBias, Texture texture)
+        protected bool IsCached(CommandBuffer cmd, out Vector4 scaleOffset, Texture texture)
         {
             bool                cached = false;
             IntPtr              key = texture.GetNativeTexturePtr();
             CustomRenderTexture crt = texture as CustomRenderTexture;
 
-            if (m_AllocationCache.TryGetValue(key, out scaleBias))
+            if (m_AllocationCache.TryGetValue(key, out scaleOffset))
                 cached = true;
 
             // Update the custom render texture if needed
@@ -251,24 +255,43 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 if (m_CustomRenderTextureUpdateCache.TryGetValue(key, out updateCount))
                 {
                     if (crt.updateCount != updateCount)
-                        BlitTexture(cmd, scaleBias, crt);
+                        BlitTexture(cmd, scaleOffset, crt);
                 }
                 m_CustomRenderTextureUpdateCache[key] = crt.updateCount;
             }
 
+            // TODO: check if it's needed !
+// #if UNITY_EDITOR
+//             textureHash += (uint)texture.imageContentsHash.GetHashCode();
+// #endif
+
             return cached;
         }
 
-        public virtual bool AddTexture(CommandBuffer cmd, ref Vector4 scaleBias, Texture texture)
+        public virtual bool AddTexture(CommandBuffer cmd, ref Vector4 scaleOffset, Texture texture)
         {
-            if (IsCached(cmd, out scaleBias, texture))
+            if (IsCached(cmd, out scaleOffset, texture))
                 return true;
             
             // We only support 2D texture in this class, support for other textures are provided by child classes (ex: PowerOfTwoTextureAtlas)
             if (!Is2D(texture))
                 return false;
 
-            return AllocateTexture(cmd, ref scaleBias, texture, texture.width, texture.height);
+            return AllocateTexture(cmd, ref scaleOffset, texture, texture.width, texture.height);
+        }
+
+        public virtual bool UpdateTexture(CommandBuffer cmd, Texture oldTexture, Texture newTexture, ref Vector4 scaleOffset)
+        {
+            // In case the old texture is here, we Blit the new one at the scale offset of the old one
+            if (IsCached(cmd, out scaleOffset, oldTexture))
+            {
+                BlitTexture(cmd, scaleOffset, newTexture);
+                return true;
+            }
+            else // else we try to allocate the updated texture
+            {
+                return AllocateTexture(cmd, ref scaleOffset, newTexture, newTexture.width, newTexture.height);
+            }
         }
     }
 }

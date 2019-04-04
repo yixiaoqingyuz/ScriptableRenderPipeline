@@ -194,6 +194,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             int size = (int)currentPlatformRenderPipelineSettings.lightLoopSettings.cookieAtlasSize;
             return (int)Mathf.Log(size, 2);
         }
+        public int GetPlanarReflectionProbeMipCount()
+        {
+            int size = (int)currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize;
+            return (int)Mathf.Log(size, 2);
+        }
 
         readonly SkyManager m_SkyManager = new SkyManager();
         readonly LightLoop m_LightLoop = new LightLoop();
@@ -1189,7 +1194,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                             }
                             break;
                         case ProbeSettings.ProbeType.PlanarProbe:
-                            int desiredPlanarProbeSize = (int)((HDRenderPipeline)RenderPipelineManager.currentPipeline).currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionTextureSize;
+                            int desiredPlanarProbeSize = (int)((HDRenderPipeline)RenderPipelineManager.currentPipeline).currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize;
                             if (visibleProbe.realtimeTexture == null || visibleProbe.realtimeTexture.width != desiredPlanarProbeSize)
                             {
                                 visibleProbe.SetTexture(ProbeSettings.Mode.Realtime, HDRenderUtilities.CreatePlanarProbeRenderTarget(desiredPlanarProbeSize));

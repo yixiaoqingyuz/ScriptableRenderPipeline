@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using System;
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
@@ -20,7 +21,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     }
 
     [Serializable]
-    public enum PlanarReflectionResolution
+    public enum PlanarReflectionAtlasResolution
     {
         PlanarReflectionResolution64 = 64,
         PlanarReflectionResolution128 = 128,
@@ -34,7 +35,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     }
 
     [Serializable]
-    public enum CookieResolution
+    public enum CookieAtlasResolution
     {
         CookieResolution64 = 64,
         CookieResolution128 = 128,
@@ -77,7 +78,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         /// <summary>Default GlobalDecalSettings</summary>
         public static readonly GlobalLightLoopSettings @default = new GlobalLightLoopSettings()
         {
-            cookieAtlasSize = CookieResolution.CookieResolution2048,
+            cookieAtlasSize = CookieAtlasResolution.CookieResolution2048,
             pointCookieSize = CubeCookieResolution.CubeCookieResolution128,
             cubeCookieTexArraySize = 16,
 
@@ -85,7 +86,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cookieAreaTextureArraySize = 16,
 
             planarReflectionProbeCacheSize = 2,
-            planarReflectionTextureSize = PlanarReflectionResolution.PlanarReflectionResolution1024,
+            planarReflectionAtlasSize = PlanarReflectionAtlasResolution.PlanarReflectionResolution1024,
             reflectionProbeCacheSize = 64,
             reflectionCubemapSize = CubeReflectionResolution.CubeReflectionResolution256,
 
@@ -99,7 +100,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             maxDecalsOnScreen = 512,
         };
 
-        public CookieResolution cookieAtlasSize;
+        [FormerlySerializedAs("cookieSize")]
+        public CookieAtlasResolution cookieAtlasSize;
         public CubeCookieResolution pointCookieSize;
         public int cookieAtlasMaxValidMip;
         public int cubeCookieTexArraySize;
@@ -108,7 +110,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public int cookieAreaTextureArraySize;
 
         public int planarReflectionProbeCacheSize;
-        public PlanarReflectionResolution planarReflectionTextureSize;
+        [FormerlySerializedAs("planarReflectionTextureSize")]
+        public PlanarReflectionAtlasResolution planarReflectionAtlasSize;
         public int reflectionProbeCacheSize;
         public CubeReflectionResolution reflectionCubemapSize;
         public bool reflectionCacheCompressed;

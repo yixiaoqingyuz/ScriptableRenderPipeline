@@ -147,6 +147,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         /// <summary>The capture mode.</summary>
         public ProbeSettings.Mode mode { get => m_ProbeSettings.mode; set => m_ProbeSettings.mode = value; }
         public ProbeSettings.RealtimeMode realtimeMode { get => m_ProbeSettings.realtimeMode; set => m_ProbeSettings.realtimeMode = value; }
+        public PlanarReflectionAtlasResolution resolution { get => m_ProbeSettings.resolution; set => m_ProbeSettings.resolution = value; }
 
         // Lighting
         /// <summary>Light layer to use by this probe.</summary>

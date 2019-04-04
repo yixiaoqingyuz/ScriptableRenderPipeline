@@ -235,19 +235,15 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             EditorGUILayout.Space();
 
             EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.planarReflectionCacheCompressed, k_CompressPlanarProbeCacheContent);
-            EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.planarReflectionCubemapSize, k_PlanarTextureSizeContent);
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.DelayedIntField(serialized.renderPipelineSettings.lightLoopSettings.planarReflectionProbeCacheSize, k_PlanarProbeCacheSizeContent);
-            if (EditorGUI.EndChangeCheck())
-                serialized.renderPipelineSettings.lightLoopSettings.planarReflectionProbeCacheSize.intValue = Mathf.Clamp(serialized.renderPipelineSettings.lightLoopSettings.planarReflectionProbeCacheSize.intValue, 1, TextureCache.k_MaxSupported);
-            if (serialized.renderPipelineSettings.lightLoopSettings.planarReflectionProbeCacheSize.hasMultipleDifferentValues)
+            EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize, k_PlanarTextureSizeContent);
+            if (serialized.renderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize.hasMultipleDifferentValues)
                 EditorGUILayout.HelpBox(k_MultipleDifferentValueMessage, MessageType.Info);
             else
             {
-                long currentCache = PlanarReflectionProbeCache.GetApproxCacheSizeInByte(serialized.renderPipelineSettings.lightLoopSettings.planarReflectionProbeCacheSize.intValue, serialized.renderPipelineSettings.lightLoopSettings.planarReflectionCubemapSize.intValue, 1);
+                long currentCache = PlanarReflectionProbeCache.GetApproxCacheSizeInByte(1, serialized.renderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize.intValue, 1);
                 if (currentCache > LightLoop.k_MaxCacheSize)
                 {
-                    int reserved = PlanarReflectionProbeCache.GetMaxCacheSizeForWeightInByte(LightLoop.k_MaxCacheSize, serialized.renderPipelineSettings.lightLoopSettings.planarReflectionCubemapSize.intValue, 1);
+                    int reserved = PlanarReflectionProbeCache.GetMaxCacheSizeForWeightInByte(LightLoop.k_MaxCacheSize, serialized.renderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize.intValue, 1);
                     string message = string.Format(k_CacheErrorFormat, HDEditorUtils.HumanizeWeight(currentCache), reserved);
                     EditorGUILayout.HelpBox(message, MessageType.Error);
                 }

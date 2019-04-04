@@ -174,7 +174,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 // == 4. ==
                 var cubemapSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.reflectionCubemapSize;
-                var planarSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionTextureSize;
+                var planarSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize;
                 var cubeRT = HDRenderUtilities.CreateReflectionProbeRenderTarget(cubemapSize);
                 var planarRT = HDRenderUtilities.CreatePlanarProbeRenderTarget(planarSize);
 
@@ -318,7 +318,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
 
             var cubemapSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.reflectionCubemapSize;
-            var planarSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionTextureSize;
+            var planarSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize;
 
             var cubeRT = HDRenderUtilities.CreateReflectionProbeRenderTarget(cubemapSize);
             var planarRT = HDRenderUtilities.CreatePlanarProbeRenderTarget(planarSize);

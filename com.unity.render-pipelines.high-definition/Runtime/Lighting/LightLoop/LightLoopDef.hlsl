@@ -19,9 +19,9 @@ struct LightLoopContext
 // ----------------------------------------------------------------------------
 
 // Adjust UVs using the LOD padding size
-float2 RemapUV(float2 coord, float2 size)
+float2 RemapUVWithPadding(float2 coord, float2 size, float rcpPaddingWidth)
 {
-    float2 scale = rcp(size + _CookieAtlasData.y) * size;
+    float2 scale = rcp(size + rcpPaddingWidth) * size;
     float2 offset = 0.5 * (1.0 - scale);
     
     return coord * scale + offset;
@@ -38,7 +38,7 @@ float3 SampleCookie2D(LightLoopContext lightLoopContext, float2 coord, float4 sc
     // lod = min(_CookieAtlasData.x, lod);
 
     // Remap the uv to take in account the padding
-    coord = RemapUV(coord, scale);
+    coord = RemapUVWithPadding(coord, scale, _CookieAtlasData.y);
 
     // Apply atlas scale and offset
     float2 atlasCoords = coord * scale + offset;
@@ -117,7 +117,10 @@ float4 SampleEnv(LightLoopContext lightLoopContext, int index, float3 texCoord, 
             //_Env2DCaptureVP is in capture space
             float3 ndc = ComputeNormalizedDeviceCoordinatesWithZ(texCoord, _Env2DCaptureVP[index]);
 
-            color.rgb = SAMPLE_TEXTURE2D_ARRAY_LOD(_Env2DTextures, s_trilinear_clamp_sampler, ndc.xy, index, lod).rgb;
+            // Apply atlas scale and offset
+            float2 atlasCoords = ndc.xy/* * scale + offset*/; // TODO !
+
+            color.rgb = SAMPLE_TEXTURE2D_LOD(_Env2DTextures, s_trilinear_clamp_sampler, atlasCoords, lod).rgb;
 #if UNITY_REVERSED_Z
             // We check that the sample was capture by the probe according to its frustum planes, except the far plane.
             //   When using oblique projection, the far plane is so distorded that it is not reliable for this check.

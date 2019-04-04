@@ -37,6 +37,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         internal SerializedProperty proxyCaptureRotationProxySpace;
         internal SerializedProperty proxyMirrorPositionProxySpace;
         internal SerializedProperty proxyMirrorRotationProxySpace;
+        internal SerializedProperty resolution;
 
         internal SerializedProbeSettings(SerializedProperty root)
         {
@@ -53,6 +54,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             proxyCaptureRotationProxySpace = root.FindPropertyRelative("proxySettings.captureRotationProxySpace");
             proxyMirrorPositionProxySpace = root.FindPropertyRelative("proxySettings.mirrorPositionProxySpace");
             proxyMirrorRotationProxySpace = root.FindPropertyRelative("proxySettings.mirrorRotationProxySpace");
+            resolution = root.FindPropertyRelative("resolution");
 
             cameraSettings = new SerializedCameraSettings(root.Find((ProbeSettings p) => p.camera));
             influence = new SerializedInfluenceVolume(root.Find((ProbeSettings p) => p.influence));

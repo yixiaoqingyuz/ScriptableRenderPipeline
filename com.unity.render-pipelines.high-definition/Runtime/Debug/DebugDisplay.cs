@@ -629,7 +629,21 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     children =
                     {
                         new DebugUI.UIntField { displayName = "Mip Level", getter = () => data.lightingDebugSettings.cookieAtlasMipLevel, setter = value => data.lightingDebugSettings.cookieAtlasMipLevel = value, min = () => 0, max = () => (uint)(RenderPipelineManager.currentPipeline as HDRenderPipeline).GetCookieAtlasMipCount()},
-                        new DebugUI.Button { displayName = "Reset Cookie atlas", action = () => data.lightingDebugSettings.clearCookieAtlas = true}
+                        new DebugUI.Button { displayName = "Reset Cookie Atlas", action = () => data.lightingDebugSettings.clearCookieAtlas = true}
+                    }
+                });
+            }
+
+            list.Add(new DebugUI.BoolField { displayName = "Display Planar Reflection Probe Atlas", getter = () => data.lightingDebugSettings.displayPlanarReflectionProbeAtlas, setter = value => data.lightingDebugSettings.displayPlanarReflectionProbeAtlas = value, onValueChanged = RefreshLightingDebug});
+            if (data.lightingDebugSettings.displayPlanarReflectionProbeAtlas)
+            {
+                list.Add(new DebugUI.Container
+                {
+                    children =
+                    {
+                        new DebugUI.UIntField { displayName = "Mip Level", getter = () => data.lightingDebugSettings.planarReflectionProbeMipLevel, setter = value => data.lightingDebugSettings.planarReflectionProbeMipLevel = value, min = () => 0, max = () => (uint)(RenderPipelineManager.currentPipeline as HDRenderPipeline).GetPlanarReflectionProbeMipCount()},
+                        new DebugUI.BoolField { displayName = "Use Selection", getter = () => data.lightingDebugSettings.planarReflectionProbeUseSelection, setter = value => data.lightingDebugSettings.planarReflectionProbeUseSelection = value },
+                        new DebugUI.Button { displayName = "Reset Planar Atlas", action = () => data.lightingDebugSettings.clearPlanarReflectionProbeAtlas = true },
                     }
                 });
             }

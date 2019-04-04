@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.Rendering;
+using System.Collections.Generic;
 
 namespace UnityEngine.Experimental.Rendering.HDPipeline
 {
@@ -18,33 +19,31 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         int                     m_ProbeSize;
         int                     m_CacheSize;
         IBLFilterGGX            m_IBLFilterGGX;
-        TextureCache2D          m_TextureCache;
+        PowerOfTwoTextureAtlas  m_TextureAtlas;
         RenderTexture           m_TempRenderTexture;
         RenderTexture           m_ConvolutionTargetTexture;
-        ProbeFilteringState[]   m_ProbeBakingState;
+        Dictionary<Vector4, ProbeFilteringState> m_ProbeBakingState = new Dictionary<Vector4, ProbeFilteringState>();
         Material                m_ConvertTextureMaterial;
         MaterialPropertyBlock   m_ConvertTextureMPB;
         bool                    m_PerformBC6HCompression;
+        Dictionary<int, uint>   m_TextureHashes = new Dictionary<int, uint>();
 
-        public PlanarReflectionProbeCache(HDRenderPipelineAsset hdAsset, IBLFilterGGX iblFilter, int cacheSize, int probeSize, TextureFormat probeFormat, bool isMipmaped)
+        public PlanarReflectionProbeCache(HDRenderPipelineAsset hdAsset, IBLFilterGGX iblFilter, int cacheSize, int probeSize, GraphicsFormat probeFormat, bool isMipmaped)
         {
             m_ConvertTextureMaterial = CoreUtils.CreateEngineMaterial(hdAsset.renderPipelineResources.shaders.blitCubeTextureFacePS);
             m_ConvertTextureMPB = new MaterialPropertyBlock();
 
             // BC6H requires CPP feature not yet available
-            probeFormat = TextureFormat.RGBAHalf;
+            probeFormat = GraphicsFormat.R16G16B16A16_UNorm;
 
-            Debug.Assert(probeFormat == TextureFormat.BC6H || probeFormat == TextureFormat.RGBAHalf, "Reflection Probe Cache format for HDRP can only be BC6H or FP16.");
+            Debug.Assert(probeFormat == GraphicsFormat.RGB_BC6H_UFloat || probeFormat == GraphicsFormat.R16G16B16A16_UNorm, "Reflection Probe Cache format for HDRP can only be BC6H or FP16.");
 
             m_ProbeSize = probeSize;
             m_CacheSize = cacheSize;
-            m_TextureCache = new TextureCache2D("PlanarReflectionProbe");
-            m_TextureCache.AllocTextureArray(cacheSize, probeSize, probeSize, probeFormat, isMipmaped);
+            m_TextureAtlas = new PowerOfTwoTextureAtlas(cacheSize, 0, probeFormat, useMipMap: isMipmaped, name: "PlanarReflectionProbe Atlas");
             m_IBLFilterGGX = iblFilter;
 
-            m_PerformBC6HCompression = probeFormat == TextureFormat.BC6H;
-
-            InitializeProbeBakingStates();
+            m_PerformBC6HCompression = probeFormat == GraphicsFormat.RGB_BC6H_UFloat;
         }
 
         void Initialize()
@@ -68,24 +67,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 m_ConvolutionTargetTexture.name = CoreUtils.GetRenderTargetAutoName(m_ProbeSize, m_ProbeSize, 1, RenderTextureFormat.ARGBHalf, "PlanarReflectionConvolution", mips: true);
                 m_ConvolutionTargetTexture.enableRandomWrite = true;
                 m_ConvolutionTargetTexture.Create();
-
-                InitializeProbeBakingStates();
-            }
-        }
-
-        void InitializeProbeBakingStates()
-        {
-            if (m_ProbeBakingState == null || m_ProbeBakingState.Length != m_CacheSize)
-            {
-                Array.Resize(ref m_ProbeBakingState, m_CacheSize);
-                for (var i = 0; i < m_CacheSize; ++i)
-                    m_ProbeBakingState[i] = ProbeFilteringState.Convolving;
             }
         }
 
         public void Release()
         {
-            m_TextureCache.Release();
+            m_TextureAtlas.Release();
             CoreUtils.Destroy(m_TempRenderTexture);
             CoreUtils.Destroy(m_ConvolutionTargetTexture);
 
@@ -97,7 +84,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public void NewFrame()
         {
             Initialize();
-            m_TextureCache.NewFrame();
         }
 
         // This method is used to convert inputs that are either compressed or not of the right size.
@@ -171,22 +157,22 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return m_ConvolutionTargetTexture;
         }
 
-        public int FetchSlice(CommandBuffer cmd, Texture texture)
+        public Vector4 FetchSlice(CommandBuffer cmd, Texture texture)
         {
-            bool needUpdate;
-            var sliceIndex = m_TextureCache.ReserveSlice(texture, out needUpdate);
-            if (sliceIndex != -1)
+            Vector4 scaleOffset = Vector4.zero;
+
+            if (m_TextureAtlas.AddTexture(cmd, ref scaleOffset, texture))
             {
-                if (needUpdate || m_ProbeBakingState[sliceIndex] != ProbeFilteringState.Ready)
+                if (NeedsUpdate(texture) || m_ProbeBakingState[scaleOffset] != ProbeFilteringState.Ready)
                 {
                     using (new ProfilingSample(cmd, "Convolve Planar Reflection Probe"))
                     {
                         // For now baking is done directly but will be time sliced in the future. Just preparing the code here.
-                        m_ProbeBakingState[sliceIndex] = ProbeFilteringState.Convolving;
+                        m_ProbeBakingState[scaleOffset] = ProbeFilteringState.Convolving;
 
-                        Texture result = ConvolveProbeTexture(cmd, texture);
-                        if (result == null)
-                            return -1;
+                        Texture convolvedTexture = ConvolveProbeTexture(cmd, texture);
+                        if (convolvedTexture == null)
+                            return Vector4.zero;
 
                         if (m_PerformBC6HCompression)
                         {
@@ -194,20 +180,54 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         }
                         else
                         {
-                            m_TextureCache.UpdateSlice(cmd, sliceIndex, result, m_TextureCache.GetTextureHash(texture)); // Be careful to provide the update count from the input texture, not the temporary one used for convolving.
+                            m_TextureAtlas.UpdateTexture(cmd, texture, convolvedTexture, ref scaleOffset);
                         }
 
-                        m_ProbeBakingState[sliceIndex] = ProbeFilteringState.Ready;
+                        m_ProbeBakingState[scaleOffset] = ProbeFilteringState.Ready;
                     }
                 }
             }
 
-            return sliceIndex;
+            return scaleOffset;
+        }
+
+        public uint GetTextureHash(Texture texture)
+        {
+            uint textureHash  = texture.updateCount;
+            // For baked probes in the editor we need to factor in the actual hash of texture because we can't increment the update count of a texture that's baked on the disk.
+#if UNITY_EDITOR
+            textureHash += (uint)texture.imageContentsHash.GetHashCode();
+#endif
+            return textureHash;
+        }
+
+        bool NeedsUpdate(Texture texture)
+        {
+            uint savedTextureHash;
+            uint currentTextureHash = GetTextureHash(texture);
+            int instanceId = texture.GetInstanceID();
+            bool needsUpdate = false;
+
+            m_TextureHashes.TryGetValue(instanceId, out savedTextureHash);
+
+            if (savedTextureHash != currentTextureHash)
+            {
+                m_TextureHashes[instanceId] = currentTextureHash;
+                needsUpdate = true;
+            }
+
+            return needsUpdate;
         }
 
         public Texture GetTexCache()
         {
-            return m_TextureCache.GetTexCache();
+            return m_TextureAtlas.AtlasTexture;
+        }
+
+        public void Clear(CommandBuffer cmd)
+        {
+            m_TextureAtlas.ResetAllocator();
+            m_TextureAtlas.ClearTarget(cmd);
         }
 
         internal static long GetApproxCacheSizeInByte(int nbElement, int resolution, int sliceSize)

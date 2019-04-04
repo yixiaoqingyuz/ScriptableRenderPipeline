@@ -130,7 +130,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             influence = null,
             lighting = Lighting.@default,
             proxy = null,
-            proxySettings = ProxySettings.@default
+            proxySettings = ProxySettings.@default,
+            resolution = PlanarReflectionAtlasResolution.PlanarReflectionResolution512,
         };
 
         /// <summary>The type of the probe.</summary>
@@ -149,6 +150,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public ProxySettings proxySettings;
         /// <summary>Camera settings to use when capturing data.</summary>
         public CameraSettings camera;
+        /// <summary>The resolution of the probe.</summary>
+        public PlanarReflectionAtlasResolution resolution;
 
         public Hash128 ComputeHash()
         {

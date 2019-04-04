@@ -521,7 +521,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_lightList.Allocate();
             m_Env2DCaptureVP.Clear();
             m_Env2DCaptureForward.Clear();
-            for (int i = 0, c = Mathf.Max(1, lightLoopSettings.planarReflectionProbeCacheSize); i < c; ++i)
+            for (int i = 0, c = Mathf.Max(1, m_MaxEnvLightsOnScreen); i < c; ++i)
             {
                 m_Env2DCaptureVP.Add(Matrix4x4.identity);
                 m_Env2DCaptureForward.Add(0);
@@ -556,9 +556,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_ReflectionProbeCache = new ReflectionProbeCache(hdAsset, iBLFilterBSDFArray, reflectionCubeSize, reflectionCubeResolution, probeCacheFormat, true);
 
             // For planar reflection we only convolve with the GGX filter, otherwise it would be too expensive
-            TextureFormat planarProbeCacheFormat = gLightLoopSettings.planarReflectionCacheCompressed ? TextureFormat.BC6H : TextureFormat.RGBAHalf;
+            GraphicsFormat planarProbeCacheFormat = gLightLoopSettings.planarReflectionCacheCompressed ? GraphicsFormat.RGB_BC6H_UFloat : GraphicsFormat.R16G16B16A16_UNorm;
             int reflectionPlanarSize = gLightLoopSettings.planarReflectionProbeCacheSize;
-            int reflectionPlanarResolution = (int)gLightLoopSettings.planarReflectionTextureSize;
+            int reflectionPlanarResolution = (int)gLightLoopSettings.planarReflectionAtlasSize;
             if (ReflectionProbeCache.GetApproxCacheSizeInByte(reflectionPlanarSize, reflectionPlanarResolution, 1) > k_MaxCacheSize)
                 reflectionPlanarSize = ReflectionProbeCache.GetMaxCacheSizeForWeightInByte(k_MaxCacheSize, reflectionPlanarResolution, 1);
             m_ReflectionPlanarProbeCache = new PlanarReflectionProbeCache(hdAsset, (IBLFilterGGX)iBLFilterBSDFArray[0], reflectionPlanarSize, reflectionPlanarResolution, planarProbeCacheFormat, true);
@@ -1490,7 +1490,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        public bool GetEnvLightData(CommandBuffer cmd, HDCamera hdCamera, HDProbe probe, DebugDisplaySettings debugDisplaySettings)
+        public bool GetEnvLightData(CommandBuffer cmd, HDCamera hdCamera, HDProbe probe, DebugDisplaySettings debugDisplaySettings, int lightIndex)
         {
             Camera camera = hdCamera.camera;
 
@@ -1519,7 +1519,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                         var fetchIndex = m_ReflectionPlanarProbeCache.FetchSlice(cmd, probe.texture);
                         // Indices start at 1, because -0 == 0, we can know from the bit sign which cache to use
-                        envIndex = fetchIndex == -1 ? int.MinValue : -(fetchIndex + 1);
+                        envIndex = fetchIndex == Vector4.zero ? int.MinValue : -(lightIndex + 1);
 
                         var renderData = planarProbe.renderData;
                         var worldToCameraRHSMatrix = renderData.worldToCameraRHS;
@@ -1533,13 +1533,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         var gpuProj = GL.GetGPUProjectionMatrix(projectionMatrix, true);
                         var gpuView = worldToCameraRHSMatrix;
                         var vp = gpuProj * gpuView;
-                        m_Env2DCaptureVP[fetchIndex] = vp;
+                        m_Env2DCaptureVP[lightIndex] = vp;
 
                         var capturedForwardWS = renderData.captureRotation * Vector3.forward;
                         //capturedForwardWS.z *= -1; // Transform to RHS standard
-                        m_Env2DCaptureForward[fetchIndex * 3 + 0] = capturedForwardWS.x;
-                        m_Env2DCaptureForward[fetchIndex * 3 + 1] = capturedForwardWS.y;
-                        m_Env2DCaptureForward[fetchIndex * 3 + 2] = capturedForwardWS.z;
+                        m_Env2DCaptureForward[lightIndex * 3 + 0] = capturedForwardWS.x;
+                        m_Env2DCaptureForward[lightIndex * 3 + 1] = capturedForwardWS.y;
+                        m_Env2DCaptureForward[lightIndex * 3 + 2] = capturedForwardWS.z;
                         break;
                     }
                 case HDAdditionalReflectionData _:
@@ -2153,7 +2153,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                         var probeWrapper = SelectProbe(probe, planarProbe);
 
-                        if (GetEnvLightData(cmd, hdCamera, probeWrapper, debugDisplaySettings))
+                        if (GetEnvLightData(cmd, hdCamera, probeWrapper, debugDisplaySettings, sortIndex))
                         {
                             GetEnvLightVolumeDataAndBound(probeWrapper, lightVolumeType, worldToView);
                             if (stereoEnabled)
@@ -3123,6 +3123,22 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 {
                     cmd.SetViewport(new Rect(x, y, overlaySize, overlaySize));
                     HDUtils.BlitQuad(cmd, m_CookieAtlas.AtlasTexture, new Vector4(1, 1, 0, 0), new Vector4(1, 1, 0, 0), (int)lightingDebug.cookieAtlasMipLevel, false);
+                    HDUtils.NextOverlayCoord(ref x, ref y, overlaySize, overlaySize, hdCamera);
+                }
+            }
+
+            using (new ProfilingSample(cmd, "Display Planar Reflection Probe Atlas", CustomSamplerId.DisplayCookieAtlas.GetSampler()))
+            {
+                if (lightingDebug.clearPlanarReflectionProbeAtlas)
+                {
+                    m_ReflectionPlanarProbeCache.Clear(cmd);
+                    lightingDebug.clearPlanarReflectionProbeAtlas = false;
+                }
+                
+                if (lightingDebug.displayPlanarReflectionProbeAtlas)
+                {
+                    cmd.SetViewport(new Rect(x, y, overlaySize, overlaySize));
+                    HDUtils.BlitQuad(cmd, m_ReflectionPlanarProbeCache.GetTexCache(), new Vector4(1, 1, 0, 0), new Vector4(1, 1, 0, 0), (int)lightingDebug.planarReflectionProbeMipLevel, false);
                     HDUtils.NextOverlayCoord(ref x, ref y, overlaySize, overlaySize, hdCamera);
                 }
             }

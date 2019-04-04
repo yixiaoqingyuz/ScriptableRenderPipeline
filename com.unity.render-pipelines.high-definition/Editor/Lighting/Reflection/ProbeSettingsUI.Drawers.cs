@@ -65,6 +65,12 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 EditorGUILayout.Space();
             }
 
+            // TODO: move this elsewhere
+            EditorGUILayout.PropertyField(
+                serialized.resolution,
+                EditorGUIUtility.TrTextContent("Resolution", "Sets the resolution for the planar probe camera.")
+            );
+
             CameraSettingsUI.Draw(serialized.cameraSettings, owner, @override.camera, displayedFields.camera, overridableFields.camera);
         }
     }

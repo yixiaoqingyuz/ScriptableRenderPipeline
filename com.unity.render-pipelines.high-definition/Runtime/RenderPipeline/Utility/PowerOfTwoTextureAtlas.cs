@@ -10,8 +10,8 @@ namespace UnityEngine.Experimental.Rendering
     {
         public int mipPadding;
 
-        public PowerOfTwoTextureAtlas(int size, int mipPadding, GraphicsFormat format, FilterMode filterMode = FilterMode.Point, string name = "")
-            : base(size, size, format, filterMode, true, name)
+        public PowerOfTwoTextureAtlas(int size, int mipPadding, GraphicsFormat format, FilterMode filterMode = FilterMode.Point, string name = "", bool useMipMap = true)
+            : base(size, size, format, filterMode, true, name, useMipMap)
         {
             this.mipPadding = mipPadding;
 
@@ -64,6 +64,7 @@ namespace UnityEngine.Experimental.Rendering
             return new Vector2(width, height);
         }
 
+        // Override the behavior when we add a texture so all non-pot textures are blitted to a pot target zone
         protected override bool AllocateTexture(CommandBuffer cmd, ref Vector4 scaleBias, Texture texture, int width, int height)
         {
             // This atlas only supports square textures
@@ -81,9 +82,7 @@ namespace UnityEngine.Experimental.Rendering
             if (base.AddTexture(cmd, ref scaleBias, texture))
                 return true;
 
-            bool b = AllocateTexture(cmd, ref scaleBias, texture, texture.width, texture.height);
-
-            return b;
+            return AllocateTexture(cmd, ref scaleBias, texture, texture.width, texture.height);
         }
     }
 }

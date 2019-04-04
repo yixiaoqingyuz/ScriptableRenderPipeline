@@ -114,7 +114,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 {
                     maxPlanarReflectionProbePerCamera = currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionProbeCacheSize,
                     maxActivePlanarReflectionProbe = 512,
-                    planarReflectionProbeSize = (int)currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionTextureSize,
+                    planarReflectionProbeSize = (int)PlanarReflectionAtlasResolution.PlanarReflectionResolution512, // TODO: HDRP asset setting ?
                     maxActiveReflectionProbe = 512,
                     reflectionProbeSize = (int)currentPlatformRenderPipelineSettings.lightLoopSettings.reflectionCubemapSize
                 };

@@ -14,8 +14,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         public SerializedProperty reflectionProbeCacheSize;
         public SerializedProperty reflectionCubemapSize;
         public SerializedProperty reflectionCacheCompressed;
-        public SerializedProperty planarReflectionProbeCacheSize;
-        public SerializedProperty planarReflectionCubemapSize;
+        public SerializedProperty planarReflectionAtlasSize;
         public SerializedProperty planarReflectionCacheCompressed;
         public SerializedProperty skyReflectionSize;
         public SerializedProperty skyLightingOverrideLayerMask;
@@ -39,8 +38,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             reflectionCubemapSize = root.Find((GlobalLightLoopSettings s) => s.reflectionCubemapSize);
             reflectionCacheCompressed = root.Find((GlobalLightLoopSettings s) => s.reflectionCacheCompressed);
 
-            planarReflectionProbeCacheSize = root.Find((GlobalLightLoopSettings s) => s.planarReflectionProbeCacheSize);
-            planarReflectionCubemapSize = root.Find((GlobalLightLoopSettings s) => s.planarReflectionTextureSize);
+            planarReflectionAtlasSize = root.Find((GlobalLightLoopSettings s) => s.planarReflectionAtlasSize);
             planarReflectionCacheCompressed = root.Find((GlobalLightLoopSettings s) => s.planarReflectionCacheCompressed);
 
             skyReflectionSize = root.Find((GlobalLightLoopSettings s) => s.skyReflectionSize);

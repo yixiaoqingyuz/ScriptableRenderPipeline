@@ -27,6 +27,17 @@ namespace UnityEditor.ShaderGraph.Drawing
         VisualElement m_Control;
         VisualElement m_Container;
         EdgeControl m_EdgeControl;
+        
+        private bool m_IsVisible;
+        public bool isVisible
+        { 
+            get => m_IsVisible; 
+            set
+            {
+                style.display = value == true ? DisplayStyle.Flex : DisplayStyle.None;
+                m_IsVisible = value;
+            }
+        }
 
         public PortInputView(MaterialSlot slot)
         {
@@ -91,6 +102,9 @@ namespace UnityEditor.ShaderGraph.Drawing
 
         void Recreate()
         {
+            if(!isVisible)
+                return;
+
             RemoveFromClassList("type" + m_SlotType);
             m_SlotType = slot.concreteValueType;
             AddToClassList("type" + m_SlotType);

@@ -4,11 +4,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [6.6.1] - 2019-04-02
+## [6.6.2] - 2019-04-XX
 
-## [6.6.0] - 2019-04-01
+## [6.6.1] - 2019-04-02
 ### Fixed
 - Fixed compile errors in XRGraphics.cs when ENABLE_VR is not defined
+
+## [6.6.0] - 2019-04-01
 
 ## [6.5.0] - 2019-03-07
 

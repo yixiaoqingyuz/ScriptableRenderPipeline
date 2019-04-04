@@ -94,8 +94,12 @@ float3 EvaluateCookie_Directional(LightLoopContext lightLoopContext, Directional
     // Remap the texture coordinates from [-1, 1]^2 to [0, 1]^2.
     float2 positionNDC = positionCS * 0.5 + 0.5;
 
+    // Tile texture for cookie in repeat mode
+    if (light.cookieMode == COOKIEMODE_REPEAT)
+        positionNDC = frac(positionNDC);
+
     // We let the sampler handle clamping to border.
-    return SampleCookie2D(lightLoopContext, positionNDC, light.cookieIndex, light.tileCookie);
+    return SampleCookie2D(lightLoopContext, positionNDC, light.cookieScaleOffset);
 }
 #endif
 
@@ -141,7 +145,7 @@ void EvaluateLight_Directional(LightLoopContext lightLoopContext, PositionInputs
                                               _HeightFogExponents, cosZenithAngle, fragmentHeight);
     }
 
-    if (light.cookieIndex >= 0)
+    if (light.cookieMode != COOKIEMODE_NONE)
     {
         float3 lightToSample = positionWS - light.positionRWS;
         float3 cookie = EvaluateCookie_Directional(lightLoopContext, light, lightToSample);
@@ -271,7 +275,7 @@ float4 EvaluateCookie_Punctual(LightLoopContext lightLoopContext, LightData ligh
         float2 positionNDC = positionCS * 0.5 + 0.5;
 
         // Manually clamp to border (black).
-        cookie.rgb = SampleCookie2D(lightLoopContext, positionNDC, light.cookieIndex, false);
+        cookie.rgb = SampleCookie2D(lightLoopContext, positionNDC, light.cookieScaleOffset);
         cookie.a   = isInBounds ? 1 : 0;
     }
 
@@ -309,7 +313,7 @@ void EvaluateLight_Punctual(LightLoopContext lightLoopContext, PositionInputs po
     }
 
     // Projector lights always have cookies, so we can perform clipping inside the if().
-    if (light.cookieIndex >= 0)
+    if (light.cookieMode != COOKIEMODE_NONE)
     {
         float4 cookie = EvaluateCookie_Punctual(lightLoopContext, light, lightToSample);
 

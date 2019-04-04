@@ -158,19 +158,16 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 
         static void Drawer_SectionCookies(SerializedHDRenderPipelineAsset serialized, Editor owner)
         {
-            EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.cookieSize, k_CoockieSizeContent);
+            EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.cookieAtlasSize, k_CookieAtlasSizeContent);
             EditorGUI.BeginChangeCheck();
-            EditorGUILayout.DelayedIntField(serialized.renderPipelineSettings.lightLoopSettings.cookieTexArraySize, k_CookieTextureArraySizeContent);
-            if (EditorGUI.EndChangeCheck())
-                serialized.renderPipelineSettings.lightLoopSettings.cookieTexArraySize.intValue = Mathf.Clamp(serialized.renderPipelineSettings.lightLoopSettings.cookieTexArraySize.intValue, 1, TextureCache.k_MaxSupported);
-            if (serialized.renderPipelineSettings.lightLoopSettings.cookieTexArraySize.hasMultipleDifferentValues)
-                EditorGUILayout.HelpBox(k_MultipleDifferenteValueMessage, MessageType.Info);
+            if (serialized.renderPipelineSettings.lightLoopSettings.cookieAtlasSize.hasMultipleDifferentValues)
+                EditorGUILayout.HelpBox(k_MultipleDifferentValueMessage, MessageType.Info);
             else
             {
-                long currentCache = TextureCache2D.GetApproxCacheSizeInByte(serialized.renderPipelineSettings.lightLoopSettings.cookieTexArraySize.intValue, serialized.renderPipelineSettings.lightLoopSettings.cookieSize.intValue, 1);
+                long currentCache = TextureCache2D.GetApproxCacheSizeInByte(1, serialized.renderPipelineSettings.lightLoopSettings.cookieAtlasSize.intValue, 1);
                 if (currentCache > LightLoop.k_MaxCacheSize)
                 {
-                    int reserved = TextureCache2D.GetMaxCacheSizeForWeightInByte(LightLoop.k_MaxCacheSize, serialized.renderPipelineSettings.lightLoopSettings.cookieSize.intValue, 1);
+                    int reserved = TextureCache2D.GetMaxCacheSizeForWeightInByte(LightLoop.k_MaxCacheSize, serialized.renderPipelineSettings.lightLoopSettings.cookieAtlasSize.intValue, 1);
                     string message = string.Format(k_CacheErrorFormat, HDEditorUtils.HumanizeWeight(currentCache), reserved);
                     EditorGUILayout.HelpBox(message, MessageType.Error);
                 }
@@ -180,13 +177,14 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                     EditorGUILayout.HelpBox(message, MessageType.Info);
                 }
             }
-            EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.pointCookieSize, k_PointCoockieSizeContent);
+            EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.cookieAtlasMaxValidMip, k_CookieAtlasMaxValidMip);
+            EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.pointCookieSize, k_PointCookieSizeContent);
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.DelayedIntField(serialized.renderPipelineSettings.lightLoopSettings.cubeCookieTexArraySize, k_PointCookieTextureArraySizeContent);
             if (EditorGUI.EndChangeCheck())
                 serialized.renderPipelineSettings.lightLoopSettings.cubeCookieTexArraySize.intValue = Mathf.Clamp(serialized.renderPipelineSettings.lightLoopSettings.cubeCookieTexArraySize.intValue, 1, TextureCache.k_MaxSupported);
             if (serialized.renderPipelineSettings.lightLoopSettings.cubeCookieTexArraySize.hasMultipleDifferentValues)
-                EditorGUILayout.HelpBox(k_MultipleDifferenteValueMessage, MessageType.Info);
+                EditorGUILayout.HelpBox(k_MultipleDifferentValueMessage, MessageType.Info);
             else
             {
                 long currentCache = TextureCacheCubemap.GetApproxCacheSizeInByte(serialized.renderPipelineSettings.lightLoopSettings.cubeCookieTexArraySize.intValue, serialized.renderPipelineSettings.lightLoopSettings.pointCookieSize.intValue, 1);
@@ -217,7 +215,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             if (EditorGUI.EndChangeCheck())
                 serialized.renderPipelineSettings.lightLoopSettings.reflectionProbeCacheSize.intValue = Mathf.Clamp(serialized.renderPipelineSettings.lightLoopSettings.reflectionProbeCacheSize.intValue, 1, TextureCache.k_MaxSupported);
             if (serialized.renderPipelineSettings.lightLoopSettings.reflectionProbeCacheSize.hasMultipleDifferentValues)
-                EditorGUILayout.HelpBox(k_MultipleDifferenteValueMessage, MessageType.Info);
+                EditorGUILayout.HelpBox(k_MultipleDifferentValueMessage, MessageType.Info);
             else
             {
                 long currentCache = ReflectionProbeCache.GetApproxCacheSizeInByte(serialized.renderPipelineSettings.lightLoopSettings.reflectionProbeCacheSize.intValue, serialized.renderPipelineSettings.lightLoopSettings.reflectionCubemapSize.intValue, serialized.renderPipelineSettings.lightLoopSettings.supportFabricConvolution.boolValue ? 2 : 1);
@@ -243,7 +241,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             if (EditorGUI.EndChangeCheck())
                 serialized.renderPipelineSettings.lightLoopSettings.planarReflectionProbeCacheSize.intValue = Mathf.Clamp(serialized.renderPipelineSettings.lightLoopSettings.planarReflectionProbeCacheSize.intValue, 1, TextureCache.k_MaxSupported);
             if (serialized.renderPipelineSettings.lightLoopSettings.planarReflectionProbeCacheSize.hasMultipleDifferentValues)
-                EditorGUILayout.HelpBox(k_MultipleDifferenteValueMessage, MessageType.Info);
+                EditorGUILayout.HelpBox(k_MultipleDifferentValueMessage, MessageType.Info);
             else
             {
                 long currentCache = PlanarReflectionProbeCache.GetApproxCacheSizeInByte(serialized.renderPipelineSettings.lightLoopSettings.planarReflectionProbeCacheSize.intValue, serialized.renderPipelineSettings.lightLoopSettings.planarReflectionCubemapSize.intValue, 1);
@@ -314,7 +312,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             else
             {
                 using (new EditorGUI.DisabledGroupScope(true))
-                    EditorGUILayout.LabelField(k_MultipleDifferenteValueMessage);
+                    EditorGUILayout.LabelField(k_MultipleDifferentValueMessage);
             }
         }
 
@@ -379,7 +377,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 if (serialized.renderPipelineSettings.dynamicResolutionSettings.dynamicResType.hasMultipleDifferentValues)
                 {
                     using (new EditorGUI.DisabledGroupScope(true))
-                        EditorGUILayout.LabelField(k_MultipleDifferenteValueMessage);
+                        EditorGUILayout.LabelField(k_MultipleDifferentValueMessage);
                 }
                 else if ((DynamicResolutionType)serialized.renderPipelineSettings.dynamicResolutionSettings.dynamicResType.intValue == DynamicResolutionType.Software)
                     EditorGUILayout.PropertyField(serialized.renderPipelineSettings.dynamicResolutionSettings.softwareUpsamplingFilter, k_UpsampleFilter);
@@ -422,7 +420,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 if (serialized.renderPipelineSettings.dynamicResolutionSettings.forcePercentage.hasMultipleDifferentValues)
                 {
                     using (new EditorGUI.DisabledGroupScope(true))
-                        EditorGUILayout.LabelField(k_MultipleDifferenteValueMessage);
+                        EditorGUILayout.LabelField(k_MultipleDifferentValueMessage);
                 }
             }
             --EditorGUI.indentLevel;

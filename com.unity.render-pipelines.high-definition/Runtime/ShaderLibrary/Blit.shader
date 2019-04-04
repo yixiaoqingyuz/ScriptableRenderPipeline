@@ -11,9 +11,13 @@ Shader "Hidden/HDRP/Blit"
         TEXTURE2D_X(_BlitTexture);
         SamplerState sampler_PointClamp;
         SamplerState sampler_LinearClamp;
+        SamplerState sampler_PointRepeat;
+        SamplerState sampler_LinearRepeat;
         uniform float4 _BlitScaleBias;
         uniform float4 _BlitScaleBiasRt;
         uniform float _BlitMipLevel;
+        uniform float2 _BlitTextureSize;
+        uniform uint _BlitPaddingSize;
 
         struct Attributes
         {
@@ -49,6 +53,20 @@ Shader "Hidden/HDRP/Blit"
             return output;
         }
 
+        Varyings VertQuadPadding(Attributes input)
+        {
+            Varyings output;
+            float2 scalePadding = ((_BlitTextureSize + float(_BlitPaddingSize)) / _BlitTextureSize);
+            float2 offsetPaddding = (float(_BlitPaddingSize) / 2.0) / (_BlitTextureSize + _BlitPaddingSize);
+
+            output.positionCS = GetQuadVertexPosition(input.vertexID) * float4(_BlitScaleBiasRt.x, _BlitScaleBiasRt.y, 1, 1) + float4(_BlitScaleBiasRt.z, _BlitScaleBiasRt.w, 0, 0);
+            output.positionCS.xy = output.positionCS.xy * float2(2.0f, -2.0f) + float2(-1.0f, 1.0f); //convert to -1..1
+            output.texcoord = GetQuadTexCoord(input.vertexID);
+            output.texcoord = (output.texcoord - offsetPaddding) * scalePadding;
+            output.texcoord = output.texcoord * _BlitScaleBias.xy + _BlitScaleBias.zw;
+            return output;
+        }
+
         float4 FragNearest(Varyings input) : SV_Target
         {
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
@@ -67,6 +85,26 @@ Shader "Hidden/HDRP/Blit"
             uv.x = (uv.x + unity_StereoEyeIndex) * 0.5;
 #endif
             return SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv, _BlitMipLevel);
+        }
+        
+        float4 FragBilinearRepeat(Varyings input) : SV_Target
+        {
+            UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+            float2 uv = input.texcoord.xy;
+#if UNITY_SINGLE_PASS_STEREO
+            uv.x = (uv.x + unity_StereoEyeIndex) * 0.5;
+#endif
+            return SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearRepeat, uv, _BlitMipLevel);
+        }
+
+        float4 FragNearestRepeat(Varyings input) : SV_Target
+        {
+            UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+            float2 uv = input.texcoord.xy;
+#if UNITY_SINGLE_PASS_STEREO
+            uv.x = (uv.x + unity_StereoEyeIndex) * 0.5;
+#endif
+            return SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointRepeat, uv, _BlitMipLevel);
         }
 
     ENDHLSL
@@ -116,6 +154,50 @@ Shader "Hidden/HDRP/Blit"
             HLSLPROGRAM
                 #pragma vertex VertQuad
                 #pragma fragment FragBilinear
+            ENDHLSL
+        }
+        
+        // 4: Nearest quad with padding
+        Pass
+        {
+            ZWrite Off ZTest Always Blend Off Cull Off
+
+            HLSLPROGRAM
+                #pragma vertex VertQuadPadding
+                #pragma fragment FragNearest
+            ENDHLSL
+        }
+
+        // 5: Bilinear quad with padding
+        Pass
+        {
+            ZWrite Off ZTest Always Blend Off Cull Off
+
+            HLSLPROGRAM
+                #pragma vertex VertQuadPadding
+                #pragma fragment FragBilinear
+            ENDHLSL
+        }
+        
+        // 6: Nearest quad with padding
+        Pass
+        {
+            ZWrite Off ZTest Always Blend Off Cull Off
+
+            HLSLPROGRAM
+                #pragma vertex VertQuadPadding
+                #pragma fragment FragNearestRepeat
+            ENDHLSL
+        }
+
+        // 7: Bilinear quad with padding
+        Pass
+        {
+            ZWrite Off ZTest Always Blend Off Cull Off
+
+            HLSLPROGRAM
+                #pragma vertex VertQuadPadding
+                #pragma fragment FragBilinearRepeat
             ENDHLSL
         }
 

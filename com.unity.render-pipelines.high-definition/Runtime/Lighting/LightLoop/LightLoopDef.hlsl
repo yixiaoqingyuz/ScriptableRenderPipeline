@@ -18,19 +18,37 @@ struct LightLoopContext
 // Cookie sampling functions
 // ----------------------------------------------------------------------------
 
-// Used by directional and spot lights.
-float3 SampleCookie2D(LightLoopContext lightLoopContext, float2 coord, int index, bool repeat)
+// Adjust UVs using the LOD padding size
+float2 RemapUV(float2 coord, float2 size)
 {
-    if (repeat)
-    {
-        // TODO: add MIP maps to combat aliasing?
-        return SAMPLE_TEXTURE2D_ARRAY_LOD(_CookieTextures, s_linear_repeat_sampler, coord, index, 0).rgb;
-    }
-    else // clamp
-    {
-        // TODO: add MIP maps to combat aliasing?
-        return SAMPLE_TEXTURE2D_ARRAY_LOD(_CookieTextures, s_linear_clamp_sampler, coord, index, 0).rgb;
-    }
+    float2 scale = rcp(size + _CookieAtlasData.y) * size;
+    float2 offset = 0.5 * (1.0 - scale);
+    
+    return coord * scale + offset;
+}
+
+// Used by directional and spot lights.
+float3 SampleCookie2D(LightLoopContext lightLoopContext, float2 coord, float4 scaleOffset)
+{
+    float2 offset       = scaleOffset.zw;
+    float2 scale        = scaleOffset.xy;
+    float lod           = 0; // TODO: mip maps for cookies
+
+    // Clamp lod to the maximum level of the texture we are sampling
+    // lod = min(_CookieAtlasData.x, lod);
+
+    // Remap the uv to take in account the padding
+    coord = RemapUV(coord, scale);
+
+    // Apply atlas scale and offset
+    float2 atlasCoords = coord * scale + offset;
+
+    float3 color = SAMPLE_TEXTURE2D_LOD(_CookieAtlas, s_linear_clamp_sampler, atlasCoords, lod).rgb;
+    
+    // Mip visualization (0 -> red, 10 -> blue)
+    // color *= saturate(1 - abs(3 * lod / 10 - float4(0, 1, 2, 3))).rgb;
+
+    return color;
 }
 
 // Used by point lights.

@@ -27,6 +27,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public int  _EnvLightSkyEnabled;         // TODO: make it a bool
         public int _DirectionalShadowIndex;
 
+        public Vector4 _CookieAtlasSize;
+        public Vector4 _CookieAtlasData;
+
         public float _MicroShadowOpacity;
 
         public uint _NumTileFtplX;

@@ -220,7 +220,7 @@ void RayGenShadows()
 
         // Combine the light color with the light cookie color (if any)
         float3 lightColor = lightData.color;
-        if (lightData.cookieIndex >= 0)
+        if (lightData.cookieMode != COOKIEMODE_NONE)
         {
             lightColor *= SAMPLE_TEXTURE2D_ARRAY_LOD(_AreaCookieTextures, s_trilinear_clamp_sampler, misOutput.sampleUV, lightData.cookieIndex, bsdfData.perceptualRoughness *  _CookieSizePOT).xyz;
         }

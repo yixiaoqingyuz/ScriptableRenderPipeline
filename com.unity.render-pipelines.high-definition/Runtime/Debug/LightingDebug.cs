@@ -78,6 +78,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public float                debugExposure = 0.0f;
 
+        public bool                 displayCookieAtlas;
+        public uint                 cookieAtlasMipLevel;
+        public bool                 clearCookieAtlas = false;
+
         public bool                 showPunctualLight = true;
         public bool                 showDirectionalLight = true;
         public bool                 showAreaLight = true;

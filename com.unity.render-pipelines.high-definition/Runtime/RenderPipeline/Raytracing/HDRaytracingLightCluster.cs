@@ -533,7 +533,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 lightData.volumetricLightDimmer = lightDistanceFade * (additionalLightData.volumetricDimmer);
 
                 lightData.contactShadowIndex = -1;
-                lightData.cookieIndex = -1;
+                lightData.cookieMode = CookieMode.Clamp;
                 lightData.shadowIndex = -1;
                 lightData.rayTracedAreaShadowIndex = -1;
 
@@ -543,7 +543,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     switch (light.type)
                     {
                         case LightType.Spot:
-                            lightData.cookieIndex = m_LightLoop.cookieTexArray.FetchSlice(cmd, light.cookie);
+                            lightData.cookieMode = (lightComponent.cookie.wrapMode == TextureWrapMode.Repeat) ? CookieMode.Repeat : CookieMode.Clamp;
+                            lightData.cookieScaleOffset = FetchCookieAtlas(cmd, lightComponent.cookie);
                             break;
                         case LightType.Point:
                             lightData.cookieIndex = m_LightLoop.cubeCookieTexArray.FetchSlice(cmd, light.cookie);
@@ -554,7 +555,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 {
                     // Projectors lights must always have a cookie texture.
                     // As long as the cache is a texture array and not an atlas, the 4x4 white texture will be rescaled to 128
-                    lightData.cookieIndex = m_LightLoop.cookieTexArray.FetchSlice(cmd, Texture2D.whiteTexture);
+                    lightData.cookieScaleOffset = FetchCookieAtlas(cmd, Texture2D.whiteTexture);
                 }
                 else if (lightData.lightType == GPULightType.Rectangle && additionalLightData.areaLightCookie != null)
                 {

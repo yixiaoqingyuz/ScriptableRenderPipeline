@@ -28,8 +28,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             // Create the texture cookie cache that we shall be using for the area lights
             GlobalLightLoopSettings gLightLoopSettings = hdAsset.currentPlatformRenderPipelineSettings.lightLoopSettings;
             m_AreaCookieTexArray = new TextureCache2D("AreaCookie");
-            int cookieSize = gLightLoopSettings.cookieTexArraySize;
-            int cookieResolution = (int)gLightLoopSettings.cookieSize;
+            int cookieSize = gLightLoopSettings.cookieAreaTextureArraySize;
+            int cookieResolution = (int)gLightLoopSettings.cookieAreaTextureSize;
             if (TextureCache2D.GetApproxCacheSizeInByte(cookieSize, cookieResolution, 1) > maxCacheSize)
                 cookieSize = TextureCache2D.GetMaxCacheSizeForWeightInByte(maxCacheSize, cookieResolution, 1);
             m_AreaCookieTexArray.AllocTextureArray(cookieSize, cookieResolution, cookieResolution, TextureFormat.RGBA32, true);

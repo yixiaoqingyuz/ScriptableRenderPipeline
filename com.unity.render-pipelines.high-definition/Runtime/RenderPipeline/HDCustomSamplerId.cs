@@ -57,6 +57,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         UpdateStencilCopyForSSRExclusion,
         GizmosPrePostprocess,
         Gizmos,
+        DisplayCookieAtlas,
 
         RaytracingBuildCluster,
         RaytracingCullLights,

@@ -23,6 +23,8 @@
     uint _EnvProxyCount;
     int _EnvLightSkyEnabled;
     int _DirectionalShadowIndex;
+    float4 _CookieAtlasSize;
+    float4 _CookieAtlasData;
     float _MicroShadowOpacity;
     uint _NumTileFtplX;
     uint _NumTileFtplY;
@@ -40,4 +42,6 @@
     uint _CookieSizePOT;
     int _RaytracedAreaShadow;
     int _RaytracedIndirectDiffuse;
+
+
 #endif

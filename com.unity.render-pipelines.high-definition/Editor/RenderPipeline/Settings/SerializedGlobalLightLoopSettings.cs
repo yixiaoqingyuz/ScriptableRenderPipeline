@@ -7,9 +7,9 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
     {
         public SerializedProperty root;
 
-        public SerializedProperty cookieSize;
-        public SerializedProperty cookieTexArraySize;
+        public SerializedProperty cookieAtlasSize;
         public SerializedProperty pointCookieSize;
+        public SerializedProperty cookieAtlasMaxValidMip;
         public SerializedProperty cubeCookieTexArraySize;
         public SerializedProperty reflectionProbeCacheSize;
         public SerializedProperty reflectionCubemapSize;
@@ -30,9 +30,9 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         {
             this.root = root;
 
-            cookieSize = root.Find((GlobalLightLoopSettings s) => s.cookieSize);
-            cookieTexArraySize = root.Find((GlobalLightLoopSettings s) => s.cookieTexArraySize);
+            cookieAtlasSize = root.Find((GlobalLightLoopSettings s) => s.cookieAtlasSize);
             pointCookieSize = root.Find((GlobalLightLoopSettings s) => s.pointCookieSize);
+            cookieAtlasMaxValidMip = root.Find((GlobalLightLoopSettings s) => s.cookieAtlasMaxValidMip);
             cubeCookieTexArraySize = root.Find((GlobalLightLoopSettings s) => s.cubeCookieTexArraySize);
 
             reflectionProbeCacheSize = root.Find((GlobalLightLoopSettings s) => s.reflectionProbeCacheSize);

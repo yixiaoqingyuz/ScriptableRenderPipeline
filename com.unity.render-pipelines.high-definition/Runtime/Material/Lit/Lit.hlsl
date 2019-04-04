@@ -1517,7 +1517,7 @@ DirectLighting EvaluateBSDF_Rect(   LightLoopContext lightLoopContext,
             ltcValue *= lightData.diffuseDimmer;
 
             // Only apply cookie if there is one
-            if ( lightData.cookieIndex >= 0 )
+            if ( lightData.cookieMode != COOKIEMODE_NONE )
             {
                 // Compute the cookie data for the diffuse term
                 float3 formFactorD =  PolygonFormFactor(LD);
@@ -1546,7 +1546,7 @@ DirectLighting EvaluateBSDF_Rect(   LightLoopContext lightLoopContext,
                 ltcValue *= lightData.diffuseDimmer;
 
                 // Only apply cookie if there is one
-                if ( lightData.cookieIndex >= 0 )
+                if ( lightData.cookieMode != COOKIEMODE_NONE )
                 {
                     // Compute the cookie data for the transmission diffuse term
                     float3 formFactorTD = PolygonFormFactor(LTD);
@@ -1565,7 +1565,7 @@ DirectLighting EvaluateBSDF_Rect(   LightLoopContext lightLoopContext,
             ltcValue *= lightData.specularDimmer;
             
             // Only apply cookie if there is one
-            if ( lightData.cookieIndex >= 0 )
+            if ( lightData.cookieMode != COOKIEMODE_NONE)
             {
                 // Compute the cookie data for the specular term
                 float3 formFactorS =  PolygonFormFactor(LS);
@@ -1584,7 +1584,7 @@ DirectLighting EvaluateBSDF_Rect(   LightLoopContext lightLoopContext,
                 ltcValue = PolygonIrradiance(LSCC);
                 ltcValue *= lightData.specularDimmer;
                 // Only apply cookie if there is one
-                if ( lightData.cookieIndex >= 0 )
+                if ( lightData.cookieMode != COOKIEMODE_NONE )
                 {
                     // Compute the cookie data for the specular term
                     float3 formFactorS =  PolygonFormFactor(LSCC);

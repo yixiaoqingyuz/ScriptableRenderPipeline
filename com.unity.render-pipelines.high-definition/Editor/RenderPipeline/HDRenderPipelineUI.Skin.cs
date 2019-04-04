@@ -56,11 +56,12 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 
         const string k_CacheErrorFormat = "This configuration will lead to more than 2 GB reserved for this cache at runtime! ({0} requested) Only {1} element will be reserved instead.";
         const string k_CacheInfoFormat = "Reserving {0} in memory at runtime.";
-        const string k_MultipleDifferenteValueMessage = "Multiple different values";
+        const string k_MultipleDifferentValueMessage = "Multiple different values";
 
-        static readonly GUIContent k_CoockieSizeContent = EditorGUIUtility.TrTextContent("Cookie Size", "Specifies the maximum size for the individual 2D cookies that HDRP uses for Directional and Spot Lights.");
+        static readonly GUIContent k_CookieAtlasSizeContent = EditorGUIUtility.TrTextContent("Cookie Atlas Size", "Specifies the size of the atlas used for 2D cookies (Directional and Spot Lights).");
         static readonly GUIContent k_CookieTextureArraySizeContent = EditorGUIUtility.TrTextContent("Texture Array Size", "Sets the maximum Texture Array size for the 2D cookies HDRP uses for Directional and Spot Lights. Higher values allow HDRP to use more cookies concurrently on screen.");
-        static readonly GUIContent k_PointCoockieSizeContent = EditorGUIUtility.TrTextContent("Point Cookie Size", "Specifies the maximum size for the Cube cookes HDRP uses for Point Lights.");
+        static readonly GUIContent k_PointCookieSizeContent = EditorGUIUtility.TrTextContent("Point Cookie Size", "Specifies the maximum size for the Cube cookies HDRP uses for Point Lights.");
+        static readonly GUIContent k_CookieAtlasMaxValidMip = EditorGUIUtility.TrTextContent("Maximum valid mip level", "Use this mip level to add borders on textures in the atlas, so trilinear filtering is valid until this mip level");
         static readonly GUIContent k_PointCookieTextureArraySizeContent = EditorGUIUtility.TrTextContent("Cubemap Array Size", "Sets the maximum Texture Array size for the Cube cookies HDRP uses for Directional and Spot Lights. Higher values allow HDRP to use more cookies concurrently on screen.");
 
 

@@ -189,6 +189,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             int highestDim = Math.Max(currentPlatformRenderPipelineSettings.decalSettings.atlasWidth, currentPlatformRenderPipelineSettings.decalSettings.atlasHeight);
             return (int)Math.Log(highestDim, 2);
         }
+        public int GetCookieAtlasMipCount()
+        {
+            int size = (int)currentPlatformRenderPipelineSettings.lightLoopSettings.cookieAtlasSize;
+            return (int)Mathf.Log(size, 2);
+        }
 
         readonly SkyManager m_SkyManager = new SkyManager();
         readonly LightLoop m_LightLoop = new LightLoop();

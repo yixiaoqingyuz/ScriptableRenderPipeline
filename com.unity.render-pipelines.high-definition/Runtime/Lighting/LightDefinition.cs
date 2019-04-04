@@ -45,6 +45,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         Refraction
     };
 
+    [GenerateHLSL]
+    public enum CookieMode
+    {
+        None,
+        Clamp,
+        Repeat,
+    }
+
     // These structures share between C# and hlsl need to be align on float4, so we pad them.
     [GenerateHLSL(PackingRules.Exact, false)]
     public struct DirectionalLightData
@@ -60,26 +68,27 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public float   angleOffset;             // Sun disk highlight
 
         public Vector3 forward;
-        public int     cookieIndex;             // -1 if unused (TODO: 16 bit)
+        public CookieMode cookieMode;
+        
+        public Vector4 cookieScaleOffset;
 
         public Vector3 right;                   // Rescaled by (2 / shapeWidth)
-        public int     tileCookie;              // (TODO: use a bitfield)
-
-        public Vector3 up;                      // Rescaled by (2 / shapeHeight)
         public int     shadowIndex;             // -1 if unused (TODO: 16 bit)
 
-        public Vector3 color;
+        public Vector3 up;                      // Rescaled by (2 / shapeHeight)
         public int     contactShadowIndex;      // -1 if unused (TODO: 16 bit)
+
+        public Vector3 color;
+        public float   minRoughness;            // Hack
 
         public float   shadowDimmer;
         public float   volumetricShadowDimmer;  // Replaces 'shadowDimmer'
-        public int     nonLightMappedOnly;      // Used with ShadowMask (TODO: use a bitfield)
-        public float   minRoughness;            // Hack
-
-        public Vector4 shadowMaskSelector;      // Used with ShadowMask feature
-
         public float   diffuseDimmer;
         public float   specularDimmer;
+
+        public Vector4 shadowMaskSelector;      // Used with ShadowMask feature
+        
+        public int     nonLightMappedOnly;      // Used with ShadowMask (TODO: use a bitfield)
     };
 
     [GenerateHLSL(PackingRules.Exact, false)]
@@ -107,8 +116,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public Vector3 color;
         public float   rangeAttenuationBias;
 
-        public int     cookieIndex;             // -1 if unused
-        public int     tileCookie;              // (TODO: use a bitfield)
+        public CookieMode cookieMode;
+        public int     cookieIndex;             // Texture array index of the point and rectangle light cookies
         public int     shadowIndex;             // -1 if unused (TODO: 16 bit)
 #if ENABLE_RAYTRACING
         // We store the ray traced area shadow index as a negative value inside the contactShadowIndex.
@@ -116,7 +125,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // disabling contact shadows in the shader code (checks for => 0)
         public int     rayTracedAreaShadowIndex { get => -contactShadowIndex; set => contactShadowIndex = -value; }
 #endif
-        public int contactShadowIndex;      // negative if unused (TODO: 16 bit)
+        public int     contactShadowIndex;      // negative if unused (TODO: 16 bit)
+
+        public Vector4 cookieScaleOffset;       // coordinates of the cookie texture in the atlas
 
         public float   shadowDimmer;
         public float   volumetricShadowDimmer;  // Replaces 'shadowDimmer'

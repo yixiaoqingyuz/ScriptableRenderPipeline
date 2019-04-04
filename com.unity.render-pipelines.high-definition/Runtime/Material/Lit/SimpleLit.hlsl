@@ -277,8 +277,12 @@ float3 EvaluateCookie_Directional(LightLoopContext lightLoopContext, Directional
     // Remap the texture coordinates from [-1, 1]^2 to [0, 1]^2.
     float2 positionNDC = positionCS * 0.5 + 0.5;
 
+    // Tile texture for cookie in repeat mode
+    if (light.cookieMode == COOKIEMODE_REPEAT)
+        positionNDC = frac(positionNDC);
+
     // We let the sampler handle clamping to border.
-    return SampleCookie2D(lightLoopContext, positionNDC, lightData.cookieIndex, lightData.tileCookie);
+    return SampleCookie2D(lightLoopContext, positionNDC, lightData.cookieScaleOffset);
 }
 
 float4 EvaluateCookie_Punctual(LightLoopContext lightLoopContext, LightData lightData,
@@ -309,7 +313,7 @@ float4 EvaluateCookie_Punctual(LightLoopContext lightLoopContext, LightData ligh
         float2 positionNDC = positionCS * 0.5 + 0.5;
 
         // Manually clamp to border (black).
-        cookie.rgb = SampleCookie2D(lightLoopContext, positionNDC, lightData.cookieIndex, false);
+        cookie.rgb = SampleCookie2D(lightLoopContext, positionNDC, lightData.cookieScaleOffset);
         cookie.a   = isInBounds ? 1 : 0;
     }
 

@@ -60,15 +60,29 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
     }
 
     [Serializable]
+    public enum AreaCookieResolution
+    {
+        AreaCookieResolution64 = 64,
+        AreaCookieResolution128 = 128,
+        AreaCookieResolution256 = 256,
+        AreaCookieResolution512 = 512,
+        AreaCookieResolution1024 = 1024,
+        AreaCookieResolution2048 = 2048,
+        AreaCookieResolution4096 = 4096
+    }
+
+    [Serializable]
     public struct GlobalLightLoopSettings
     {
         /// <summary>Default GlobalDecalSettings</summary>
         public static readonly GlobalLightLoopSettings @default = new GlobalLightLoopSettings()
         {
-            cookieSize = CookieResolution.CookieResolution128,
-            cookieTexArraySize = 16,
+            cookieAtlasSize = CookieResolution.CookieResolution2048,
             pointCookieSize = CubeCookieResolution.CubeCookieResolution128,
             cubeCookieTexArraySize = 16,
+
+            cookieAreaTextureSize = AreaCookieResolution.AreaCookieResolution128,
+            cookieAreaTextureArraySize = 16,
 
             planarReflectionProbeCacheSize = 2,
             planarReflectionTextureSize = PlanarReflectionResolution.PlanarReflectionResolution1024,
@@ -85,10 +99,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             maxDecalsOnScreen = 512,
         };
 
-        public CookieResolution cookieSize;
-        public int cookieTexArraySize;
+        public CookieResolution cookieAtlasSize;
         public CubeCookieResolution pointCookieSize;
+        public int cookieAtlasMaxValidMip;
         public int cubeCookieTexArraySize;
+
+        public AreaCookieResolution cookieAreaTextureSize;
+        public int cookieAreaTextureArraySize;
 
         public int planarReflectionProbeCacheSize;
         public PlanarReflectionResolution planarReflectionTextureSize;

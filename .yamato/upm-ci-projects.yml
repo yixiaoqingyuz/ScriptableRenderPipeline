@@ -30,7 +30,7 @@ projects:
 {% for project in projects %}
 {% for editor in editors %}
 {% for platform in platforms %}
-all_project_ci:
+all_project_ci_{{ platform.name }}_{{ editor.version }}:
   name: Run all test projects
   agent:
     type: {{ platform.type }}

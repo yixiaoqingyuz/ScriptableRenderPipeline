@@ -17,8 +17,9 @@ testplatforms:
   - name: editmode
     args: --suite=editor --platform=editmode
 projects:
-  - name: PostProcessing
-    folder: PostProcessing
+  - name: VFX_LWRP
+    folder: VisualEffectGraph_LWRP
+    packagename: com.unity.visualeffectgraph
 ---
 {% for project in projects %}
 {% for editor in editors %}
@@ -47,6 +48,30 @@ projects:
         - "**/upm-ci~/test-results/**/*"
         
 {% endfor %}
+{% endfor %}
+{% endfor %}
+
+{% for editor in editors %}
+{% for platform in platforms %}
+{{ project.packagename }}_{{ platform.name }}_{{ editor.version }}:
+  name: Pack and Test {{ project.packagename }} version {{ editor.version }} on {{ platform.name }}
+  agent:
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
+  commands:
+  - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
+  - cd {{ project.packagename }} && upm-ci package pack
+  - cd {{ project.packagename }} && upm-ci package test --unity-version {{ editor.version }}
+  dependencies:
+    - .yamato/upm-ci-core.yml#com.unity.render-pipelines.core_{{ platform.name }}_{{ editor.version }}
+  artifacts:
+    logs.zip:
+      paths:
+      - "**/upm-ci~/test-results/**/*"
+      - "**/upm-ci~/packages/**/*.tgz"
+
+
 {% endfor %}
 {% endfor %}
 

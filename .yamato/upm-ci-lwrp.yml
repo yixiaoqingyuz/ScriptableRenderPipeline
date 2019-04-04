@@ -42,10 +42,6 @@ projects:
             - cd TestProjects/{{ project.folder }} && utr/utr {{ testplatform.args }} --testproject=. --editor-location=.Editor --artifacts_path=upm-ci~/test-results || powershell -command "utr/utr {{ testplatform.args }} --testproject=. --editor-location=.Editor --artifacts_path=upm-ci~/test-results"
       {% endif %}
             
-  #triggers:
-   # branches:
-     # only:
-        #- yamato-master
   artifacts:
     logs:
       paths:
@@ -68,7 +64,7 @@ projects:
   - cd {{ project.packagename }} && upm-ci package pack
   - cd {{ project.packagename }} && upm-ci package test --unity-version {{ editor.version }}
   dependencies:
-    - .yamato/upm-ci-shadergraph.yml#Pack and Test com.unity.shadergraph version {{ editor.version }} on {{ platform.name }}
+    - .yamato/upm-ci-shadergraph.yml#com.unity.render-pipelines.core_{{ platform.name }}_{{ editor.version }}
   artifacts:
     logs.zip:
       paths:

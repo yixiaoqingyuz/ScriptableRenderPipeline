@@ -153,12 +153,16 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
         lightStart = 0;
 #endif
 
+        bool fastPath = false;
+    #if SCALARIZE_LIGHT_LOOP
         uint lightStartLane0;
-        bool fastPath = IsFastPath(lightStart, lightStartLane0);
+        fastPath = IsFastPath(lightStart, lightStartLane0);
+
         if (fastPath)
         {
             lightStart = lightStartLane0;
         }
+    #endif
 
         // Scalarized loop. All lights that are in a tile/cluster touched by any pixel in the wave are loaded (scalar load), only the one relevant to current thread/pixel are processed.
         // For clarity, the following code will follow the convention: variables starting with s_ are meant to be wave uniform (meant for scalar register),
@@ -171,7 +175,7 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
         while (v_lightListOffset < lightCount)
         {
             v_lightIdx = FetchIndex(lightStart, v_lightListOffset);
-            uint s_lightIdx = ScalarizeLightIndex(v_lightIdx, fastPath);
+            uint s_lightIdx = ScalarizeElementIndex(v_lightIdx, fastPath);
             if (s_lightIdx == -1)
                 break;
             
@@ -273,6 +277,11 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
     #if SCALARIZE_LIGHT_LOOP
         uint envStartFirstLane;
         fastPath = IsFastPath(envLightStart, envStartFirstLane);
+
+        if (fastPath)
+        {
+            envLightStart = envStartFirstLane;
+        }
     #endif
 
         // Reflection / Refraction hierarchy is
@@ -309,12 +318,6 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
         if (featureFlags & LIGHTFEATUREFLAGS_ENV)
         {
             context.sampleReflection = SINGLE_PASS_CONTEXT_SAMPLE_REFLECTION_PROBES;
-        #if SCALARIZE_LIGHT_LOOP
-            if (fastPath)
-            {
-                envLightStart = envStartFirstLane;
-            }
-        #endif
 
             // Scalarized loop, same rationale of the punctual light version
             uint v_envLightListOffset = 0;
@@ -322,7 +325,7 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
             while (v_envLightListOffset < envLightCount)
             {
                 v_envLightIdx = FetchIndex(envLightStart, v_envLightListOffset);
-                uint s_envLightIdx = ScalarizeLightIndex(v_envLightIdx, fastPath);
+                uint s_envLightIdx = ScalarizeElementIndex(v_envLightIdx, fastPath);
                 if (s_envLightIdx == -1)
                     break;
 

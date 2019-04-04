@@ -270,32 +270,29 @@ bool IsFastPath(uint lightStart, out uint lightStartLane0)
 #endif
 }
 
-bool IsFastPath(uint lightStart)
+// This function scalarize an index accross all lanes. To be effecient it must be used in the context
+// of the scalarization of a loop. It is to use with IsFastPath so it can optimize the number of
+// element to load, which is optimal when all the lanes are contained into a tile.
+uint ScalarizeElementIndex(uint v_elementIdx, bool fastPath)
 {
-    uint unusedLightStartLane0;
-    return IsFastPath(lightStart, unusedLightStartLane0);
-}
-
-uint ScalarizeLightIndex(uint v_lightIdx, bool fastPath)
-{
-    uint s_lightIdx = v_lightIdx;
+    uint s_elementIdx = v_elementIdx;
 #if SCALARIZE_LIGHT_LOOP
     if (!fastPath)
     {
-        // If we are not in fast path, v_lightIdx is not scalar, so we need to query the Min value across the wave. 
-        s_lightIdx = WaveActiveMin(v_lightIdx);
+        // If we are not in fast path, v_elementIdx is not scalar, so we need to query the Min value across the wave. 
+        s_elementIdx = WaveActiveMin(v_elementIdx);
         // If WaveActiveMin returns 0xffffffff it means that all lanes are actually dead, so we can safely ignore the loop and move forward.
-        // This could happen as an helper lane could reach this point, hence having a valid v_lightIdx, but their values will be ignored by the WaveActiveMin
-        if (s_lightIdx == -1)
+        // This could happen as an helper lane could reach this point, hence having a valid v_elementIdx, but their values will be ignored by the WaveActiveMin
+        if (s_elementIdx == -1)
         {
             return -1;
         }
     }
     // Note that the WaveReadLaneFirst should not be needed, but the compiler might insist in putting the result in VGPR.
     // However, we are certain at this point that the index is scalar.
-    s_lightIdx = WaveReadLaneFirst(s_lightIdx);
+    s_elementIdx = WaveReadLaneFirst(s_elementIdx);
 #endif
-    return s_lightIdx;
+    return s_elementIdx;
 }
 
 uint FetchIndexWithBoundsCheck(uint start, uint count, uint i)

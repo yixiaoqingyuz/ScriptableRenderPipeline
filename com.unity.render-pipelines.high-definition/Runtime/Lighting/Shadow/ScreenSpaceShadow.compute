@@ -240,7 +240,7 @@ void DEFERRED_CONTACT_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uin
         for (uint lightListOffset = 0; lightListOffset < lightCount; lightListOffset++)
         {
             uint v_lightIdx = FetchIndex(lightStart, lightListOffset);
-            uint s_lightIdx = ScalarizeLightIndex(v_lightIdx, fastPath);
+            uint s_lightIdx = ScalarizeElementIndex(v_lightIdx, fastPath);
             if (s_lightIdx == -1)
                 break;
 

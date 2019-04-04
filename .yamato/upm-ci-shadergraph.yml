@@ -68,7 +68,7 @@ projects:
   - cd {{ project.packagename }} && upm-ci package pack
   - cd {{ project.packagename }} && upm-ci package test --unity-version {{ editor.version }}
   dependencies:
-    - .yamato/upm-ci-core.yml#Pack and Test com.unity.render-pipelines.core version {{ editor.version }} on {{ platform.name }}
+    - .yamato/upm-ci-core.yml#com.unity.render-pipelines.core_{{ platform.name }}_{{ editor.version }}
   artifacts:
     logs.zip:
       paths:

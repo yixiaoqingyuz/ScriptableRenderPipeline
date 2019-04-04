@@ -17,7 +17,7 @@ projects:
 {% for project in projects %}
 {% for editor in editors %}
 {% for platform in platforms %}
-{{ platform.name }}_{{ editor.version }}:
+{{ project.packagename }}_{{ platform.name }}_{{ editor.version }}:
   name: Pack and Test {{ project.packagename }} version {{ editor.version }} on {{ platform.name }}
   agent:
     type: {{ platform.type }}

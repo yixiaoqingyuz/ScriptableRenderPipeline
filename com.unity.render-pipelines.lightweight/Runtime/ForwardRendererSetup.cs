@@ -208,7 +208,7 @@ namespace UnityEngine.Experimental.Rendering.LWRP
             //seongdae;vxsm
             if (computeShadowsInScreenSpace)
             {
-                m_ScreenSpaceShadowComputePass.Setup(baseDescriptor, m_ScreenSpaceShadowmap, mainLightDynamicShadows);
+                m_ScreenSpaceShadowComputePass.Setup(baseDescriptor, m_ScreenSpaceShadowmap, m_MainLightShadowCasterPass, mainLightDynamicShadows);
                 renderer.EnqueuePass(m_ScreenSpaceShadowComputePass);
             }
             else

@@ -86,7 +86,8 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
 
     if (attenuation == 0.0)
     {
-        _ScreenSpaceShadowOutput[pixelCoord] = LerpWhiteTo(attenuation, shadowStrength);
+        attenuation = LerpWhiteTo(attenuation, shadowStrength);
+        _ScreenSpaceShadowOutput[pixelCoord] = attenuation;
         return;
     }
 #endif
@@ -117,7 +118,7 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
     };
 
     //positionWS.y += _VoxelUpBias;
-    positionWS.y += 0.1;
+    positionWS.y += 0.01;
     float3 posNDC = mul(worldToShadowMatrix, float4(positionWS, 1.0)).xyz;
     float3 posP = posNDC * (float)voxelResolution;
     float3 posF = floor(posP);
@@ -129,7 +130,8 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
 
     if (any(posQ >= (voxelResolution.xxx - 1)))
     {
-        _ScreenSpaceShadowOutput[pixelCoord] = 1.0;
+        attenuation = LerpWhiteTo(attenuation, shadowStrength);
+        _ScreenSpaceShadowOutput[pixelCoord] = attenuation;
         return;
     }
 
@@ -139,22 +141,28 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
 
     if (result.w == 0)
     {
-        _ScreenSpaceShadowOutput[pixelCoord] = result.y ? 1.0 : 0.0;
+        attenuation = result.y ? attenuation : 0.0;
+        attenuation = LerpWhiteTo(attenuation, shadowStrength);
+        _ScreenSpaceShadowOutput[pixelCoord] = attenuation;
         return;
     }
 
-    attenuation = TraversePointSampleVxShadowMap(begin, posQ, result);
+    float attenuationVxsm = TraversePointSampleVxShadowMap(begin, posQ, result);
+    attenuation = min(attenuation, attenuationVxsm);
 #elif BILINEAR_FILTERING
     uint4 results[4];
     TraverseVxShadowMapPosQ2x2(begin, posQ, results);
 
     if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0)
     {
-        _ScreenSpaceShadowOutput[pixelCoord] = results[0].y ? 1.0 : 0.0;
+        attenuation = results[0].y ? attenuation : 0.0;
+        attenuation = LerpWhiteTo(attenuation, shadowStrength);
+        _ScreenSpaceShadowOutput[pixelCoord] = attenuation;
         return;
     }
 
-    attenuation = TraverseBilinearSampleVxShadowMap(begin, posQ, results, lerpWeight.xy);
+    float attenuationVxsm = TraverseBilinearSampleVxShadowMap(begin, posQ, results, lerpWeight.xy);
+    attenuation = min(attenuation, attenuationVxsm);
 #elif TRILINEAR_FILTERING
     uint4 results[8];
     TraverseVxShadowMapPosQ2x2x2(begin, posQ, results);
@@ -162,12 +170,16 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
     if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0 &&
         results[4].w == 0 && results[5].w == 0 && results[6].w == 0 && results[7].w == 0)
     {
-        _ScreenSpaceShadowOutput[pixelCoord] = results[0].y ? 1.0 : 0.0;
+        attenuation = results[0].y ? attenuation : 0.0;
+        attenuation = LerpWhiteTo(attenuation, shadowStrength);
+        _ScreenSpaceShadowOutput[pixelCoord] = attenuation;
         return;
     }
 
-    attenuation = TravereTrilinearSampleVxShadowMap(begin, posQ, results, lerpWeight);
+    float attenuationVxsm = TravereTrilinearSampleVxShadowMap(begin, posQ, results, lerpWeight);
+    attenuation = min(attenuation, attenuationVxsm);
 #endif
 
-    _ScreenSpaceShadowOutput[pixelCoord] = LerpWhiteTo(attenuation, shadowStrength);
+    attenuation = LerpWhiteTo(attenuation, shadowStrength);
+    _ScreenSpaceShadowOutput[pixelCoord] = attenuation;
 }

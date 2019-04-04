@@ -5,31 +5,14 @@ using UnityEngine.Rendering.LWRP;
 
 namespace UnityEngine.Experimental.Rendering.LWRP
 {
-    public class ScreenSpaceShadowComputePass : ScriptableRenderPass
+    internal class ScreenSpaceShadowComputePass : ScriptableRenderPass
     {
         private static class VxShadowMapConstantBuffer
         {
-            public static int _WorldToShadow;
-            public static int _ShadowData;
-            public static int _CascadeShadowSplitSpheres0;
-            public static int _CascadeShadowSplitSpheres1;
-            public static int _CascadeShadowSplitSpheres2;
-            public static int _CascadeShadowSplitSpheres3;
-            public static int _CascadeShadowSplitSphereRadii;
-            public static int _ShadowOffset0;
-            public static int _ShadowOffset1;
-            public static int _ShadowOffset2;
-            public static int _ShadowOffset3;
-            public static int _ShadowmapSize;
-
             public static int _InvViewProjMatrixID;
             public static int _ScreenSizeID;
-
-            public static int _VoxelResolutionID;
             public static int _VoxelZBiasID;
             public static int _VoxelUpBiasID;
-            public static int _MaxScaleID;
-            public static int _WorldToShadowMatrixID;
 
             public static int _VxShadowMapsBufferID;
             public static int _ScreenSpaceShadowOutputID;
@@ -43,27 +26,10 @@ namespace UnityEngine.Experimental.Rendering.LWRP
 
         public ScreenSpaceShadowComputePass()
         {
-            VxShadowMapConstantBuffer._WorldToShadow = Shader.PropertyToID("_MainLightWorldToShadow");
-            VxShadowMapConstantBuffer._ShadowData = Shader.PropertyToID("_MainLightShadowData");
-            VxShadowMapConstantBuffer._CascadeShadowSplitSpheres0 = Shader.PropertyToID("_CascadeShadowSplitSpheres0");
-            VxShadowMapConstantBuffer._CascadeShadowSplitSpheres1 = Shader.PropertyToID("_CascadeShadowSplitSpheres1");
-            VxShadowMapConstantBuffer._CascadeShadowSplitSpheres2 = Shader.PropertyToID("_CascadeShadowSplitSpheres2");
-            VxShadowMapConstantBuffer._CascadeShadowSplitSpheres3 = Shader.PropertyToID("_CascadeShadowSplitSpheres3");
-            VxShadowMapConstantBuffer._CascadeShadowSplitSphereRadii = Shader.PropertyToID("_CascadeShadowSplitSphereRadii");
-            VxShadowMapConstantBuffer._ShadowOffset0 = Shader.PropertyToID("_MainLightShadowOffset0");
-            VxShadowMapConstantBuffer._ShadowOffset1 = Shader.PropertyToID("_MainLightShadowOffset1");
-            VxShadowMapConstantBuffer._ShadowOffset2 = Shader.PropertyToID("_MainLightShadowOffset2");
-            VxShadowMapConstantBuffer._ShadowOffset3 = Shader.PropertyToID("_MainLightShadowOffset3");
-            VxShadowMapConstantBuffer._ShadowmapSize = Shader.PropertyToID("_MainLightShadowmapSize");
-
             VxShadowMapConstantBuffer._InvViewProjMatrixID = Shader.PropertyToID("_InvViewProjMatrix");
             VxShadowMapConstantBuffer._ScreenSizeID = Shader.PropertyToID("_ScreenSize");
-
-            VxShadowMapConstantBuffer._VoxelResolutionID = Shader.PropertyToID("_VoxelResolution");
             VxShadowMapConstantBuffer._VoxelZBiasID = Shader.PropertyToID("_VoxelZBias");
             VxShadowMapConstantBuffer._VoxelUpBiasID = Shader.PropertyToID("_VoxelUpBias");
-            VxShadowMapConstantBuffer._MaxScaleID = Shader.PropertyToID("_MaxScale");
-            VxShadowMapConstantBuffer._WorldToShadowMatrixID = Shader.PropertyToID("_WorldToShadowMatrix");
 
             VxShadowMapConstantBuffer._VxShadowMapsBufferID = Shader.PropertyToID("_VxShadowMapsBuffer");
             VxShadowMapConstantBuffer._ScreenSpaceShadowOutputID = Shader.PropertyToID("_ScreenSpaceShadowOutput");
@@ -82,12 +48,14 @@ namespace UnityEngine.Experimental.Rendering.LWRP
 
         private RenderTargetHandle colorAttachmentHandle { get; set; }
         private RenderTextureDescriptor descriptor { get; set; }
+        private MainLightShadowCasterPass mainLightShadowCasterPass;
         private bool mainLightDynamicShadows = false;
         DirectionalVxShadowMap dirVxShadowMap;
 
         public void Setup(
             RenderTextureDescriptor baseDescriptor,
             RenderTargetHandle colorAttachmentHandle,
+            MainLightShadowCasterPass mainLightShadowCasterPass,
             bool mainLightDynamicShadows)
         {
             this.colorAttachmentHandle = colorAttachmentHandle;
@@ -99,6 +67,7 @@ namespace UnityEngine.Experimental.Rendering.LWRP
             baseDescriptor.colorFormat = m_ColorFormat;
             baseDescriptor.enableRandomWrite = true;
             this.descriptor = baseDescriptor;
+            this.mainLightShadowCasterPass = mainLightShadowCasterPass;
             this.mainLightDynamicShadows = mainLightDynamicShadows;
         }
 
@@ -147,8 +116,13 @@ namespace UnityEngine.Experimental.Rendering.LWRP
             cmd.GetTemporaryRT(colorAttachmentHandle.id, descriptor, FilterMode.Bilinear);
 
             if (mainLightDynamicShadows)
-                SetupMainLightShadowReceiverConstants(cmd, kernel, ref computeShader, ref renderingData.shadowData, shadowLight);
-            SetupVxShadowReceiverConstants(cmd, kernel, ref computeShader, ref renderingData.cameraData.camera, ref shadowLight);
+            {
+                mainLightShadowCasterPass.SetMainLightShadowReceiverConstantsOnComputeShader(
+                    cmd, ref renderingData.shadowData, shadowLight, computeShader);
+            }
+
+            SetupVxShadowReceiverConstants(
+                cmd, kernel, ref computeShader, ref renderingData.cameraData.camera, ref shadowLight);
 
             int x = (renderingData.cameraData.camera.pixelWidth + TileAdditive) / TileSize;
             int y = (renderingData.cameraData.camera.pixelHeight + TileAdditive) / TileSize;
@@ -193,31 +167,6 @@ namespace UnityEngine.Experimental.Rendering.LWRP
             }
         }
 
-        void SetupMainLightShadowReceiverConstants(CommandBuffer cmd, int kernel, ref ComputeShader computeShader, ref ShadowData shadowData, VisibleLight shadowLight)
-        {
-            float invShadowAtlasWidth = 1.0f / shadowData.mainLightShadowmapWidth;
-            float invShadowAtlasHeight = 1.0f / shadowData.mainLightShadowmapHeight;
-            float invHalfShadowAtlasWidth = 0.5f * invShadowAtlasWidth;
-            float invHalfShadowAtlasHeight = 0.5f * invShadowAtlasHeight;
-
-            cmd.SetComputeMatrixArrayParam(computeShader, VxShadowMapConstantBuffer._WorldToShadow, dirVxShadowMap.cascadesMatrices);
-            cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._CascadeShadowSplitSpheres0, dirVxShadowMap.cascadeSplitDistances[0]);
-            cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._CascadeShadowSplitSpheres1, dirVxShadowMap.cascadeSplitDistances[1]);
-            cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._CascadeShadowSplitSpheres2, dirVxShadowMap.cascadeSplitDistances[2]);
-            cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._CascadeShadowSplitSpheres3, dirVxShadowMap.cascadeSplitDistances[3]);
-            cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._CascadeShadowSplitSphereRadii, new Vector4(
-                dirVxShadowMap.cascadeSplitDistances[0].w * dirVxShadowMap.cascadeSplitDistances[0].w,
-                dirVxShadowMap.cascadeSplitDistances[1].w * dirVxShadowMap.cascadeSplitDistances[1].w,
-                dirVxShadowMap.cascadeSplitDistances[2].w * dirVxShadowMap.cascadeSplitDistances[2].w,
-                dirVxShadowMap.cascadeSplitDistances[3].w * dirVxShadowMap.cascadeSplitDistances[3].w));
-            cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._ShadowOffset0, new Vector4(-invHalfShadowAtlasWidth, -invHalfShadowAtlasHeight, 0.0f, 0.0f));
-            cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._ShadowOffset1, new Vector4(invHalfShadowAtlasWidth, -invHalfShadowAtlasHeight, 0.0f, 0.0f));
-            cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._ShadowOffset2, new Vector4(-invHalfShadowAtlasWidth, invHalfShadowAtlasHeight, 0.0f, 0.0f));
-            cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._ShadowOffset3, new Vector4(invHalfShadowAtlasWidth, invHalfShadowAtlasHeight, 0.0f, 0.0f));
-            cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._ShadowmapSize, new Vector4(invShadowAtlasWidth, invShadowAtlasHeight,
-                shadowData.mainLightShadowmapWidth, shadowData.mainLightShadowmapHeight));
-        }
-
         void SetupVxShadowReceiverConstants(CommandBuffer cmd, int kernel, ref ComputeShader computeShader, ref Camera camera, ref VisibleLight shadowLight)
         {
             var light = shadowLight.light;
@@ -239,11 +188,8 @@ namespace UnityEngine.Experimental.Rendering.LWRP
             int voxelZBias = dirVxShadowMap.voxelZBias;
             float voxelUpBias = dirVxShadowMap.voxelUpBias * (dirVxShadowMap.volumeScale / dirVxShadowMap.voxelResolutionInt);
 
-            cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._ShadowData, new Vector4(light.shadowStrength, 0.0f, 0.0f, 0.0f));
-
             cmd.SetComputeMatrixParam(computeShader, VxShadowMapConstantBuffer._InvViewProjMatrixID, viewProjMatrix.inverse);
             cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._ScreenSizeID, new Vector4(screenSizeX, screenSizeY, invScreenSizeX, invScreenSizeY));
-
             cmd.SetComputeIntParam(computeShader, VxShadowMapConstantBuffer._VoxelZBiasID, voxelZBias);
             cmd.SetComputeFloatParam(computeShader, VxShadowMapConstantBuffer._VoxelUpBiasID, voxelUpBias);
 

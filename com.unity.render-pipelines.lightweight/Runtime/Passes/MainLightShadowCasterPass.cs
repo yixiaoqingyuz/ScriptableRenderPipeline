@@ -35,8 +35,6 @@ namespace UnityEngine.Experimental.Rendering.LWRP
         ShadowSliceData[] m_CascadeSlices;
         Vector4[] m_CascadeSplitDistances;
 
-        DirectionalVxShadowMap m_DirVxShadowMap = null; //seongdae;vxsm
-
         const string k_RenderMainLightShadowmapTag = "Render Main Shadowmap";
 
         private RenderTargetHandle destination { get; set; }
@@ -108,19 +106,15 @@ namespace UnityEngine.Experimental.Rendering.LWRP
             //seongdae;vxsm
             if (renderingData.shadowData.supportsMainLightVxShadows)
             {
-                m_DirVxShadowMap = light.GetComponent<DirectionalVxShadowMap>();
+                var dirVxsm = light.GetComponent<DirectionalVxShadowMap>();
 
                 bool canNotCastDynamicShadows =
-                    m_DirVxShadowMap != null &&
-                    m_DirVxShadowMap.IsValid() &&
-                    m_DirVxShadowMap.shadowsBlendMode == ShadowsBlendMode.OnlyVxShadowMaps;
+                    dirVxsm != null &&
+                    dirVxsm.IsValid() &&
+                    dirVxsm.shadowsBlendMode == ShadowsBlendMode.OnlyVxShadowMaps;
 
                 if (canNotCastDynamicShadows)
                     return false;
-            }
-            else
-            {
-                m_DirVxShadowMap = null;
             }
             //seongdae;vxsm
 
@@ -135,7 +129,7 @@ namespace UnityEngine.Experimental.Rendering.LWRP
 
             if (renderingData.shadowData.supportsMainLightShadows)
                 RenderMainLightCascadeShadowmap(ref context, ref renderingData.cullResults, ref renderingData.lightData, ref renderingData.shadowData);
-            }
+        }
 
         /// <inheritdoc/>
         public override void FrameCleanup(CommandBuffer cmd)
@@ -194,7 +188,6 @@ namespace UnityEngine.Experimental.Rendering.LWRP
                 }
 
                 SetupMainLightShadowReceiverConstants(cmd, ref shadowData, shadowLight);
-                SetMainLightShadowReceiverConstantsToVxShadowMap(); //seongdae;vxsm
             }
 
             CoreUtils.SetKeyword(cmd, ShaderKeywordStrings.MainLightShadows, true);
@@ -244,22 +237,30 @@ namespace UnityEngine.Experimental.Rendering.LWRP
         }
 
         //seongdae;vxsm
-        void SetMainLightShadowReceiverConstantsToVxShadowMap()
+        public void SetMainLightShadowReceiverConstantsOnComputeShader(CommandBuffer cmd, ref ShadowData shadowData, VisibleLight shadowLight, ComputeShader computeShader)
         {
-            if (m_DirVxShadowMap == null)
-                return;
+            Light light = shadowLight.light;
 
-            // todo : allocate not here
-            if (m_DirVxShadowMap.cascadesMatrices.Length < (k_MaxCascades + 1))
-                m_DirVxShadowMap.cascadesMatrices = new Matrix4x4[k_MaxCascades + 1];
-            if (m_DirVxShadowMap.cascadeSplitDistances.Length < k_MaxCascades)
-                m_DirVxShadowMap.cascadeSplitDistances = new Vector4[k_MaxCascades];
-
-            m_DirVxShadowMap.cascadesCount = m_ShadowCasterCascadesCount;
-            for (int i = 0; i < m_MainLightShadowMatrices.Length; ++i)
-                m_DirVxShadowMap.cascadesMatrices[i] = m_MainLightShadowMatrices[i];
-            for (int i = 0; i < m_CascadeSplitDistances.Length; ++i)
-                m_DirVxShadowMap.cascadeSplitDistances[i] = m_CascadeSplitDistances[i];
+            float invShadowAtlasWidth = 1.0f / m_ShadowmapWidth;
+            float invShadowAtlasHeight = 1.0f / m_ShadowmapHeight;
+            float invHalfShadowAtlasWidth = 0.5f * invShadowAtlasWidth;
+            float invHalfShadowAtlasHeight = 0.5f * invShadowAtlasHeight;
+            cmd.SetComputeMatrixArrayParam(computeShader, MainLightShadowConstantBuffer._WorldToShadow, m_MainLightShadowMatrices);
+            cmd.SetComputeVectorParam(computeShader, MainLightShadowConstantBuffer._ShadowData, new Vector4(light.shadowStrength, 0.0f, 0.0f, 0.0f));
+            cmd.SetComputeVectorParam(computeShader, MainLightShadowConstantBuffer._CascadeShadowSplitSpheres0, m_CascadeSplitDistances[0]);
+            cmd.SetComputeVectorParam(computeShader, MainLightShadowConstantBuffer._CascadeShadowSplitSpheres1, m_CascadeSplitDistances[1]);
+            cmd.SetComputeVectorParam(computeShader, MainLightShadowConstantBuffer._CascadeShadowSplitSpheres2, m_CascadeSplitDistances[2]);
+            cmd.SetComputeVectorParam(computeShader, MainLightShadowConstantBuffer._CascadeShadowSplitSpheres3, m_CascadeSplitDistances[3]);
+            cmd.SetComputeVectorParam(computeShader, MainLightShadowConstantBuffer._CascadeShadowSplitSphereRadii, new Vector4(m_CascadeSplitDistances[0].w * m_CascadeSplitDistances[0].w,
+                m_CascadeSplitDistances[1].w * m_CascadeSplitDistances[1].w,
+                m_CascadeSplitDistances[2].w * m_CascadeSplitDistances[2].w,
+                m_CascadeSplitDistances[3].w * m_CascadeSplitDistances[3].w));
+            cmd.SetComputeVectorParam(computeShader, MainLightShadowConstantBuffer._ShadowOffset0, new Vector4(-invHalfShadowAtlasWidth, -invHalfShadowAtlasHeight, 0.0f, 0.0f));
+            cmd.SetComputeVectorParam(computeShader, MainLightShadowConstantBuffer._ShadowOffset1, new Vector4(invHalfShadowAtlasWidth, -invHalfShadowAtlasHeight, 0.0f, 0.0f));
+            cmd.SetComputeVectorParam(computeShader, MainLightShadowConstantBuffer._ShadowOffset2, new Vector4(-invHalfShadowAtlasWidth, invHalfShadowAtlasHeight, 0.0f, 0.0f));
+            cmd.SetComputeVectorParam(computeShader, MainLightShadowConstantBuffer._ShadowOffset3, new Vector4(invHalfShadowAtlasWidth, invHalfShadowAtlasHeight, 0.0f, 0.0f));
+            cmd.SetComputeVectorParam(computeShader, MainLightShadowConstantBuffer._ShadowmapSize, new Vector4(invShadowAtlasWidth, invShadowAtlasHeight,
+                shadowData.mainLightShadowmapWidth, shadowData.mainLightShadowmapHeight));
         }
         //seongdae;vxsm
     };

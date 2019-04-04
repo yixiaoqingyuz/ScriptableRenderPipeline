@@ -33,6 +33,7 @@ all_project_ci:
   {% for project in projects %}
   {% for editor in editors %}
   {% for platform in platforms %}
+  {% for testplatform in testplatforms %}
   agent:
     type: {{ platform.type }}
     image: {{ platform.image }}
@@ -50,6 +51,7 @@ all_project_ci:
       paths:
       - "**/upm-ci~/test-results/**/*"
 
+{% endfor %}
 {% endfor %}
 {% endfor %}
 {% endfor %}

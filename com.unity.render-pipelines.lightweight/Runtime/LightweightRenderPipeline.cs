@@ -90,6 +90,7 @@ namespace UnityEngine.Rendering.LWRP
             Lightmapping.SetDelegate(lightsDelegate);
 
             CameraCaptureBridge.enabled = true;
+            VxShadowMapsManager.instance.Build(); //seongdae;vxsm
         }
 
         protected override void Dispose(bool disposing)
@@ -106,6 +107,7 @@ namespace UnityEngine.Rendering.LWRP
 
             Lightmapping.ResetDelegate();
             CameraCaptureBridge.enabled = false;
+            VxShadowMapsManager.instance.Cleanup(); //seongdae;vxsm
         }
 
         protected override void Render(ScriptableRenderContext renderContext, Camera[] cameras)

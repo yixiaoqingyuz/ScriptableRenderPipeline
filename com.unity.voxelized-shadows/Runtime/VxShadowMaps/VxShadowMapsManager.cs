@@ -131,6 +131,28 @@ namespace UnityEngine.Experimental.VoxelizedShadows
             }
         }
 
+        public void Build()
+        {
+            var dirVxShadowMaps   = Object.FindObjectsOfType<DirectionalVxShadowMap>();
+            var pointVxShadowMaps = Object.FindObjectsOfType<PointVxShadowMap>();
+            var spotVxShadowMaps  = Object.FindObjectsOfType<SpotVxShadowMap>();
+
+            foreach (var vxsm in dirVxShadowMaps)
+            {
+                if (vxsm.enabled)
+                    _dirVxShadowMapList.Add(vxsm);
+            }
+            foreach (var vxsm in pointVxShadowMaps)
+            {
+                if (vxsm.enabled)
+                    _pointVxShadowMapList.Add(vxsm);
+            }
+            foreach (var vxsm in spotVxShadowMaps)
+            {
+                if (vxsm.enabled)
+                    _spotVxShadowMapList.Add(vxsm);
+            }
+        }
         public void Cleanup()
         {
             if (_nullVxShadowMapsBuffer != null)

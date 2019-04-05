@@ -50,6 +50,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         static readonly GUIContent k_SupportTransparentDepthPrepass = EditorGUIUtility.TrTextContent("Transparent Depth Prepass", "When disabled, HDRP removes all transparent depth prepass Shader variants when you build for the Unity Player. This decreases build time.");
         static readonly GUIContent k_SupportTransparentDepthPostpass = EditorGUIUtility.TrTextContent("Transparent Depth Postpass", "When disabled, HDRP removes all transparent depth postpass Shader variants when you build for the Unity Player. This decreases build time.");
         static readonly GUIContent k_SupportRaytracing = EditorGUIUtility.TrTextContent("Realtime Raytracing");
+        static readonly GUIContent k_SupportVxShadowsContents = EditorGUIUtility.TrTextContent("Vx Shadows", "When enabled, HDRP allocates memory for processing screen space vx shadow and needs dedicated ComputeBuffer during LightLoop. This allows you to use shadows for large scale and many lights in your Unity Projects."); //seongdae;vxsm
 
         const string k_CacheErrorFormat = "This configuration will lead to more than 2 GB reserved for this cache at runtime! ({0} requested) Only {1} element will be reserved instead.";
         const string k_CacheInfoFormat = "Reserving {0} in memory at runtime.";
@@ -116,6 +117,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         {
             //k_SupportLitShaderModeContent is special case handled separately
             //k_SupportShadowMaskContent is special case handled separately
+            { k_SupportVxShadowsContents           , memoryDrawback }, //seongdae;vxsm
             { k_SupportSSRContent                  , memoryDrawback },
             { k_SupportSSAOContent                 , memoryDrawback },
             { k_SupportedSSSContent                , memoryDrawback },

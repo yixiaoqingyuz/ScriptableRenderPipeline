@@ -254,6 +254,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         static void Drawer_SectionShadows(SerializedHDRenderPipelineAsset serialized, Editor owner)
         {
             EditorGUILayout.PropertyField(serialized.renderPipelineSettings.supportShadowMask, k_SupportShadowMaskContent);
+            EditorGUILayout.PropertyField(serialized.renderPipelineSettings.supportVxShadows, k_SupportVxShadowsContents); //seongdae;vxsm
             
             EditorGUILayout.LabelField(k_ShadowAtlasSubTitle);
             ++EditorGUI.indentLevel;
@@ -453,6 +454,8 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 builder.AppendLine().AppendFormat(supportedFormaterMultipleValue, k_SupportShadowMaskContent.text);
             else if (serialized.renderPipelineSettings.supportShadowMask.boolValue)
                 builder.AppendLine().AppendFormat(supportedFormater, k_SupportShadowMaskContent.text, k_SupportShadowMaskDrawbacks[supportedLitShaderMode]);
+
+            AppendSupport(builder, serialized.renderPipelineSettings.supportVxShadows, k_SupportVxShadowsContents); //seongdae;vxsm
 
             AppendSupport(builder, serialized.renderPipelineSettings.supportSSR, k_SupportSSRContent);
             AppendSupport(builder, serialized.renderPipelineSettings.supportSSAO, k_SupportSSAOContent);

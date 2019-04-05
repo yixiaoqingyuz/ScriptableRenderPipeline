@@ -80,6 +80,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         LightLayers = 30,
         [FrameSettingsField(1, autoName: ExposureControl, customOrderInGroup: 32)]
         ExposureControl = 32,
+        [FrameSettingsField(1, autoName: VxShadows)] //seongdae;vxsm
+        VxShadows = 33, //seongdae;vxsm
 
         //async settings from 40 to 59
         [FrameSettingsField(2, autoName: AsyncCompute)]
@@ -303,6 +305,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.Shadow] &= !preview;
             sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.ShadowMask] &= renderPipelineSettings.supportShadowMask && !preview;
+            sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.VxShadows] &= renderPipelineSettings.supportVxShadows && !preview; //seongdae;vxsm
             sanitazedFrameSettings.bitDatas[(int)FrameSettingsField.ContactShadows] &= !preview;
 
             //MSAA only supported in forward

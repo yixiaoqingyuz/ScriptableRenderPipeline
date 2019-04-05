@@ -239,7 +239,7 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
     };
 
     //positionWS.y += _VoxelUpBias;
-    positionWS.y += 0.1;
+    positionWS.y += 0.01;
     float3 posNDC = mul(worldToShadowMatrix, float4(positionWS, 1.0)).xyz;
     float3 posP = posNDC * (float)voxelResolution;
     float3 posF = floor(posP);

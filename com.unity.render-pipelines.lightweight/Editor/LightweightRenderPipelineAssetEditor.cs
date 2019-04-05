@@ -52,7 +52,7 @@ namespace UnityEditor.Rendering.LWRP
             public static GUIContent mixedLightingSupportLabel = EditorGUIUtility.TrTextContent("Mixed Lighting", "Support for mixed light mode.");
 
             public static GUIContent shaderVariantLogLevel = EditorGUIUtility.TrTextContent("Shader Variant Log Level", "Controls the level logging in of shader variants information is outputted when a build is performed. Information will appear in the Unity console when the build finishes.");
-            public static GUIContent stripGraphicsTierShaderVariants = EditorGUIUtility.TrTextContent("Strip Graphics Tier Shader Variants", "Controls if shaders of higher graphics tier than Tier1 should be stripped from the build or now/");
+            public static GUIContent stripGraphicsTierShaderVariants = EditorGUIUtility.TrTextContent("Strip Graphics Tiers", "Controls if shaders of higher graphics tier than Tier1 should be stripped from the build or not.");
 
             // Dropdown menu options
             public static string[] mainLightOptions = { "Disabled", "Per Pixel" };

@@ -19,9 +19,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         [HideInInspector, SerializeField, FormerlySerializedAs("version")]
         Version m_Version = Version.First;  //keep former creation affectation
 
-#if UNITY_EDITOR //formerly migration were only handled in editor for this asset
         Version IVersionable<Version>.version { get { return (Version)m_Version; } set { m_Version = value; } }
 
+#if UNITY_EDITOR //formerly migration were only handled in editor for this asset
         static readonly MigrationDescription<Version, RenderPipelineResources> k_Migration = MigrationDescription.New(
             MigrationStep.New(Version.RemovedEditorOnlyResources, (RenderPipelineResources i) =>
             {

@@ -1,2 +1,4 @@
 # Unity assets are always serialized using lf endings
+# However some LightingData.asset are serialized in a binary version 
+# and forcing line endings here will cause unwanted change
 *.asset binary

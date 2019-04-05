@@ -769,6 +769,11 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 material.SetShaderPassEnabled(HDShaderPassNames.s_TransparentBackfaceStr, backFaceEnable);
             }
 
+            // We don't have any vertex animation for lit/unlit vector, so we
+            // setup motion vector pass to false. Remind that in HDRP this
+            // doesn't disable motion vector, it just mean that the material
+            // don't do any vertex deformation but we can still have
+            // skinning / morph target
             material.SetShaderPassEnabled(HDShaderPassNames.s_MotionVectorsStr, false);
         }
 

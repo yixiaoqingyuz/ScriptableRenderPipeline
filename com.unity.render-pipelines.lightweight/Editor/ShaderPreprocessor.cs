@@ -151,7 +151,7 @@ namespace UnityEditor.Rendering.LWRP
             if (!isShadowVariant && compilerData.shaderKeywordSet.IsEnabled(m_SoftShadows))
                 return true;
 
-            if (isAdditionalShadow && !compilerData.shaderKeywordSet.IsEnabled(m_AdditionalLightsPixel)) 
+            if (isAdditionalShadow && !compilerData.shaderKeywordSet.IsEnabled(m_AdditionalLightsPixel))
                 return true;
 
             return false;
@@ -174,8 +174,11 @@ namespace UnityEditor.Rendering.LWRP
             return false;
         }
 
-        bool StripUnused(ShaderFeatures features, Shader shader, ShaderSnippetData snippetData, ShaderCompilerData compilerData)
+        bool StripUnused(ShaderFeatures features, Shader shader, ShaderSnippetData snippetData, ShaderCompilerData compilerData, bool stripTiers)
         {
+            if (stripTiers && compilerData.graphicsTier != GraphicsTier.Tier1)
+                return true;
+
             if (StripUnusedShader(features, shader, compilerData))
                 return true;
 
@@ -221,11 +224,13 @@ namespace UnityEditor.Rendering.LWRP
 
             ShaderFeatures features = GetSupportedShaderFeatures(lwrpAsset);
 
+            bool stripTiers = lwrpAsset.stripGraphicsTierShaderVariants;
+
             int prevVariantCount = compilerDataList.Count;
 
             for (int i = 0; i < compilerDataList.Count; ++i)
             {
-                if (StripUnused(features, shader, snippetData, compilerDataList[i]))
+                if (StripUnused(features, shader, snippetData, compilerDataList[i], stripTiers))
                 {
                     compilerDataList.RemoveAt(i);
                     --i;

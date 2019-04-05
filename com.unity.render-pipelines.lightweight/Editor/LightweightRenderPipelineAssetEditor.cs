@@ -50,8 +50,9 @@ namespace UnityEditor.Rendering.LWRP
             public static GUIContent srpBatcher = EditorGUIUtility.TrTextContent("SRP Batcher (Experimental)", "If enabled, the render pipeline uses the SRP batcher.");
             public static GUIContent dynamicBatching = EditorGUIUtility.TrTextContent("Dynamic Batching", "If enabled, the render pipeline will batch drawcalls with few triangles together by copying their vertex buffers into a shared buffer on a per-frame basis.");
             public static GUIContent mixedLightingSupportLabel = EditorGUIUtility.TrTextContent("Mixed Lighting", "Support for mixed light mode.");
-            
+
             public static GUIContent shaderVariantLogLevel = EditorGUIUtility.TrTextContent("Shader Variant Log Level", "Controls the level logging in of shader variants information is outputted when a build is performed. Information will appear in the Unity console when the build finishes.");
+            public static GUIContent stripGraphicsTierShaderVariants = EditorGUIUtility.TrTextContent("Strip Graphics Tier Shader Variants", "Controls if shaders of higher graphics tier than Tier1 should be stripped from the build or now/");
 
             // Dropdown menu options
             public static string[] mainLightOptions = { "Disabled", "Per Pixel" };
@@ -100,12 +101,14 @@ namespace UnityEditor.Rendering.LWRP
 
         SerializedProperty m_ShaderVariantLogLevel;
 
+        SerializedProperty m_StripGraphicsTierShaderVariants;
+
         internal static LightRenderingMode selectedLightRenderingMode;
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-            
+
             DrawGeneralSettings();
             DrawQualitySettings();
             DrawLightingSettings();
@@ -156,6 +159,7 @@ namespace UnityEditor.Rendering.LWRP
             m_MixedLightingSupportedProp = serializedObject.FindProperty("m_MixedLightingSupported");
 
             m_ShaderVariantLogLevel = serializedObject.FindProperty("m_ShaderVariantLogLevel");
+            m_StripGraphicsTierShaderVariants = serializedObject.FindProperty("m_StripGraphicsTierShaderVariants");
             selectedLightRenderingMode = (LightRenderingMode)m_AdditionalLightsRenderingModeProp.intValue;
         }
 
@@ -302,6 +306,7 @@ namespace UnityEditor.Rendering.LWRP
                 EditorGUILayout.PropertyField(m_SupportsDynamicBatching, Styles.dynamicBatching);
                 EditorGUILayout.PropertyField(m_MixedLightingSupportedProp, Styles.mixedLightingSupportLabel);
                 EditorGUILayout.PropertyField(m_ShaderVariantLogLevel, Styles.shaderVariantLogLevel);
+                EditorGUILayout.PropertyField(m_StripGraphicsTierShaderVariants, Styles.stripGraphicsTierShaderVariants);
                 EditorGUI.indentLevel--;
                 EditorGUILayout.Space();
                 EditorGUILayout.Space();

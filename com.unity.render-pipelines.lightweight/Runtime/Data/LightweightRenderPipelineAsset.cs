@@ -84,7 +84,7 @@ namespace UnityEngine.Rendering.LWRP
 
         [SerializeField] RendererType m_RendererType = RendererType.ForwardRenderer;
         [SerializeField] internal ScriptableRendererData m_RendererData = null;
-        
+
         // General settings
         [SerializeField] bool m_RequireDepthTexture = false;
         [SerializeField] bool m_RequireOpaqueTexture = false;
@@ -129,6 +129,8 @@ namespace UnityEngine.Rendering.LWRP
         [SerializeField] ShadowResolution m_ShadowAtlasResolution = ShadowResolution._256;
 
         [SerializeField] ShaderVariantLogLevel m_ShaderVariantLogLevel = ShaderVariantLogLevel.Disabled;
+
+        [SerializeField] bool m_StripGraphicsTierShaderVariants = false;
 
 #if UNITY_EDITOR
         [NonSerialized]
@@ -410,7 +412,13 @@ namespace UnityEngine.Rendering.LWRP
             get { return m_ShaderVariantLogLevel; }
             set { m_ShaderVariantLogLevel = value; }
         }
-        
+
+        public bool stripGraphicsTierShaderVariants
+        {
+            get { return m_StripGraphicsTierShaderVariants; }
+            set { m_StripGraphicsTierShaderVariants = value; }
+        }
+
         public bool useSRPBatcher
         {
             get { return m_UseSRPBatcher; }

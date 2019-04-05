@@ -259,7 +259,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             // The first thing we need to do is to set the defines that depend on the render pipeline settings
             m_Asset.EvaluateSettings();
 
-            UpdateResourcesIfNeeded();
+            UpgradeResourcesIfNeeded();
 #endif
 
             // Initial state of the RTHandle system.
@@ -381,7 +381,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
 #if UNITY_EDITOR
-        void UpdateResourcesIfNeeded()
+        void UpgradeResourcesIfNeeded()
         {
             // The first thing we need to do is to set the defines that depend on the render pipeline settings
             m_Asset.EvaluateSettings();

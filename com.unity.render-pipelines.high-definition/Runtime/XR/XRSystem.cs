@@ -4,8 +4,8 @@
 
 // XRTODO(2019.3) Deprecate legacy code
 // XRTODO(2020.1) Remove legacy code
-#if UNITY_2019_2_OR_NEWER
-    #define USE_XR_SDK
+#if UNITY_2019_3_OR_NEWER
+    //#define USE_XR_SDK
 #endif
 
 using System;
@@ -174,8 +174,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         internal void ClearAll()
         {
             passList = null;
+
+#if USE_XR_SDK
             displayList = null;
             display = null;
+#endif
         }
 
         internal void ReleaseFrame()
@@ -186,7 +189,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             passList.Clear();
         }
 
-        void AddPassToFrame(XRPass pass, Camera camera, ref List<MultipassCamera> multipassCameras)
+        internal void AddPassToFrame(XRPass pass, Camera camera, ref List<MultipassCamera> multipassCameras)
         {
             int passIndex = passList.Count;
             passList.Add(pass);

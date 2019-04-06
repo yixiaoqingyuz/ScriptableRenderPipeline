@@ -189,6 +189,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // Static keyword is required here else we get a "DestroyBuffer can only be called from the main thread"
         ComputeBuffer m_DirectionalLightDatas = null;
+        public ComputeBuffer directionalLightDatas { get { return m_DirectionalLightDatas; } }
         ComputeBuffer m_LightDatas = null;
         ComputeBuffer m_EnvLightDatas = null;
         ComputeBuffer m_DecalDatas = null;
@@ -283,6 +284,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         int m_lightCount = 0;
         int m_densityVolumeCount = 0;
         bool m_enableBakeShadowMask = false; // Track if any light require shadow mask. In this case we will need to enable the keyword shadow mask
+        bool m_hasRunLightListPrevFrame = false;
 
         // This value is used to compute the area shadow when using raytracing by the HDRaytracingShadowManager
         public int areaLightCount { get { return m_areaLightCount; } }
@@ -758,7 +760,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_FrameSettings = frameSettings;
 
             m_ContactShadows = VolumeManager.instance.stack.GetComponent<ContactShadows>();
-            m_EnableContactShadow = m_FrameSettings.IsEnabled(FrameSettingsField.ContactShadows) && m_ContactShadows.enable && m_ContactShadows.length > 0;
+            m_EnableContactShadow = m_FrameSettings.IsEnabled(FrameSettingsField.ContactShadows) && m_ContactShadows.enable.value && m_ContactShadows.length.value > 0;
             m_indirectLightingController = VolumeManager.instance.stack.GetComponent<IndirectLightingController>();
 
             // Cluster
@@ -1237,7 +1239,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             if (additionalShadowData)
             {
-                float shadowDistanceFade         = HDUtils.ComputeLinearDistanceFade(distanceToCamera, Mathf.Min(shadowSettings.maxShadowDistance, additionalShadowData.shadowFadeDistance));
+                float shadowDistanceFade         = HDUtils.ComputeLinearDistanceFade(distanceToCamera, Mathf.Min(shadowSettings.maxShadowDistance.value, additionalShadowData.shadowFadeDistance));
                 lightData.shadowDimmer           = shadowDistanceFade * additionalShadowData.shadowDimmer;
                 lightData.volumetricShadowDimmer = shadowDistanceFade * additionalShadowData.volumetricShadowDimmer;
             }
@@ -1554,7 +1556,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             envLightData.lightLayers = probe.lightLayersAsUInt;
             envLightData.influenceShapeType = influence.envShape;
             envLightData.weight = probe.weight;
-            envLightData.multiplier = probe.multiplier * m_indirectLightingController.indirectSpecularIntensity;
+            envLightData.multiplier = probe.multiplier * m_indirectLightingController.indirectSpecularIntensity.value;
             envLightData.influenceExtents = influence.extents;
             switch (influence.envShape)
             {
@@ -2362,8 +2364,19 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             bool isOrthographic = camera.orthographic;
             bool isProjectionOblique = GeometryUtils.IsProjectionMatrixOblique(m_LightListProjMatrices[0]);
 
+            // If we don't need to run the light list, we still run it for the first frame that is not needed in order to keep the lists in a clean state. 
+            if (!runLightList && m_hasRunLightListPrevFrame)
+            {
+                m_hasRunLightListPrevFrame = false;
+                runLightList = true;
+            }
+            else
+            {
+                m_hasRunLightListPrevFrame = runLightList;
+            }
+
             // generate screen-space AABBs (used for both fptl and clustered).
-            if (runLightList)
+            if (m_lightCount != 0)
             {
                 temp.SetRow(0, new Vector4(1.0f, 0.0f, 0.0f, 0.0f));
                 temp.SetRow(1, new Vector4(0.0f, 1.0f, 0.0f, 0.0f));
@@ -2717,14 +2730,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                 m_ShadowManager.BindResources(cmd);
 
-                float contactShadowRange = Mathf.Clamp(m_ContactShadows.fadeDistance, 0.0f, m_ContactShadows.maxDistance);
-                float contactShadowFadeEnd = m_ContactShadows.maxDistance;
+                float contactShadowRange = Mathf.Clamp(m_ContactShadows.fadeDistance.value, 0.0f, m_ContactShadows.maxDistance.value);
+                float contactShadowFadeEnd = m_ContactShadows.maxDistance.value;
                 float contactShadowOneOverFadeRange = 1.0f / Math.Max(1e-6f, contactShadowRange);
-                Vector4 contactShadowParams = new Vector4(m_ContactShadows.length, m_ContactShadows.distanceScaleFactor, contactShadowFadeEnd, contactShadowOneOverFadeRange);
-                Vector4 contactShadowParams2 = new Vector4(m_ContactShadows.opacity, firstMipOffsetY, 0.0f, 0.0f);
+                Vector4 contactShadowParams = new Vector4(m_ContactShadows.length.value, m_ContactShadows.distanceScaleFactor.value, contactShadowFadeEnd, contactShadowOneOverFadeRange);
+                Vector4 contactShadowParams2 = new Vector4(m_ContactShadows.opacity.value, firstMipOffsetY, 0.0f, 0.0f);
                 cmd.SetComputeVectorParam(screenSpaceShadowComputeShader, HDShaderIDs._ContactShadowParamsParameters, contactShadowParams);
                 cmd.SetComputeVectorParam(screenSpaceShadowComputeShader, HDShaderIDs._ContactShadowParamsParameters2, contactShadowParams2);
-                cmd.SetComputeIntParam(screenSpaceShadowComputeShader, HDShaderIDs._DirectionalContactShadowSampleCount, m_ContactShadows.sampleCount);
+                cmd.SetComputeIntParam(screenSpaceShadowComputeShader, HDShaderIDs._DirectionalContactShadowSampleCount, m_ContactShadows.sampleCount.value);
                 cmd.SetComputeVectorParam(screenSpaceShadowComputeShader, HDShaderIDs._DirectionalLightDirection, lightDirection);
                 cmd.SetComputeVectorParam(screenSpaceShadowComputeShader, HDShaderIDs._PunctualLightPosition, lightPosition);
 

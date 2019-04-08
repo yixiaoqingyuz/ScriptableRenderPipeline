@@ -39,6 +39,7 @@
   "testables": [
     "com.unity.render-pipelines.core",
     "com.unity.render-pipelines.high-definition",
-    "com.unity.shadergraph"
+    "com.unity.shadergraph",
+    "com.unity.testframework.graphics"
   ]
 }

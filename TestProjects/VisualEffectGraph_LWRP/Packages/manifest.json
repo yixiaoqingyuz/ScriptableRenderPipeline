@@ -52,6 +52,7 @@
   },
   "testables": [
     "com.unity.testing.visualeffectgraph",
-    "com.unity.render-pipelines.visualeffectgraph"
+    "com.unity.render-pipelines.visualeffectgraph",
+    "com.unity.testframework.graphics"
   ]
 }

@@ -1,5 +1,3 @@
-**Note:** This page is subject to change during the 2019.1 beta cycle.
-
 # Configuring LWRP for use
 
 To configure and use LWRP, you must first 

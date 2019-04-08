@@ -1018,7 +1018,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             {
                 // With XR multi-pass enabled, each camera can be rendered multiple times with different parameters
-                m_XRSystem.SetupFrame(cameras, ref multipassCameras);
+                m_XRSystem.SetupFrame(cameras, ref multipassCameras, m_DebugDisplaySettings.GetXRDebugMode());
 
                 // Culling loop
                 foreach (var multipassCamera in multipassCameras)

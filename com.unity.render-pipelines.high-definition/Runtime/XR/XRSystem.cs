@@ -24,14 +24,23 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         List<XRPass> passList = new List<XRPass>();
 
+        public enum DebugMode
+        {
+            None,
+            Composite,
+        }
+
 #if USE_XR_SDK
         List<XRDisplaySubsystem> displayList = new List<XRDisplaySubsystem>();
         XRDisplaySubsystem display = null;
 #endif
 
-        internal void SetupFrame(Camera[] cameras, ref List<MultipassCamera> multipassCameras)
+        internal void SetupFrame(Camera[] cameras, ref List<MultipassCamera> multipassCameras, DebugMode debugMode)
         {
             bool xrSdkActive = false;
+
+            // force for tests
+            //debugMode = DebugMode.Composite;
 
 #if USE_XR_SDK
             // Refresh XR displays
@@ -58,45 +67,18 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 bool xrEnabled = xrSdkActive || (camera.stereoEnabled && XRGraphics.enabled);
 
-                if (camera.targetTexture != null && !xrEnabled)
-                {
-                    // LEFT
-                    {
-                        var xrPass = XRPass.Create(0, camera.targetTexture);
-
-                        Rect vp = new Rect(0, 0, camera.targetTexture.width / 2, camera.targetTexture.height);
-
-                        var planes = camera.projectionMatrix.decomposeProjection;
-                        planes.right = (planes.left + planes.right) * 0.5f;
-                        var newProj = Matrix4x4.Frustum(planes);
-
-                        xrPass.AddView(newProj, camera.worldToCameraMatrix, vp);
-
-                        AddPassToFrame(xrPass, camera, ref multipassCameras);
-                    }
-
-                    // RIGHT
-                    {
-                        var xrPass = XRPass.Create(0, camera.targetTexture);
-
-                        Rect vp = new Rect(camera.targetTexture.width / 2, 0, camera.targetTexture.width / 2, camera.targetTexture.height);
-
-                        var planes = camera.projectionMatrix.decomposeProjection;
-                        planes.left = (planes.left + planes.right) * 0.5f;
-                        var newProj = Matrix4x4.Frustum(planes);
-
-                        xrPass.AddView(newProj, camera.worldToCameraMatrix, vp);
-
-                        AddPassToFrame(xrPass, camera, ref multipassCameras);
-                    }
-
-                    continue;
-                }
-
                 // XRTODO: support render to texture
                 if (camera.cameraType != CameraType.Game || camera.targetTexture != null || !xrEnabled)
                 {
-                    multipassCameras.Add(new MultipassCamera(camera));
+                    if (debugMode != DebugMode.None)
+                    {
+                        ProcessDebugMode(camera, ref multipassCameras);
+                    }
+                    else
+                    {
+                        multipassCameras.Add(new MultipassCamera(camera));
+                    }
+
                     continue;
                 }
 
@@ -149,6 +131,56 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                         AddPassToFrame(xrPass, camera, ref multipassCameras);
                     }
+                }
+            }
+        }
+
+        private void ProcessDebugMode(Camera camera, ref List<MultipassCamera> multipassCameras)
+        {
+            Rect fullViewport = camera.pixelRect;
+            if (camera.targetTexture != null)
+            {
+                fullViewport = new Rect(0, 0, camera.targetTexture.width, camera.targetTexture.height);
+            }
+
+            int tileCountX = 2;
+            int tileCountY = 2;
+
+            float splitRatio = 2.0f;
+            //float splitRatio = 2.0f + Mathf.Sin(Time.time);
+
+            var furstumPlanes = camera.projectionMatrix.decomposeProjection;
+
+            for (int tileY = 0; tileY < tileCountY; ++tileY)
+            {
+                for (int tileX = 0; tileX < tileCountX; ++tileX)
+                {
+                    var xrPass = XRPass.Create(passList.Count, camera.targetTexture);
+
+                    float spliRatioX1 = Mathf.Pow((tileX + 0.0f) / tileCountX, splitRatio);
+                    float spliRatioX2 = Mathf.Pow((tileX + 1.0f) / tileCountX, splitRatio);
+
+                    float spliRatioY1 = Mathf.Pow((tileY + 0.0f) / tileCountY, splitRatio);
+                    float spliRatioY2 = Mathf.Pow((tileY + 1.0f) / tileCountY, splitRatio);
+
+                   
+                    float tileOffsetX = spliRatioX1 * fullViewport.width;
+                    float tileOffsetY = spliRatioY1 * fullViewport.height;
+
+                    float tileSizeX = spliRatioX2 * fullViewport.width  - tileOffsetX;
+                    float tileSizeY = spliRatioY2 * fullViewport.height - tileOffsetY;
+
+                    Rect viewport = new Rect(fullViewport.x + tileOffsetX, fullViewport.y + tileOffsetY, tileSizeX, tileSizeY);
+
+                    var splitPlanes    = furstumPlanes;
+                    splitPlanes.left   = Mathf.Lerp(furstumPlanes.left, furstumPlanes.right, spliRatioX1);
+                    splitPlanes.right  = Mathf.Lerp(furstumPlanes.left, furstumPlanes.right, spliRatioX2);
+                    splitPlanes.bottom = Mathf.Lerp(furstumPlanes.bottom, furstumPlanes.top, spliRatioY1);
+                    splitPlanes.top    = Mathf.Lerp(furstumPlanes.bottom, furstumPlanes.top, spliRatioY2);
+                    var splitProj      = Matrix4x4.Frustum(splitPlanes);
+
+                    xrPass.AddView(splitProj, camera.worldToCameraMatrix, viewport);
+                    AddPassToFrame(xrPass, camera, ref multipassCameras);
                 }
             }
         }

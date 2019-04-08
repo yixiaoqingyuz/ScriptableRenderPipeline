@@ -93,36 +93,29 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         internal int  legacyMultipassEye      { get => (int)views[0].legacyStereoEye; }
         internal bool legacyMultipassEnabled  { get => enabled && !instancingEnabled && legacyMultipassEye >= 0; }
 
-        internal static XRPass Create(int passId)
+        internal static XRPass Create(int passId, RenderTexture rt = null)
         {
             XRPass passInfo = GenericPool<XRPass>.Get();
 
             passInfo.passId = passId;
             passInfo.cullingPassId = -1;
             passInfo.views.Clear();
-            passInfo.renderTarget = invalidRT;
-            passInfo.renderTargetDesc = default;
+            if (rt != null)
+            {
+                passInfo.renderTarget = new RenderTargetIdentifier(rt);
+                passInfo.renderTargetDesc = rt.descriptor;
+            }
+            else
+            {
+                passInfo.renderTarget = invalidRT;
+                passInfo.renderTargetDesc = default;
+            }
+            
             passInfo.xrSdkEnabled = false;
             passInfo.tempRenderTexture = null;
 #if USE_XR_SDK
             passInfo.tempRenderTextureDesc = default;
 #endif
-
-            return passInfo;
-        }
-
-        internal static XRPass Create(int passId, RenderTexture rt)
-        {
-            XRPass passInfo = GenericPool<XRPass>.Get();
-
-            passInfo.passId = passId;
-            passInfo.cullingPassId = -1;
-            passInfo.views.Clear();
-            passInfo.renderTarget = new RenderTargetIdentifier(rt);
-            passInfo.renderTargetDesc = rt.descriptor;
-            passInfo.xrSdkEnabled = false;
-            passInfo.tempRenderTexture = null;
-            passInfo.tempRenderTextureDesc = default;
 
             return passInfo;
         }

@@ -15,6 +15,7 @@ namespace UnityEditor.Rendering.LWRP
             public static GUIContent lightingSettingsText = EditorGUIUtility.TrTextContent("Lighting");
             public static GUIContent shadowSettingsText = EditorGUIUtility.TrTextContent("Shadows");
             public static GUIContent advancedSettingsText = EditorGUIUtility.TrTextContent("Advanced");
+            public static GUIContent rendererSettingsText = EditorGUIUtility.TrTextContent("Renderer Specific");
 
             // General
             public static GUIContent rendererTypeText = EditorGUIUtility.TrTextContent("Renderer Type", "Controls the global renderer that LWRP uses for all cameras. Choose between the default Forward Renderer and a custom renderer.");
@@ -64,6 +65,10 @@ namespace UnityEditor.Rendering.LWRP
         SavedBool m_LightingSettingsFoldout;
         SavedBool m_ShadowSettingsFoldout;
         SavedBool m_AdvancedSettingsFoldout;
+        SavedBool m_RendererSettingsFoldout;
+
+        bool m_RecreateRendererDataEditor;
+        ScriptableRendererDataEditor m_RendererDataEditor;
 
         SerializedProperty m_RendererTypeProp;
         SerializedProperty m_RendererDataProp;
@@ -111,6 +116,7 @@ namespace UnityEditor.Rendering.LWRP
             DrawLightingSettings();
             DrawShadowSettings();
             DrawAdvancedSettings();
+            DrawRendererSettings();
 
             serializedObject.ApplyModifiedProperties();
         }
@@ -122,6 +128,7 @@ namespace UnityEditor.Rendering.LWRP
             m_LightingSettingsFoldout = new SavedBool($"{target.GetType()}.LightingSettingsFoldout", false);
             m_ShadowSettingsFoldout = new SavedBool($"{target.GetType()}.ShadowSettingsFoldout", false);
             m_AdvancedSettingsFoldout = new SavedBool($"{target.GetType()}.AdvancedSettingsFoldout", false);
+            m_RendererSettingsFoldout = new SavedBool($"{target.GetType()}.RendererSettingsFoldout", false);
 
             m_RendererTypeProp = serializedObject.FindProperty("m_RendererType");
             m_RendererDataProp = serializedObject.FindProperty("m_RendererData");
@@ -157,6 +164,17 @@ namespace UnityEditor.Rendering.LWRP
 
             m_ShaderVariantLogLevel = serializedObject.FindProperty("m_ShaderVariantLogLevel");
             selectedLightRenderingMode = (LightRenderingMode)m_AdditionalLightsRenderingModeProp.intValue;
+
+            m_RecreateRendererDataEditor = true;
+        }
+
+        void OnDisable()
+        {
+            if (m_RendererDataEditor != null)
+            {
+                DestroyImmediate(m_RendererDataEditor);
+                m_RendererDataEditor = null;
+            }
         }
 
         void DrawGeneralSettings()
@@ -170,14 +188,21 @@ namespace UnityEditor.Rendering.LWRP
                 if (EditorGUI.EndChangeCheck())
                 {
                     if (m_RendererTypeProp.intValue != (int) RendererType.Custom)
+                    {
                         m_RendererDataProp.objectReferenceValue = LightweightRenderPipeline.asset.LoadBuiltinRendererData();
+                        m_RecreateRendererDataEditor = true;
+                    }
                 }
                 if (m_RendererTypeProp.intValue == (int) RendererType.Custom)
                 {
                     EditorGUI.indentLevel++;
+                    EditorGUI.BeginChangeCheck();
                     EditorGUILayout.PropertyField(m_RendererDataProp, Styles.rendererDataText);
+                    if (EditorGUI.EndChangeCheck())
+                        m_RecreateRendererDataEditor = true;
                     EditorGUI.indentLevel--;
                 }
+
                 EditorGUILayout.PropertyField(m_RequireDepthTextureProp, Styles.requireDepthTextureText);
                 EditorGUILayout.PropertyField(m_RequireOpaqueTextureProp, Styles.requireOpaqueTextureText);
                 EditorGUI.indentLevel++;
@@ -306,6 +331,28 @@ namespace UnityEditor.Rendering.LWRP
                 EditorGUILayout.Space();
                 EditorGUILayout.Space();
             }
+            EditorGUILayout.EndFoldoutHeaderGroup();
+        }
+
+        void DrawRendererSettings()
+        {
+            if (m_RecreateRendererDataEditor && Event.current.type == EventType.Layout)
+            {
+                Editor editor = m_RendererDataEditor;
+                CreateCachedEditor(m_RendererDataProp.objectReferenceValue, null, ref editor);
+                m_RendererDataEditor = editor as ScriptableRendererDataEditor;
+
+                m_RecreateRendererDataEditor = false;
+            }
+
+            if (m_RendererDataEditor == null)
+                return;
+
+            m_RendererSettingsFoldout.value = EditorGUILayout.BeginFoldoutHeaderGroup(m_RendererSettingsFoldout.value, Styles.rendererSettingsText);
+
+            if (m_RendererSettingsFoldout.value)
+                m_RendererDataEditor.OnInspectorGUI();
+
             EditorGUILayout.EndFoldoutHeaderGroup();
         }
     }

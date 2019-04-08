@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Rendering.LWRP;
 
 namespace UnityEditor.Rendering.LWRP
@@ -28,12 +28,13 @@ namespace UnityEditor.Rendering.LWRP
         }
 
         private bool firstTime = true;
-        
+        private SerializedObject m_CachedSO;
+
         //Stencil rendering
         private const int stencilBits = 4;
         private const int minStencilValue = 0;
         private const int maxStencilValue = (1 << stencilBits) - 1;
-        
+
         //Stencil props
         private SerializedProperty m_OverrideStencil;
         private SerializedProperty m_StencilIndex;
@@ -44,6 +45,11 @@ namespace UnityEditor.Rendering.LWRP
 
         void Init(SerializedProperty property)
         {
+            // This property drawer can be potentially reused for different UnityEditor.Editor instances,
+            // So we need to fetch SerializedProperties again if property.serializedObject changes.
+            if (!firstTime && property.serializedObject == m_CachedSO)
+                return;
+
             //Stencil
             m_OverrideStencil = property.FindPropertyRelative("overrideStencilState");
             m_StencilIndex = property.FindPropertyRelative("stencilReference");
@@ -52,13 +58,13 @@ namespace UnityEditor.Rendering.LWRP
             m_StencilFail = property.FindPropertyRelative("failOperation");
             m_StencilZFail = property.FindPropertyRelative("zFailOperation");
 
+            m_CachedSO = property.serializedObject;
             firstTime = false;
         }
 
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
-            if(firstTime)
-                Init(property);
+            Init(property);
 
             rect.height = EditorGUIUtility.singleLineHeight;
 
@@ -91,6 +97,8 @@ namespace UnityEditor.Rendering.LWRP
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            Init(property);
+
             if (m_OverrideStencil != null && m_OverrideStencil.boolValue)
                 return EditorUtils.Styles.defaultLineSpace * 6;
             return EditorUtils.Styles.defaultLineSpace * 1;

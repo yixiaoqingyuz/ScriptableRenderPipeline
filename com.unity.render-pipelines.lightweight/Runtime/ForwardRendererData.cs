@@ -1,40 +1,79 @@
-namespace UnityEngine.Experimental.Rendering.LWRP
-{
-    //[CreateAssetMenu()]
-    public class ForwardRendererData : IRendererData
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.ProjectWindowCallback;
+#endif
+
+namespace UnityEngine.Rendering.LWRP
+{    
+    public class ForwardRendererData : ScriptableRendererData
     {
         [SerializeField] Shader m_BlitShader = null;
         [SerializeField] Shader m_CopyDepthShader = null;
         [SerializeField] Shader m_ScreenSpaceShadowShader = null;
         [SerializeField] Shader m_SamplingShader = null;
 
-        public override IRendererSetup Create()
+        [SerializeField] LayerMask m_OpaqueLayerMask = -1;
+        [SerializeField] LayerMask m_TransparentLayerMask = -1;
+
+        [SerializeField] StencilStateData m_DefaultStencilState = null;
+
+#if UNITY_EDITOR
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812")]
+        internal class CreateForwardRendererAsset : EndNameEditAction
         {
-            return new ForwardRendererSetup(this);
+            public override void Action(int instanceId, string pathName, string resourceFile)
+            {
+                var instance = CreateInstance<ForwardRendererData>();
+                AssetDatabase.CreateAsset(instance, pathName);
+                Selection.activeObject = instance;
+            }
+        }
+        
+        [MenuItem("Assets/Create/Rendering/Lightweight Render Pipeline/Forward Renderer", priority = CoreUtils.assetCreateMenuPriority1)]
+        static void CreateForwardRendererData()
+        {
+            ProjectWindowUtil.StartNameEditingIfProjectWindowExists(0, CreateInstance<CreateForwardRendererAsset>(), "CustomForwardRendererData.asset", null, null);
+        }
+#endif
+        
+        protected override ScriptableRenderer Create()
+        {
+            return new ForwardRenderer(this);
         }
 
-        public Shader blitShader
+        internal Shader blitShader
         {
             get => m_BlitShader;
-            set => m_BlitShader = value;
         }
 
-        public Shader copyDepthShader
+        internal Shader copyDepthShader
         {
             get => m_CopyDepthShader;
-            set => m_CopyDepthShader = value;
         }
 
-        public Shader screenSpaceShadowShader
+        internal Shader screenSpaceShadowShader
         {
             get => m_ScreenSpaceShadowShader;
-            set => m_ScreenSpaceShadowShader = value;
         }
 
-        public Shader samplingShader
+        internal Shader samplingShader
         {
             get => m_SamplingShader;
-            set => m_SamplingShader = value;
+        }
+
+        internal LayerMask opaqueLayerMask
+        {
+            get => m_OpaqueLayerMask;
+        }
+
+        public LayerMask transparentLayerMask
+        {
+            get => m_TransparentLayerMask;
+        }
+
+        public StencilStateData defaultStencilState
+        {
+            get => m_DefaultStencilState;
         }
     }
 }

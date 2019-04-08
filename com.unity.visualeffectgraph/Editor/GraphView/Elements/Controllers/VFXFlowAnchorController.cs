@@ -55,6 +55,11 @@ namespace UnityEditor.VFX.UI
         {
             get {return ""; }
         }
+
+        static public bool CanLink(VFXFlowAnchorController from, VFXFlowAnchorController to)
+        {
+            return VFXContext.CanLink(from.owner, to.owner, from.slotIndex, to.slotIndex);
+        }
     }
 
     class VFXFlowInputAnchorController : VFXFlowAnchorController

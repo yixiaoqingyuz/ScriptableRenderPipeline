@@ -43,6 +43,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             public static GUIContent anisotropyMapText = new GUIContent("Anisotropy Map", "Specifies the Anisotropy Map(R) for this Material.");
 
             public static GUIContent UVBaseMappingText = new GUIContent("Base UV mapping", "");
+            public static GUIContent UVEmissiveMappingText = new GUIContent("Emission UV mapping", "");
             public static GUIContent texWorldScaleText = new GUIContent("World scale", "Sets the tiling factor HDRP applies to Planar/Trilinear mapping.");
 
             // Details
@@ -924,7 +925,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             if (material.GetTexture(kEmissiveColorMap))
             {
                 EditorGUI.indentLevel++;
-                m_MaterialEditor.ShaderProperty(UVEmissive, Styles.UVBaseMappingText);
+                m_MaterialEditor.ShaderProperty(UVEmissive, Styles.UVEmissiveMappingText);
                 UVBaseMapping uvEmissiveMapping = (UVBaseMapping)UVEmissive.floatValue;
 
                 float X, Y, Z, W;

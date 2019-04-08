@@ -80,6 +80,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         public float   diffuseDimmer;
         public float   specularDimmer;
+        public int     vxShadowsType;           //seongdae;vxsm
     };
 
     [GenerateHLSL(PackingRules.Exact, false)]

@@ -9,6 +9,7 @@ namespace UnityEngine.Rendering.LWRP
         MainLightShadowCasterPass m_MainLightShadowCasterPass;
         AdditionalLightsShadowCasterPass m_AdditionalLightsShadowCasterPass;
         ScreenSpaceShadowResolvePass m_ScreenSpaceShadowResolvePass;
+        ScreenSpaceShadowComputePass m_ScreenSpaceShadowComputePass; //seongdae;vxsm
         DrawObjectsPass m_RenderOpaqueForwardPass;
         PostProcessPass m_OpaquePostProcessPass;
         DrawSkyboxPass m_DrawSkyboxPass;
@@ -56,6 +57,7 @@ namespace UnityEngine.Rendering.LWRP
             m_AdditionalLightsShadowCasterPass = new AdditionalLightsShadowCasterPass(RenderPassEvent.BeforeRenderingShadows);
             m_DepthPrepass = new DepthOnlyPass(RenderPassEvent.BeforeRenderingPrepasses, RenderQueueRange.opaque, data.opaqueLayerMask);
             m_ScreenSpaceShadowResolvePass = new ScreenSpaceShadowResolvePass(RenderPassEvent.BeforeRenderingPrepasses, screenspaceShadowsMaterial);
+            m_ScreenSpaceShadowComputePass = new ScreenSpaceShadowComputePass(RenderPassEvent.BeforeRenderingPrepasses, data.screenSpaceShadowComputeShader); //seongdae;vxsm
             m_RenderOpaqueForwardPass = new DrawObjectsPass("Render Opaques", true, RenderPassEvent.BeforeRenderingOpaques, RenderQueueRange.opaque, data.opaqueLayerMask, m_DefaultStencilState, stencilData.stencilReference);
             m_CopyDepthPass = new CopyDepthPass(RenderPassEvent.BeforeRenderingOpaques, copyDepthMaterial);
             m_OpaquePostProcessPass = new PostProcessPass(RenderPassEvent.BeforeRenderingOpaques, true);
@@ -99,10 +101,13 @@ namespace UnityEngine.Rendering.LWRP
                 return;
             }
 
-            bool mainLightShadows = m_MainLightShadowCasterPass.Setup(ref renderingData);
+            //bool mainLightShadows = m_MainLightShadowCasterPass.Setup(ref renderingData); //seongdae;vxsm;origin
+            bool mainLightDynamicShadows = m_MainLightShadowCasterPass.Setup(ref renderingData);
             bool additionalLightShadows = m_AdditionalLightsShadowCasterPass.Setup(ref renderingData);
-            bool resolveShadowsInScreenSpace = mainLightShadows && renderingData.shadowData.requiresScreenSpaceShadowResolve;
-            
+            //bool resolveShadowsInScreenSpace = mainLightShadows && renderingData.shadowData.requiresScreenSpaceShadowResolve; //seongdae;vxsm;origin
+            bool resolveShadowsInScreenSpace = mainLightDynamicShadows && renderingData.shadowData.requiresScreenSpaceShadowResolve;
+            bool computeShadowsInScreenSpace = renderingData.shadowData.requiresScreenSpaceShadowCompute; //seongdae;vxsm
+
             // Depth prepass is generated in the following cases:
             // - We resolve shadows in screen space
             // - Scene view camera always requires a depth texture. We do a depth pre-pass to simplify it and it shouldn't matter much for editor.
@@ -145,7 +150,8 @@ namespace UnityEngine.Rendering.LWRP
             }
             bool hasAfterRendering = activeRenderPassQueue.Find(x => x.renderPassEvent == RenderPassEvent.AfterRendering) != null;
 
-            if (mainLightShadows)
+            //if (mainLightShadows) //seongdae;vxsm;origin
+            if (mainLightDynamicShadows) //seongdae;vxsm
                 EnqueuePass(m_MainLightShadowCasterPass);
 
             if (additionalLightShadows)
@@ -157,6 +163,14 @@ namespace UnityEngine.Rendering.LWRP
                 EnqueuePass(m_DepthPrepass);
             }
 
+            //seongdae;vxsm
+            if (computeShadowsInScreenSpace)
+            {
+                m_ScreenSpaceShadowComputePass.Setup(cameraTargetDescriptor, m_MainLightShadowCasterPass, mainLightDynamicShadows);
+                EnqueuePass(m_ScreenSpaceShadowComputePass);
+            }
+            else
+            //seongdae;vxsm
             if (resolveShadowsInScreenSpace)
             {
                 m_ScreenSpaceShadowResolvePass.Setup(cameraTargetDescriptor);

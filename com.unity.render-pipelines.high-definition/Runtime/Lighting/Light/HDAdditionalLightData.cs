@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.Rendering;
+using UnityEngine.Experimental.VoxelizedShadows; //seongdae;vxsm
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Experimental.Rendering;
@@ -266,6 +267,15 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         int GetShadowRequestCount()
         {
+            //seongdae;vxsm
+            // todo : this should be for not only directional vxsm, but also other light type
+            var dirVxsm = GetComponent<DirectionalVxShadowMap>();
+            if (dirVxsm != null && dirVxsm.IsValid())
+            {
+                if (dirVxsm.shadowsBlendMode == ShadowsBlendMode.OnlyVxShadowMaps)
+                    return 0;
+            }
+            //seongdae;vxsm
             return (legacyLight.type == LightType.Point && lightTypeExtent == LightTypeExtent.Punctual) ? 6 : (legacyLight.type == LightType.Directional) ? m_ShadowSettings.cascadeShadowSplitCount.value : 1;
         }
 

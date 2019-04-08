@@ -1,8 +1,9 @@
 {
     "name": "Unity.RenderPipelines.HighDefinition.Runtime",
     "references": [
-        "Unity.RenderPipelines.Core.Runtime",
-		"Unity.ugui"
+        "GUID:df380645f10b7bc4b97d4f5eb6303d95",
+        "Unity.ugui",
+        "GUID:855bcba30f8d4a9469a49269ade73231"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

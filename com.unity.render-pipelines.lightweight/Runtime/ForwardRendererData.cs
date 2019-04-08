@@ -11,6 +11,7 @@ namespace UnityEngine.Rendering.LWRP
         [SerializeField] Shader m_CopyDepthShader = null;
         [SerializeField] Shader m_ScreenSpaceShadowShader = null;
         [SerializeField] Shader m_SamplingShader = null;
+        [SerializeField] ComputeShader m_ScreenSpaceShadowComputeShader = null; //seongdae;vxsm
 
         [SerializeField] LayerMask m_OpaqueLayerMask = -1;
         [SerializeField] LayerMask m_TransparentLayerMask = -1;
@@ -60,6 +61,13 @@ namespace UnityEngine.Rendering.LWRP
         {
             get => m_SamplingShader;
         }
+
+        //seongdae;vxsm
+        internal ComputeShader screenSpaceShadowComputeShader
+        {
+            get => m_ScreenSpaceShadowComputeShader;
+        }
+        //seongdae;vxsm
 
         internal LayerMask opaqueLayerMask
         {

@@ -67,18 +67,16 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 bool xrEnabled = xrSdkActive || (camera.stereoEnabled && XRGraphics.enabled);
 
+                if (debugMode != DebugMode.None && !xrEnabled && camera.cameraType == CameraType.Game)
+                {
+                    ProcessDebugMode(camera, ref multipassCameras);
+                    continue;
+                }
+
                 // XRTODO: support render to texture
                 if (camera.cameraType != CameraType.Game || camera.targetTexture != null || !xrEnabled)
                 {
-                    if (debugMode != DebugMode.None)
-                    {
-                        ProcessDebugMode(camera, ref multipassCameras);
-                    }
-                    else
-                    {
-                        multipassCameras.Add(new MultipassCamera(camera));
-                    }
-
+                    multipassCameras.Add(new MultipassCamera(camera));
                     continue;
                 }
 

@@ -277,11 +277,6 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
     #if SCALARIZE_LIGHT_LOOP
         uint envStartFirstLane;
         fastPath = IsFastPath(envLightStart, envStartFirstLane);
-
-        if (fastPath)
-        {
-            envLightStart = envStartFirstLane;
-        }
     #endif
 
         // Reflection / Refraction hierarchy is
@@ -318,6 +313,13 @@ void LightLoop( float3 V, PositionInputs posInput, PreLightData preLightData, BS
         if (featureFlags & LIGHTFEATUREFLAGS_ENV)
         {
             context.sampleReflection = SINGLE_PASS_CONTEXT_SAMPLE_REFLECTION_PROBES;
+
+        #if SCALARIZE_LIGHT_LOOP
+            if (fastPath)
+            {
+                envLightStart = envStartFirstLane;
+            }
+        #endif
 
             // Scalarized loop, same rationale of the punctual light version
             uint v_envLightListOffset = 0;

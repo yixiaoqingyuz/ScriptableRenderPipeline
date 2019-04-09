@@ -14,6 +14,7 @@ namespace UnityEngine.Rendering.LWRP
             public static int _VoxelUpBiasID;
 
             public static int _VxShadowMapsBufferID;
+            public static int _CameraDepthTextureID;
             public static int _ScreenSpaceShadowOutputID;
         }
 
@@ -21,7 +22,7 @@ namespace UnityEngine.Rendering.LWRP
         static readonly int TileAdditive = TileSize - 1;
 
         ComputeShader m_ScreenSpaceShadowsComputeShader;
-        RenderTargetHandle m_ScreenSpaceShadowmap;
+        RenderTargetHandle m_ScreenSpaceShadowmapTexture;
         RenderTextureDescriptor m_RenderTextureDescriptor;
         RenderTextureFormat m_ColorFormat;
         const string k_CollectShadowsTag = "Collect Shadows";
@@ -34,6 +35,7 @@ namespace UnityEngine.Rendering.LWRP
             VxShadowMapConstantBuffer._VoxelUpBiasID = Shader.PropertyToID("_VoxelUpBias");
 
             VxShadowMapConstantBuffer._VxShadowMapsBufferID = Shader.PropertyToID("_VxShadowMapsBuffer");
+            VxShadowMapConstantBuffer._CameraDepthTextureID = Shader.PropertyToID("_CameraDepthTexture");
             VxShadowMapConstantBuffer._ScreenSpaceShadowOutputID = Shader.PropertyToID("_ScreenSpaceShadowOutput");
 
             bool R8_UNorm = SystemInfo.IsFormatSupported(GraphicsFormat.R8_UNorm, FormatUsage.LoadStore);
@@ -45,11 +47,10 @@ namespace UnityEngine.Rendering.LWRP
             
             m_ColorFormat = R8 ? RenderTextureFormat.R8 : RenderTextureFormat.RFloat;
             m_ScreenSpaceShadowsComputeShader = computeShader;
+            m_ScreenSpaceShadowmapTexture.Init("_ScreenSpaceShadowmapTexture");
             renderPassEvent = evt;
         }
 
-        private RenderTargetHandle colorAttachmentHandle { get; set; }
-        private RenderTextureDescriptor descriptor { get; set; }
         private MainLightShadowCasterPass mainLightShadowCasterPass;
         private bool mainLightDynamicShadows = false;
         DirectionalVxShadowMap dirVxShadowMap;
@@ -60,6 +61,10 @@ namespace UnityEngine.Rendering.LWRP
             bool mainLightDynamicShadows)
         {
             m_RenderTextureDescriptor = baseDescriptor;
+            m_RenderTextureDescriptor.autoGenerateMips = false;
+            m_RenderTextureDescriptor.useMipMap = false;
+            m_RenderTextureDescriptor.sRGB = false;
+            m_RenderTextureDescriptor.enableRandomWrite = true;
             m_RenderTextureDescriptor.depthBufferBits = 0;
             m_RenderTextureDescriptor.colorFormat = m_ColorFormat;
 
@@ -67,31 +72,9 @@ namespace UnityEngine.Rendering.LWRP
             this.mainLightDynamicShadows = mainLightDynamicShadows;
         }
 
-        private int GetComputeShaderKernel(ref ShadowData shadowData)
+        public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
         {
-            int kernel = -1;
-
-            if (m_ScreenSpaceShadowsComputeShader != null)
-            {
-                string blendModeName;
-                if (mainLightDynamicShadows)
-                    blendModeName = "BlendDynamicShadows";
-                else
-                    blendModeName = "NoBlend";
-
-                string filteringName = "NoFilter";
-                switch (shadowData.mainLightVxShadowQuality)
-                {
-                    case 1: filteringName = "Bilinear";  break;
-                    case 2: filteringName = "Trilinear"; break;
-                }
-
-                string kernelName = blendModeName + filteringName;
-
-                kernel = m_ScreenSpaceShadowsComputeShader.FindKernel(kernelName);
-            }
-
-            return kernel;
+            cmd.GetTemporaryRT(m_ScreenSpaceShadowmapTexture.id, m_RenderTextureDescriptor, FilterMode.Point);
         }
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
@@ -107,8 +90,6 @@ namespace UnityEngine.Rendering.LWRP
             dirVxShadowMap = light.GetComponent<DirectionalVxShadowMap>();
 
             CommandBuffer cmd = CommandBufferPool.Get(k_CollectShadowsTag);
-
-            cmd.GetTemporaryRT(colorAttachmentHandle.id, descriptor, FilterMode.Bilinear);
 
             if (mainLightDynamicShadows)
             {
@@ -155,11 +136,34 @@ namespace UnityEngine.Rendering.LWRP
             if (cmd == null)
                 throw new ArgumentNullException("cmd");
 
-            if (colorAttachmentHandle != RenderTargetHandle.CameraTarget)
+            cmd.ReleaseTemporaryRT(m_ScreenSpaceShadowmapTexture.id);
+        }
+
+        private int GetComputeShaderKernel(ref ShadowData shadowData)
+        {
+            int kernel = -1;
+
+            if (m_ScreenSpaceShadowsComputeShader != null)
             {
-                cmd.ReleaseTemporaryRT(colorAttachmentHandle.id);
-                colorAttachmentHandle = RenderTargetHandle.CameraTarget;
+                string blendModeName;
+                if (mainLightDynamicShadows)
+                    blendModeName = "BlendDynamicShadows";
+                else
+                    blendModeName = "NoBlend";
+
+                string filteringName = "NoFilter";
+                switch (shadowData.mainLightVxShadowQuality)
+                {
+                    case 1: filteringName = "Bilinear";  break;
+                    case 2: filteringName = "Trilinear"; break;
+                }
+
+                string kernelName = blendModeName + filteringName;
+
+                kernel = m_ScreenSpaceShadowsComputeShader.FindKernel(kernelName);
             }
+
+            return kernel;
         }
 
         void SetupVxShadowReceiverConstants(CommandBuffer cmd, int kernel, ref ComputeShader computeShader, ref Camera camera, ref VisibleLight shadowLight)
@@ -189,7 +193,7 @@ namespace UnityEngine.Rendering.LWRP
             cmd.SetComputeFloatParam(computeShader, VxShadowMapConstantBuffer._VoxelUpBiasID, voxelUpBias);
 
             cmd.SetComputeBufferParam(computeShader, kernel, VxShadowMapConstantBuffer._VxShadowMapsBufferID, vxShadowMapsBuffer);
-            cmd.SetComputeTextureParam(computeShader, kernel, VxShadowMapConstantBuffer._ScreenSpaceShadowOutputID, colorAttachmentHandle.Identifier());
+            cmd.SetComputeTextureParam(computeShader, kernel, VxShadowMapConstantBuffer._ScreenSpaceShadowOutputID, m_ScreenSpaceShadowmapTexture.Identifier());
         }
     }
 }

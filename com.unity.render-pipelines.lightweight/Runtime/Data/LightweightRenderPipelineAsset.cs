@@ -21,7 +21,7 @@ namespace UnityEngine.Rendering.LWRP
     }
 
     //seongdae;vxsm
-    public enum VxShadowMapsQuality
+    public enum VxShadowsQuality
     {
         Nearest = 0,
         Bilinear = 1,
@@ -125,7 +125,7 @@ namespace UnityEngine.Rendering.LWRP
         [SerializeField] float m_ShadowNormalBias = 1.0f;
         [SerializeField] bool m_SoftShadowsSupported = false;
         [SerializeField] bool m_VxShadowsSupported = false; //seongdae;vxsm
-        [SerializeField] VxShadowMapsQuality m_VxShadowMapsQuality = VxShadowMapsQuality.Bilinear; //seongdae;vxsm
+        [SerializeField] VxShadowsQuality m_VxShadowsQuality = VxShadowsQuality.Bilinear; //seongdae;vxsm
 
         // Advanced settings
         [SerializeField] bool m_UseSRPBatcher = true;
@@ -411,10 +411,10 @@ namespace UnityEngine.Rendering.LWRP
             get { return m_VxShadowsSupported; }
         }
 
-        public VxShadowMapsQuality vxShadowMapsQuality
+        public VxShadowsQuality vxShadowsQuality
         {
-            get { return m_VxShadowMapsQuality; }
-            set { m_VxShadowMapsQuality = value; }
+            get { return m_VxShadowsQuality; }
+            set { m_VxShadowsQuality = value; }
         }
         //seongdae;vxsm
 

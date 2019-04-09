@@ -105,7 +105,7 @@ float EvaluateRuntimeSunShadow(LightLoopContext lightLoopContext, PositionInputs
 {
     // The relationship with NdotL is complicated and is therefore handled outside the function.
     //if ((light.lightDimmer > 0) && (light.shadowDimmer > 0)) //seongdae;vxsm;origin
-    if ((light.vxShadowsType != 1) && (light.lightDimmer > 0) && (light.shadowDimmer > 0)) //seongdae;vxsm
+    if ((light.vxShadowsValues != 1) && (light.lightDimmer > 0) && (light.shadowDimmer > 0)) //seongdae;vxsm
     {
         // Shadow dimmer is applied outside this function.
         return GetDirectionalShadowAttenuation(lightLoopContext.shadowContext, posInput.positionWS,
@@ -122,7 +122,7 @@ float EvaluateRuntimeSunShadow(LightLoopContext lightLoopContext, PositionInputs
 float EvaluateRuntimeSunVxShadow(LightLoopContext lightLoopContext, PositionInputs posInput, DirectionalLightData light)
 {
 #ifdef SUPPORT_VX_SHADOWING
-    if ((lightLoopContext.shadowValue > 0) && (light.vxShadowsType > 0) && (light.lightDimmer > 0) && (light.shadowDimmer > 0))
+    if ((lightLoopContext.shadowValue > 0) && (light.vxShadowsValues > 0) && (light.lightDimmer > 0) && (light.shadowDimmer > 0))
     {
         float3 positionWS = posInput.positionWS + _WorldSpaceCameraPos;
 

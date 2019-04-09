@@ -35,11 +35,8 @@ TEXTURE2D_FLOAT(_CameraDepthTexture);
 SAMPLER(sampler_CameraDepthTexture);
 
 CBUFFER_START(_DirectionalVxShadowMap)
-uint _VoxelResolution;
 int _VoxelZBias;
 float _VoxelUpBias;
-uint _MaxScale;
-float4x4 _WorldToShadowMatrix;
 CBUFFER_END
 
 RW_TEXTURE2D(half, _ScreenSpaceShadowOutput);
@@ -67,13 +64,8 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
     //depth = depth * 2.0 - 1.0; OpenGLCore
 #endif
 
-#if 0
-    PositionInputs posInput = GetPositionInput(pixelCoord.xy, _ScreenSize.zw, depth, UNITY_MATRIX_I_VP, UNITY_MATRIX_V, tileCoord);
-    float3 positionWS = posInput.positionWS;
-#else
     PositionInputs posInput = GetPositionInput(pixelCoord.xy, _ScreenSize.zw, tileCoord);
     float3 positionWS = ComputeWorldSpacePosition(posInput.positionNDC, depth, UNITY_MATRIX_I_VP);
-#endif
 
     float shadowStrength = GetMainLightShadowStrength();
     float attenuation = 1.0;

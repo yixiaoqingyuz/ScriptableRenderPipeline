@@ -401,7 +401,7 @@ namespace UnityEngine.Rendering.LWRP
                 bool dirVxShadowMapIsValid = dirVxShadowMap != null && dirVxShadowMap.IsValid();
 
                 shadowData.requiresScreenSpaceShadowCompute = dirVxShadowMapIsValid;
-                shadowData.mainLightVxShadowQuality = (int)settings.vxShadowMapsQuality;
+                shadowData.mainLightVxShadowQuality = (int)settings.vxShadowsQuality;
             }
             else
             {

@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Experimental.VoxelizedShadows; //seongdae;vxsm
 
 namespace UnityEngine.Rendering.LWRP
 {
@@ -101,6 +102,19 @@ namespace UnityEngine.Rendering.LWRP
                 if (!success)
                     return false;
             }
+
+            //seongdae;vxsm
+            if (renderingData.shadowData.supportsMainLightVxShadows)
+            {
+                var dirVxsm = light.GetComponent<DirectionalVxShadowMap>();
+
+                bool enabledVxsm = dirVxsm != null && dirVxsm.IsValid();
+                bool canNotCastDynamicShadows = enabledVxsm && dirVxsm.shadowsBlendMode == ShadowsBlendMode.OnlyVxShadowMaps;
+
+                if (canNotCastDynamicShadows)
+                    return false;
+            }
+            //seongdae;vxsm
 
             return true;
         }

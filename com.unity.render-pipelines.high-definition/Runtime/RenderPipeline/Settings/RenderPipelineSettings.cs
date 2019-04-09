@@ -37,7 +37,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public static readonly RenderPipelineSettings @default = new RenderPipelineSettings()
         {
             supportShadowMask = true,
-            supportVxShadows = true, //seongdae;vxsm
+            supportVxShadows = false, //seongdae;vxsm
             supportSSAO = true,
             supportSubsurfaceScattering = true,
             supportVolumetrics = true,

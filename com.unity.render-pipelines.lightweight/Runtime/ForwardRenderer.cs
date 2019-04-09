@@ -115,6 +115,7 @@ namespace UnityEngine.Rendering.LWRP
             bool requiresDepthPrepass = renderingData.cameraData.isSceneViewCamera ||
                 (renderingData.cameraData.requiresDepthTexture && (!CanCopyDepth(ref renderingData.cameraData)));
             requiresDepthPrepass |= resolveShadowsInScreenSpace;
+            requiresDepthPrepass |= computeShadowsInScreenSpace; //seongdae;vxsm
 
             // TODO: There's an issue in multiview and depth copy pass. Atm forcing a depth prepass on XR until
             // we have a proper fix.
@@ -166,7 +167,11 @@ namespace UnityEngine.Rendering.LWRP
             //seongdae;vxsm
             if (computeShadowsInScreenSpace)
             {
-                m_ScreenSpaceShadowComputePass.Setup(cameraTargetDescriptor, m_MainLightShadowCasterPass, mainLightDynamicShadows);
+                m_ScreenSpaceShadowComputePass.Setup(
+                    cameraTargetDescriptor,
+                    m_MainLightShadowCasterPass,
+                    mainLightDynamicShadows);
+
                 EnqueuePass(m_ScreenSpaceShadowComputePass);
             }
             else

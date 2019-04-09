@@ -1031,8 +1031,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 switch (dirVxsm.shadowsBlendMode)
                 {
-                    case ShadowsBlendMode.OnlyVxShadowMaps: lightData.vxShadowsType = 1; break;
-                    case ShadowsBlendMode.BlendDynamicShadows: lightData.vxShadowsType = 2; break;
+                    case ShadowsBlendMode.OnlyVxShadowMaps:    lightData.vxShadowsValues = 1; break;
+                    case ShadowsBlendMode.BlendDynamicShadows: lightData.vxShadowsValues = 2; break;
                 }
 
                 //
@@ -1041,7 +1041,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
             else
             {
-                lightData.vxShadowsType = 0;
+                lightData.vxShadowsValues = 0;
             }
             //seongdae;vxsm
 

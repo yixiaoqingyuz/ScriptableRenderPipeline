@@ -208,6 +208,9 @@ namespace UnityEditor.Rendering.LWRP
                     m_RecreateRendererDataEditor = true;
             }
 
+            if (m_RendererDataEditor != null && m_RendererDataEditor.target != m_RendererDataProp.objectReferenceValue)
+                m_RecreateRendererDataEditor = true;
+
             if (m_RecreateRendererDataEditor && Event.current.type == EventType.Layout)
             {
                 Editor editor = m_RendererDataEditor;

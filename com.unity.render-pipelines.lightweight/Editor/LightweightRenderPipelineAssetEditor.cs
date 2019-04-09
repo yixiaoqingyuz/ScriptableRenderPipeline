@@ -9,6 +9,11 @@ namespace UnityEditor.Rendering.LWRP
     {
         internal class Styles
         {
+            // Renderer
+            public static GUIContent rendererTypeText = EditorGUIUtility.TrTextContent("Renderer Type", "Controls the global renderer that LWRP uses for all cameras. Choose between the default Forward Renderer and a custom renderer.");
+            public static GUIContent rendererDataText = EditorGUIUtility.TrTextContent("Data", "A ScriptableObject with rendering data. Required when using a custom Renderer. If none is assigned, LWRP uses the Forward Renderer as default.");
+            public static GUIContent relatedSettingsOnly = EditorGUIUtility.TrTextContent("Related Settings Only", "Only show settings related to the currently selected Renderer.");
+
             // Groups
             public static GUIContent generalSettingsText = EditorGUIUtility.TrTextContent("General");
             public static GUIContent qualitySettingsText = EditorGUIUtility.TrTextContent("Quality");
@@ -18,8 +23,6 @@ namespace UnityEditor.Rendering.LWRP
             public static GUIContent rendererSettingsText = EditorGUIUtility.TrTextContent("Renderer Specific");
 
             // General
-            public static GUIContent rendererTypeText = EditorGUIUtility.TrTextContent("Renderer Type", "Controls the global renderer that LWRP uses for all cameras. Choose between the default Forward Renderer and a custom renderer.");
-            public static GUIContent rendererDataText = EditorGUIUtility.TrTextContent("Data", "A ScriptableObject with rendering data. Required when using a custom Renderer. If none is assigned, LWRP uses the Forward Renderer as default.");
             public static GUIContent requireDepthTextureText = EditorGUIUtility.TrTextContent("Depth Texture", "If enabled the pipeline will generate camera's depth that can be bound in shaders as _CameraDepthTexture.");
             public static GUIContent requireOpaqueTextureText = EditorGUIUtility.TrTextContent("Opaque Texture", "If enabled the pipeline will copy the screen to texture after opaque objects are drawn. For transparent objects this can be bound in shaders as _CameraOpaqueTexture.");
             public static GUIContent opaqueDownsamplingText = EditorGUIUtility.TrTextContent("Opaque Downsampling", "The downsampling method that is used for the opaque texture");
@@ -65,8 +68,8 @@ namespace UnityEditor.Rendering.LWRP
         SavedBool m_LightingSettingsFoldout;
         SavedBool m_ShadowSettingsFoldout;
         SavedBool m_AdvancedSettingsFoldout;
-        SavedBool m_RendererSettingsFoldout;
 
+        bool m_RelatedSettingsOnly;
         bool m_RecreateRendererDataEditor;
         ScriptableRendererDataEditor m_RendererDataEditor;
 
@@ -110,13 +113,19 @@ namespace UnityEditor.Rendering.LWRP
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-            
-            DrawGeneralSettings();
-            DrawQualitySettings();
-            DrawLightingSettings();
-            DrawShadowSettings();
-            DrawAdvancedSettings();
+
             DrawRendererSettings();
+
+            if (m_RelatedSettingsOnly && m_RendererDataEditor != null && m_RendererDataEditor.overridePipelineAssetEditor)
+                m_RendererDataEditor.OnPipelineAssetEditorGUI(this);
+            else
+            {
+                DrawGeneralSettings();
+                DrawQualitySettings();
+                DrawLightingSettings();
+                DrawShadowSettings();
+                DrawAdvancedSettings();
+            }
 
             serializedObject.ApplyModifiedProperties();
         }
@@ -128,7 +137,6 @@ namespace UnityEditor.Rendering.LWRP
             m_LightingSettingsFoldout = new SavedBool($"{target.GetType()}.LightingSettingsFoldout", false);
             m_ShadowSettingsFoldout = new SavedBool($"{target.GetType()}.ShadowSettingsFoldout", false);
             m_AdvancedSettingsFoldout = new SavedBool($"{target.GetType()}.AdvancedSettingsFoldout", false);
-            m_RendererSettingsFoldout = new SavedBool($"{target.GetType()}.RendererSettingsFoldout", false);
 
             m_RendererTypeProp = serializedObject.FindProperty("m_RendererType");
             m_RendererDataProp = serializedObject.FindProperty("m_RendererData");
@@ -177,32 +185,63 @@ namespace UnityEditor.Rendering.LWRP
             }
         }
 
+        void DrawRendererSettings()
+        {
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(m_RendererTypeProp, Styles.rendererTypeText);
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (m_RendererTypeProp.intValue != (int)RendererType.Custom)
+                {
+                    m_RendererDataProp.objectReferenceValue = LightweightRenderPipeline.asset.LoadBuiltinRendererData();
+                    m_RecreateRendererDataEditor = true;
+                }
+            }
+
+            EditorGUI.indentLevel++;
+
+            if (m_RendererTypeProp.intValue == (int)RendererType.Custom)
+            {
+                EditorGUI.BeginChangeCheck();
+                EditorGUILayout.PropertyField(m_RendererDataProp, Styles.rendererDataText);
+                if (EditorGUI.EndChangeCheck())
+                    m_RecreateRendererDataEditor = true;
+            }
+
+            if (m_RecreateRendererDataEditor && Event.current.type == EventType.Layout)
+            {
+                Editor editor = m_RendererDataEditor;
+                CreateCachedEditor(m_RendererDataProp.objectReferenceValue, null, ref editor);
+
+                if (editor != null && (editor as ScriptableRendererDataEditor) == null)
+                {
+                    DestroyImmediate(editor);
+                    m_RendererDataEditor = null;
+                }
+                else
+                    m_RendererDataEditor = editor as ScriptableRendererDataEditor;
+
+                if (m_RendererDataEditor != null)
+                {
+                    m_RendererDataEditor.OnCreatedFromPipelineAssetEditor(this);
+                    m_RelatedSettingsOnly = m_RendererDataEditor.overridePipelineAssetEditor;
+                }
+
+                m_RecreateRendererDataEditor = false;
+            }
+
+            if (m_RendererDataEditor != null && m_RendererDataEditor.overridePipelineAssetEditor)
+                m_RelatedSettingsOnly = EditorGUILayout.Toggle(Styles.relatedSettingsOnly, m_RelatedSettingsOnly);
+
+            EditorGUI.indentLevel--;
+        }
+
         void DrawGeneralSettings()
         {
             m_GeneralSettingsFoldout.value = EditorGUILayout.BeginFoldoutHeaderGroup(m_GeneralSettingsFoldout.value, Styles.generalSettingsText);
             if (m_GeneralSettingsFoldout.value)
             {
                 EditorGUI.indentLevel++;
-                EditorGUI.BeginChangeCheck();
-                EditorGUILayout.PropertyField(m_RendererTypeProp, Styles.rendererTypeText);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    if (m_RendererTypeProp.intValue != (int) RendererType.Custom)
-                    {
-                        m_RendererDataProp.objectReferenceValue = LightweightRenderPipeline.asset.LoadBuiltinRendererData();
-                        m_RecreateRendererDataEditor = true;
-                    }
-                }
-                if (m_RendererTypeProp.intValue == (int) RendererType.Custom)
-                {
-                    EditorGUI.indentLevel++;
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUILayout.PropertyField(m_RendererDataProp, Styles.rendererDataText);
-                    if (EditorGUI.EndChangeCheck())
-                        m_RecreateRendererDataEditor = true;
-                    EditorGUI.indentLevel--;
-                }
-
                 EditorGUILayout.PropertyField(m_RequireDepthTextureProp, Styles.requireDepthTextureText);
                 EditorGUILayout.PropertyField(m_RequireOpaqueTextureProp, Styles.requireOpaqueTextureText);
                 EditorGUI.indentLevel++;
@@ -331,28 +370,6 @@ namespace UnityEditor.Rendering.LWRP
                 EditorGUILayout.Space();
                 EditorGUILayout.Space();
             }
-            EditorGUILayout.EndFoldoutHeaderGroup();
-        }
-
-        void DrawRendererSettings()
-        {
-            if (m_RecreateRendererDataEditor && Event.current.type == EventType.Layout)
-            {
-                Editor editor = m_RendererDataEditor;
-                CreateCachedEditor(m_RendererDataProp.objectReferenceValue, null, ref editor);
-                m_RendererDataEditor = editor as ScriptableRendererDataEditor;
-
-                m_RecreateRendererDataEditor = false;
-            }
-
-            if (m_RendererDataEditor == null)
-                return;
-
-            m_RendererSettingsFoldout.value = EditorGUILayout.BeginFoldoutHeaderGroup(m_RendererSettingsFoldout.value, Styles.rendererSettingsText);
-
-            if (m_RendererSettingsFoldout.value)
-                m_RendererDataEditor.OnInspectorGUI();
-
             EditorGUILayout.EndFoldoutHeaderGroup();
         }
     }

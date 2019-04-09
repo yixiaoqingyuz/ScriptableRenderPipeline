@@ -34,6 +34,16 @@ namespace UnityEditor.Rendering.LWRP
         ReorderableList m_PassesList;
         List<SerializedObject> m_ElementSOs = new List<SerializedObject>();
 
+        internal virtual bool overridePipelineAssetEditor => false;
+
+        internal virtual void OnCreatedFromPipelineAssetEditor(LightweightRenderPipelineAssetEditor pipelineAssetEditor)
+        {
+        }
+
+        internal virtual void OnPipelineAssetEditorGUI(LightweightRenderPipelineAssetEditor pipelineAssetEditor)
+        {
+        }
+
         SerializedObject GetElementSO(int index)
         {
             if (m_ElementSOs.Count != m_RenderPasses.arraySize || m_ElementSOs[index] == null)

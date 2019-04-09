@@ -39,7 +39,7 @@ all_package_ci:
   - dir
   dependencies:
   {% for project in projects %}
-  - upm-ci package pack --package-path={{ project.packagename }}
+  - cd ScriptableRenderPipeline && upm-ci package pack --package-path {{ project.packagename }}
   {% endfor %}
   artifacts:
     logs.zip:

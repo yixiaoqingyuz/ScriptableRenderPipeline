@@ -10,7 +10,7 @@ platforms:
     image: buildfarm/mac:stable
     flavor: m1.mac
 projects:
-  - name: SRPCore
+  - name: Core
     folder: none
     packagename: com.unity.render-pipelines.core
   - name: LWRP

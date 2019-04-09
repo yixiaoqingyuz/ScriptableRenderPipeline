@@ -27,7 +27,7 @@ projects:
     packagename: com.unity.visualeffectgraph
 ---
 
-all_project_ci:
+all_package_ci:
   name: Pack all packages
   agent:
     name: whatever
@@ -44,10 +44,6 @@ all_project_ci:
   {% endfor %}
   {% endfor %}
   {% endfor %}
-  triggers:
-    branches:
-      only:
-        - yamato-master
   artifacts:
     logs.zip:
       paths:

@@ -28,7 +28,7 @@ all_package_ci:
   - dir
   dependencies:
   {% for project in projects %}
-  - upm-ci package pack --package-path {{ project.packagename }}
+  - cd {{ project.packagename }} && upm-ci package pack
   {% endfor %}
   artifacts:
     logs.zip:

@@ -1,0 +1,55 @@
+editors:
+  - version: trunk
+platforms:
+  - name: Windows64
+    type: Unity::VM::GPU
+    image: sdet/gamecode_win10:latest
+    flavor: m1.large
+  - name: OSX
+    type: Unity::VM::osx
+    image: buildfarm/mac:stable
+    flavor: m1.mac
+projects:
+  - name: LWRP
+    folder: LWGraphicsTest
+    packagename: com.unity.visualeffectgraph
+  - name: ShaderGraph
+    folder: ShaderGraph
+    packagename: com.unity.shadergraph
+  - name: HDRP
+    folder: HDRP_Tests
+    packagename: com.unity.render-pipelines.high-definition
+  - name: VFXMain
+    folder: VisualEffectGraph
+    packagename: com.unity.visualeffectgraph
+  - name: VFX_LWRP
+    folder: VisualEffectGraph_LWRP
+    packagename: com.unity.visualeffectgraph
+---
+
+all_project_ci:
+  name: Pack all packages
+  agent:
+    name: whatever
+    type: Unity::VM
+    image: cds-ops/ubuntu-18.04-agent:latest
+    flavor: b1.small
+  commands:
+  - dir
+  dependencies:
+  {% for project in projects %}
+  {% for editor in editors %}
+  {% for platform in platforms %}
+    - .yamato/upm-ci-{{ project.name | downcase }}.yml#{{ project.packagename }}_{{ platform.name }}_{{ editor.version }}
+  {% endfor %}
+  {% endfor %}
+  {% endfor %}
+  triggers:
+    branches:
+      only:
+        - yamato-master
+  artifacts:
+    logs.zip:
+      paths:
+      - "**/upm-ci~/test-results/**/*"
+      - "**/upm-ci~/packages/**/*.tgz"

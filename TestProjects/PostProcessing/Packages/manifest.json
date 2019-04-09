@@ -1,7 +1,7 @@
 {
     "dependencies": {
         "com.unity.postprocessing": "2.1.4",
-        "com.unity.testframework.graphics": "git@github.com:Unity-Technologies/com.unity.testframework.graphics.git",
+    "com.unity.testframework.graphics": "https://github.com/Unity-Technologies/com.unity.testframework.graphics.git",
         "com.unity.modules.animation": "1.0.0",
         "com.unity.modules.assetbundle": "1.0.0",
         "com.unity.modules.audio": "1.0.0",
@@ -20,5 +20,11 @@
     "testables": [
         "com.unity.postprocessing",
     "com.unity.testframework.graphics"
-    ]
+    ],
+  "lock": {
+    "com.unity.testframework.graphics": {
+      "hash": "b0e2026794f5e51fc9e49db4c2e41346ee5e35df",
+      "revision": "HEAD"
+    }
+  }
 }

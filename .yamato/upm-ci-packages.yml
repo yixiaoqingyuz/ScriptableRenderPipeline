@@ -21,13 +21,13 @@ projects:
 all_package_ci:
   name: Pack all packages
   agent:
-    type: {{ platform.type }}
-    image: {{ platform.image }}
-    flavor: {{ platform.flavor}}
+    name: Windows64
+    type: Unity::VM::GPU
+    image: sdet/gamecode_win10:latest
+    flavor: m1.large
   commands:
-  - dir
-  dependencies:
   {% for project in projects %}
+  #- cd {{ project.folder }} && upm-ci project pack
   - cd {{ project.packagename }} && upm-ci package pack
   {% endfor %}
   artifacts:

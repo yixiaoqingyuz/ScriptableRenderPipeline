@@ -38,13 +38,7 @@ all_package_ci:
   commands:
   - dir
   dependencies:
-  {% for project in projects %}
-  {% for editor in editors %}
-  {% for platform in platforms %}
-    - .yamato/upm-ci-{{ project.name | downcase }}.yml#{{ project.packagename }}_{{ platform.name }}_{{ editor.version }}
-  {% endfor %}
-  {% endfor %}
-  {% endfor %}
+  - upm-ci project pack
   artifacts:
     logs.zip:
       paths:

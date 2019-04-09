@@ -189,28 +189,7 @@ namespace UnityEditor.VFX
                 Invalidate(InvalidationCause.kExpressionGraphChanged);
         }
 
-        struct VFXCanLinkFlowCache
-        {
-
-        }
-
-        private static IEnumerable<VFXContext> GetFlowAncestor(VFXContext currentContext)
-        {
-            yield return currentContext;
-
-            foreach (var flowSlot in currentContext.m_InputFlowSlot)
-                foreach (var subContext in flowSlot.link)
-                    if (subContext.context != null)
-                        foreach (var child in GetFlowAncestor(subContext.context))
-                            yield return child;
-        }
-
-        private IEnumerable<VFXContext> GetFlowParent(VFXContext currentContext)
-        {
-            yield return currentContext;
-        }
-
-        public static bool CanLink(VFXContext from, VFXContext to, int fromIndex = 0, int toIndex = 0/*, VFXCanLinkFlowCache cache = null*/)
+        public static bool CanLink(VFXContext from, VFXContext to, int fromIndex = 0, int toIndex = 0)
         {
             if (from == to || from == null || to == null)
                 return false;
@@ -220,13 +199,6 @@ namespace UnityEditor.VFX
 
             if (fromIndex >= from.outputFlowSlot.Length || toIndex >= to.inputFlowSlot.Length)
                 return false;
-
-            if (from.m_OutputFlowSlot[fromIndex].link.Any(o => o.context == to) || to.m_InputFlowSlot[toIndex].link.Any(o => o.context == from))
-                return false;
-            
-            var allAncestors = GetFlowAncestor(from).ToList();
-            if (allAncestors.Contains(to))
-                return true;
 
             return true;
         }

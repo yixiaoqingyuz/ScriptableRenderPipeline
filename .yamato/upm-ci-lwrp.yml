@@ -64,7 +64,8 @@ projects:
    - cd {{ project.packagename }} && upm-ci package pack
    - cd {{ project.packagename }} && upm-ci package test --unity-version {{ editor.version }}
   dependencies:
-    - .yamato/upm-ci-shadergraph.yml#com.unity.render-pipelines.core_{{ platform.name }}_{{ editor.version }}
+  - .yamato/upm-ci-shadergraph.yml#com.unity.shadergraph_{{ platform.name }}_{{ editor.version }}
+  - .yamato/upm-ci-core.yml#com.unity.render-pipelines.core_{{ platform.name }}_{{ editor.version }}
   artifacts:
     logs.zip:
       paths:

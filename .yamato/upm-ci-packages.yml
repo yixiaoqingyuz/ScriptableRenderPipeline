@@ -32,10 +32,9 @@ projects:
 all_package_ci:
   name: Pack all packages
   agent:
-    name: whatever
-    type: Unity::VM
-    image: cds-ops/ubuntu-18.04-agent:latest
-    flavor: b1.small
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
   commands:
   - dir
   dependencies:

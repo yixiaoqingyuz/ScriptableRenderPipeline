@@ -3,7 +3,7 @@
     "com.unity.render-pipelines.core": "file:../../../com.unity.render-pipelines.core",
     "com.unity.render-pipelines.lightweight": "file:../../../com.unity.render-pipelines.lightweight",
     "com.unity.shadergraph": "file:../../../com.unity.shadergraph",
-    "com.unity.testframework.graphics": "https://github.com/Unity-Technologies/com.unity.testframework.graphics.git",
+    "com.unity.testframework.graphics": "git@github.com:Unity-Technologies/com.unity.testframework.graphics.git",
     "com.unity.modules.animation": "1.0.0",
     "com.unity.modules.assetbundle": "1.0.0",
     "com.unity.modules.audio": "1.0.0",

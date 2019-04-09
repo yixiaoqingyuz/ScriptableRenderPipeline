@@ -3,7 +3,7 @@
     "com.unity.render-pipelines.core": "file:../../../com.unity.render-pipelines.core",
     "com.unity.render-pipelines.high-definition": "file:../../../com.unity.render-pipelines.high-definition",
     "com.unity.shadergraph": "file:../../../com.unity.shadergraph",
-    "com.unity.testframework.graphics": "https://github.com/Unity-Technologies/com.unity.testframework.graphics.git",
+    "com.unity.testframework.graphics": "git@github.com:Unity-Technologies/com.unity.testframework.graphics.git",
 	"com.unity.testing.visualeffectgraph": "file:../../../com.unity.testing.visualeffectgraph",
     "com.unity.timeline": "1.0.0",
     "com.unity.visualeffectgraph": "file:../../../com.unity.visualeffectgraph",

@@ -200,6 +200,11 @@ namespace UnityEditor.VFX
             if (fromIndex >= from.outputFlowSlot.Length || toIndex >= to.inputFlowSlot.Length)
                 return false;
 
+            //If link already present
+            if (    from.m_OutputFlowSlot[fromIndex].link   .Any(o => o.context == to   && o.slotIndex == toIndex)
+                ||  to.m_InputFlowSlot[toIndex].link        .Any(o => o.context == from && o.slotIndex == fromIndex))
+                return false;
+
             return true;
         }
 

@@ -122,25 +122,27 @@ namespace UnityEditor.ShaderGraph
             if(!IsValidFunction())
                 return;
 
-            registry.ProvideFunction(functionName, builder =>
+            switch (sourceType)
             {
-                switch (sourceType)
-                {
-                    case HlslSourceType.File:
-                        string sourceIncludeDirective = $"#include \"{functionSource}\"";
-                        if (!builder.ToString().Contains(sourceIncludeDirective)) builder.AppendLine(sourceIncludeDirective);
-                        break;
-                    case HlslSourceType.String:
+                case HlslSourceType.File:
+                    registry.ProvideFunction(functionSource, builder =>
+                    {
+                        builder.AppendLine($"#include \"{functionSource}\"");
+                    });
+                    break;
+                case HlslSourceType.String:
+                    registry.ProvideFunction(functionName, builder =>
+                    {
                         builder.AppendLine(GetFunctionHeader());
-                        using(builder.BlockScope())
+                        using (builder.BlockScope())
                         {
                             builder.AppendLines(functionBody);
                         }
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            });
+                    });
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         private string GetFunctionHeader()

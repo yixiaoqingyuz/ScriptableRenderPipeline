@@ -26,10 +26,10 @@
 #define RAYTRACING_REFLECTION_TILE_SIZE 8
 
 // Input textures for the spatial filtering
-Texture2D<float>                    _DepthTexture;
+TEXTURE2D_X(_DepthTexture);
 Texture2DArray<float>               _NoiseTexture;
-Texture2D<float4>                   _SsrLightingTextureRW;
-Texture2D<float4>                   _SsrHitPointTexture;
+Texture2DArray<float4>              _SsrLightingTextureRW;
+Texture2DArray<float4>              _SsrHitPointTexture;
 Texture2D<float4>                   _SsrClearCoatMaskTexture;
 
 // Output Textures for the spatial filtering
@@ -47,7 +47,7 @@ float                               _TemporalAccumuationWeight;
 // Buffers for the temporal filtering
 TEXTURE2D_X(_ReflectionHistorybufferRW);
 TEXTURE2D_X(_DenoiseInputTexture);
-RWTexture2D<float4>         _DenoiseOutputTextureRW;
+RW_TEXTURE2D_X(float4,      _DenoiseOutputTextureRW);
 int                         _RaytracingDenoiseRadius;
 
 [numthreads(RAYTRACING_REFLECTION_TILE_SIZE, RAYTRACING_REFLECTION_TILE_SIZE, 1)]
@@ -64,7 +64,7 @@ void RaytracingReflectionFilter(uint3 dispatchThreadId : SV_DispatchThreadID, ui
     int localIndex = (fullResCoord.x & 1) + (fullResCoord.y & 1) * 2;
 
     // Fetch the depth
-    float depth = LOAD_TEXTURE2D(_DepthTexture, fullResCoord).x;
+    float depth = LOAD_TEXTURE2D_X(_DepthTexture, fullResCoord).x;
 
     NormalData normalData;
     DecodeFromNormalBuffer(fullResCoord, normalData);
@@ -125,7 +125,7 @@ void RaytracingReflectionFilter(uint3 dispatchThreadId : SV_DispatchThreadID, ui
             continue;
             
             // Fetch the target color
-            float4 sampleColor = _SsrLightingTextureRW[sourceCoord];
+            float4 sampleColor = _SsrLightingTextureRW[COORD_TEXTURE2D_X(sourceCoord)];
 
             // Compute the position of the actual source pixel
             uint subPixel =  clamp(floor(sampleColor.w * 4.0f), 0, 3);
@@ -133,7 +133,7 @@ void RaytracingReflectionFilter(uint3 dispatchThreadId : SV_DispatchThreadID, ui
             uint2 actualSourceCoord = sourceCoord + shift;
 
             // Fetch the Depth
-            float sampleDepth = LOAD_TEXTURE2D(_DepthTexture, actualSourceCoord).x;
+            float sampleDepth = LOAD_TEXTURE2D_X(_DepthTexture, actualSourceCoord).x;
             // If this the background, it should not be used as a valid sample
             if(sampleDepth == 0.0f) continue;
 
@@ -145,7 +145,7 @@ void RaytracingReflectionFilter(uint3 dispatchThreadId : SV_DispatchThreadID, ui
 
             // Let's fetch the half res sample's properties
             // Get the direction and pdf
-            float4 directionPDF = _SsrHitPointTexture[sourceCoord];
+            float4 directionPDF = _SsrHitPointTexture[COORD_TEXTURE2D_X(sourceCoord)];
 
             // If this direction is under the candidate surface, then it is not valid
             if(dot(directionPDF.xyz, normalWS) <= 0.0f) continue;
@@ -244,7 +244,7 @@ void RaytracingReflectionTAA(uint2 groupThreadId : SV_GroupThreadID, uint2 group
     uint2 centerCoord = groupId * RAYTRACING_REFLECTION_TILE_SIZE + groupThreadId;
     centerCoord.x = centerCoord.x + (unity_StereoEyeIndex * _ScreenSize.x);
 
-    float depth = LOAD_TEXTURE2D(_DepthTexture, centerCoord).r;
+    float depth = LOAD_TEXTURE2D_X(_DepthTexture, centerCoord).r;
     PositionInputs posInputs = GetPositionInput_Stereo(centerCoord, _ScreenSize.zw, depth, UNITY_MATRIX_I_VP, UNITY_MATRIX_V, unity_StereoEyeIndex);
 
     float2 closest = GetClosestFragment(posInputs);
@@ -292,7 +292,7 @@ void RaytracingReflectionTAA(uint2 groupThreadId : SV_GroupThreadID, uint2 group
     color = Unmap(lerp(color, history, feedback));
     color = clamp(color, 0.0, CLAMP_MAX);
     
-    _DenoiseOutputTextureRW[centerCoord] = float4(color, LOAD_TEXTURE2D_X(_DenoiseInputTexture, centerCoord).w);
+    _DenoiseOutputTextureRW[COORD_TEXTURE2D_X(centerCoord)] = float4(color, LOAD_TEXTURE2D_X(_DenoiseInputTexture, centerCoord).w);
 }
 
 // ----------------------------------------------------------------------------
@@ -329,7 +329,7 @@ BilateralData TapBilateralData(uint2 coordSS)
 
     if (DEPTH_WEIGHT > 0.0 || PLANE_WEIGHT > 0.0)
     {
-        posInput.deviceDepth = LOAD_TEXTURE2D(_DepthTexture, coordSS).r;
+        posInput.deviceDepth = LOAD_TEXTURE2D_X(_DepthTexture, coordSS).r;
         key.z = Linear01Depth(posInput.deviceDepth, _ZBufferParams);
     }
 
@@ -426,5 +426,5 @@ void ReflBilateralFilter(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId :
 
     // Store the intermediate result
     float3 reflection = reflSum / wSum;
-    _DenoiseOutputTextureRW[centerCoord] = float4(reflection, 1.0);
+    _DenoiseOutputTextureRW[COORD_TEXTURE2D_X(centerCoord)] = float4(reflection, 1.0);
 }

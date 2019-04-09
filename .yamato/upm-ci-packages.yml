@@ -50,4 +50,3 @@ all_package_ci:
     logs.zip:
       paths:
       - "**/upm-ci~/test-results/**/*"
-      - "**/upm-ci~/packages/**/*.tgz"

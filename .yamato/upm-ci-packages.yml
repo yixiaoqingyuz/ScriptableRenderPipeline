@@ -10,6 +10,9 @@ platforms:
     image: buildfarm/mac:stable
     flavor: m1.mac
 projects:
+  - name: SRPCore
+    folder: none
+    packagename: com.unity.render-pipelines.core
   - name: LWRP
     folder: LWGraphicsTest
     packagename: com.unity.visualeffectgraph
@@ -26,7 +29,6 @@ projects:
     folder: VisualEffectGraph_LWRP
     packagename: com.unity.visualeffectgraph
 ---
-
 all_package_ci:
   name: Pack all packages
   agent:

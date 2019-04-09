@@ -32,8 +32,6 @@ projects:
       paths:
       - "**/upm-ci~/test-results/**/*"
       - "**/upm-ci~/packages/**/*.tgz"
-
-
 {% endfor %}
 {% endfor %}
 {% endfor %}

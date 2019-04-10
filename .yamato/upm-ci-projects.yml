@@ -30,9 +30,9 @@ projects:
   - name: VFX_LWRP
     folder: VisualEffectGraph_LWRP
 ---
-
+#turning off mac on this one for now so that all the macs don't start at once
 all_project_ci:
-  name: _Run all test projects on all platforms
+  name: Run all test projects on all platforms
   agent:
     name: whatever
     type: Unity::VM
@@ -43,17 +43,17 @@ all_project_ci:
   dependencies:
   {% for project in projects %}
   {% for editor in editors %}
-  {% for platform in platforms %}
+  #{% for platform in platforms %}
   {% for testplatform in testplatforms %}
-    - .yamato/upm-ci-{{ project.name | downcase }}.yml#{{ project.name }}_{{ platform.name }}_{{ testplatform.name }}_{{ editor.version }}
+    - .yamato/upm-ci-{{ project.name | downcase }}.yml#{{ project.name }}_Windows64_{{ testplatform.name }}_{{ editor.version }}
   {% endfor %}
   {% endfor %}
   {% endfor %}
-  {% endfor %}
-#  triggers:
-#    branches:
-#      only:
-#        - yamato-master
+  #{% endfor %}
+  triggers:
+    branches:
+      only:
+        - yamato-master
   artifacts:
     logs.zip:
       paths:

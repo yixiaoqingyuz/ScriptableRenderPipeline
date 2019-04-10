@@ -1,3 +1,5 @@
+editors:
+  - version: trunk
 projects:
   - name: Core
     folder: none
@@ -19,7 +21,7 @@ projects:
     packagename: com.unity.visualeffectgraph
 ---
 all_package_ci:
-  name: _Pack all packages
+  name: Pack and test all packages
   agent:
     name: Windows64
     type: Unity::VM::GPU
@@ -27,9 +29,11 @@ all_package_ci:
     flavor: m1.large
   commands:
   {% for project in projects %}
-  #- cd {{ project.folder }} && upm-ci project pack
+  {% for editor in editors %}
   - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
   - cd {{ project.packagename }} && upm-ci package pack
+  - cd {{ project.packagename }} && upm-ci package test --unity-version {{ editor.version }}
+  {% endfor %}
   {% endfor %}
   artifacts:
     logs.zip:

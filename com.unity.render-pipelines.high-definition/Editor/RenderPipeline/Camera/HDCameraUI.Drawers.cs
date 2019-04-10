@@ -126,6 +126,10 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                 ),
             CED.space,
             CED.Group(
+                Drawer_AllowDynamicResolution
+                ),
+            CED.space,
+            CED.Group(
                 Drawer_CameraWarnings,
                 Drawer_FieldRenderingPath
                 )
@@ -180,6 +184,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 
         static void Drawer_FieldVolumeLayerMask(SerializedHDCamera p, Editor owner)
         {
+            
             EditorGUILayout.PropertyField(p.volumeLayerMask, volumeLayerMaskContent);
         }
         static void Drawer_FieldVolumeAnchorOverride(SerializedHDCamera p, Editor owner)
@@ -439,6 +444,11 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         static void Drawer_StopNaNs(SerializedHDCamera p, Editor owner)
         {
             EditorGUILayout.PropertyField(p.stopNaNs, stopNaNsContent);
+        }
+
+        static void Drawer_AllowDynamicResolution(SerializedHDCamera p, Editor owner)
+        {
+            EditorGUILayout.PropertyField(p.allowHWDynamicResolution, allowHWDynResContent);
         }
 
         static void Drawer_FieldRenderingPath(SerializedHDCamera p, Editor owner)

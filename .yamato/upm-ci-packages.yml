@@ -19,7 +19,7 @@ projects:
     packagename: com.unity.visualeffectgraph
 ---
 all_package_ci:
-  name: Pack all packages
+  name: _Pack all packages
   agent:
     name: Windows64
     type: Unity::VM::GPU

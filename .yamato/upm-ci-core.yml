@@ -1,14 +1,5 @@
 editors:
   - version: trunk
-platforms:
-  - name: Windows64
-    type: Unity::VM::GPU
-    image: sdet/gamecode_win10:latest
-    flavor: m1.large
-  - name: OSX
-    type: Unity::VM::osx
-    image: buildfarm/mac:stable
-    flavor: m1.mac
 projects:
   - name: Core
     folder: none
@@ -16,13 +7,13 @@ projects:
 ---
 {% for project in projects %}
 {% for editor in editors %}
-{% for platform in platforms %}
-{{ project.packagename }}_{{ platform.name }}_{{ editor.version }}:
-  name: Pack and Test {{ project.packagename }} version {{ editor.version }} on {{ platform.name }}
+{{ project.packagename }}_{{ editor.version }}:
+  name: Pack and Test {{ project.packagename }} version {{ editor.version }}
   agent:
-    type: {{ platform.type }}
-    image: {{ platform.image }}
-    flavor: {{ platform.flavor}}
+    name: Windows64
+    type: Unity::VM::GPU
+    image: sdet/gamecode_win10:latest
+    flavor: m1.large
   commands:
   - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress
   - cd {{ project.packagename }} && upm-ci package pack
@@ -32,6 +23,5 @@ projects:
       paths:
       - "**/upm-ci~/test-results/**/*"
       - "**/upm-ci~/packages/**/*.tgz"
-{% endfor %}
 {% endfor %}
 {% endfor %}

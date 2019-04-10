@@ -23,10 +23,16 @@ projects:
     folder: ShaderGraph
   - name: PostProcessing
     folder: PostProcessing
+  - name: HDRP
+    folder: HDRP_Tests
+  - name: VFXMain
+    folder: VisualEffectGraph
+  - name: VFX_LWRP
+    folder: VisualEffectGraph_LWRP
 ---
 
 all_project_ci:
-  name: Run all test projects on all platforms
+  name: _Run all test projects on all platforms
   agent:
     name: whatever
     type: Unity::VM

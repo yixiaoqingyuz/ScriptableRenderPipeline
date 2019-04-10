@@ -1520,8 +1520,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         if (lightIndex >= m_MaxPlanarReflectionOnScreen)
                             break;
 
-                        Debug.Log("Planar: " + lightIndex + ", " + probe.name);
-
                         var scaleOffset = m_ReflectionPlanarProbeCache.FetchSlice(cmd, probe.texture);
                         // Indices start at 1, because -0 == 0, we can know from the bit sign which cache to use
                         envIndex = scaleOffset == Vector4.zero ? int.MinValue : -(lightIndex + 1);

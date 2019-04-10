@@ -205,6 +205,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         // Sampling properties
         public int envIndex;
+        public Vector4 atlasScaleOffset;
     };
 
     [GenerateHLSL]

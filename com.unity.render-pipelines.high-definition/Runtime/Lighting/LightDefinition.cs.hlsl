@@ -142,6 +142,7 @@ struct EnvLightData
     float weight;
     float multiplier;
     int envIndex;
+    float4 atlasScaleOffset;
 };
 
 

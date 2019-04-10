@@ -70,8 +70,9 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
         static readonly GUIContent k_ProbeCacheSizeContent = EditorGUIUtility.TrTextContent("Probe Cache Size", "Sets the maximum size of the Probe Cache.");
 
         static readonly GUIContent k_CompressPlanarProbeCacheContent = EditorGUIUtility.TrTextContent("Compress Planar Reflection Probe Cache", "When enabled, HDRP compresses the Planar Reflection Probe cache to save disk space.");
-        static readonly GUIContent k_PlanarTextureSizeContent = EditorGUIUtility.TrTextContent("Planar Reflection Texture Size", "Specifies the maximum resolution of Planar Reflection Textures.");
+        static readonly GUIContent k_PlanarAtlasSizeContent = EditorGUIUtility.TrTextContent("Planar Reflection Atlas Size", "Specifies the resolution of Planar Reflection Atlas.");
         static readonly GUIContent k_PlanarProbeCacheSizeContent = EditorGUIUtility.TrTextContent("Planar Probe Cache Size", "Sets the maximum size of the Planar Probe Cache.");
+        static readonly GUIContent k_MaxPlanarReflectionOnScreen = EditorGUIUtility.TrTextContent("Max Planar Reflection On Screen", "Sets the maximum number of the Planar Reflection HDRP can handle on screen at once.");
 
         static readonly GUIContent k_SupportFabricBSDFConvolutionContent = EditorGUIUtility.TrTextContent("Fabric BSDF Convolution", "When enabled, HDRP calculates a separate version of each Reflection Probe for the Fabric Shader, creating more accurate lighting effects. See the documentation for more information and limitations of this feature.");
 

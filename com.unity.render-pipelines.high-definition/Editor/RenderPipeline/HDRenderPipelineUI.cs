@@ -235,7 +235,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
             EditorGUILayout.Space();
 
             EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.planarReflectionCacheCompressed, k_CompressPlanarProbeCacheContent);
-            EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize, k_PlanarTextureSizeContent);
+            EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize, k_PlanarAtlasSizeContent);
             if (serialized.renderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize.hasMultipleDifferentValues)
                 EditorGUILayout.HelpBox(k_MultipleDifferentValueMessage, MessageType.Info);
             else
@@ -253,6 +253,7 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
                     EditorGUILayout.HelpBox(message, MessageType.Info);
                 }
             }
+            EditorGUILayout.PropertyField(serialized.renderPipelineSettings.lightLoopSettings.maxPlanarReflectionOnScreen, k_MaxPlanarReflectionOnScreen);
 
             EditorGUILayout.Space();
 

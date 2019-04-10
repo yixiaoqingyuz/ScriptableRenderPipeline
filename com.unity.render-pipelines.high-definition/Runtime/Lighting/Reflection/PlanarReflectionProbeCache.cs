@@ -17,7 +17,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         }
 
         int                     m_ProbeSize;
-        int                     m_CacheSize;
         IBLFilterGGX            m_IBLFilterGGX;
         PowerOfTwoTextureAtlas  m_TextureAtlas;
         RenderTexture           m_TempRenderTexture;
@@ -28,7 +27,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         bool                    m_PerformBC6HCompression;
         Dictionary<int, uint>   m_TextureHashes = new Dictionary<int, uint>();
 
-        public PlanarReflectionProbeCache(HDRenderPipelineAsset hdAsset, IBLFilterGGX iblFilter, int cacheSize, int probeSize, GraphicsFormat probeFormat, bool isMipmaped)
+        public PlanarReflectionProbeCache(HDRenderPipelineAsset hdAsset, IBLFilterGGX iblFilter, int probeSize, GraphicsFormat probeFormat, bool isMipmaped)
         {
             m_ConvertTextureMaterial = CoreUtils.CreateEngineMaterial(hdAsset.renderPipelineResources.shaders.blitCubeTextureFacePS);
             m_ConvertTextureMPB = new MaterialPropertyBlock();
@@ -39,8 +38,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             Debug.Assert(probeFormat == GraphicsFormat.RGB_BC6H_UFloat || probeFormat == GraphicsFormat.R16G16B16A16_UNorm, "Reflection Probe Cache format for HDRP can only be BC6H or FP16.");
 
             m_ProbeSize = probeSize;
-            m_CacheSize = cacheSize;
-            m_TextureAtlas = new PowerOfTwoTextureAtlas(cacheSize, 0, probeFormat, useMipMap: isMipmaped, name: "PlanarReflectionProbe Atlas");
+            m_TextureAtlas = new PowerOfTwoTextureAtlas(probeSize, 0, probeFormat, useMipMap: isMipmaped, name: "PlanarReflectionProbe Atlas");
             m_IBLFilterGGX = iblFilter;
 
             m_PerformBC6HCompression = probeFormat == GraphicsFormat.RGB_BC6H_UFloat;
@@ -48,16 +46,18 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         void Initialize()
         {
-            if (m_TempRenderTexture == null)
+            if (m_ConvolutionTargetTexture == null)
             {
                 // Temporary RT used for convolution and compression
-                m_TempRenderTexture = new RenderTexture(m_ProbeSize, m_ProbeSize, 1, RenderTextureFormat.ARGBHalf);
-                m_TempRenderTexture.hideFlags = HideFlags.HideAndDontSave;
-                m_TempRenderTexture.dimension = TextureDimension.Tex2D;
-                m_TempRenderTexture.useMipMap = true;
-                m_TempRenderTexture.autoGenerateMips = false;
-                m_TempRenderTexture.name = CoreUtils.GetRenderTargetAutoName(m_ProbeSize, m_ProbeSize, 1, RenderTextureFormat.ARGBHalf, "PlanarReflectionTemp", mips: true);
-                m_TempRenderTexture.Create();
+
+                // TODO: Temporarily disabled because planar probe baking is currently disabled so we avoid allocating unused targets
+                // m_TempRenderTexture = new RenderTexture(m_ProbeSize, m_ProbeSize, 1, RenderTextureFormat.ARGBHalf);
+                // m_TempRenderTexture.hideFlags = HideFlags.HideAndDontSave;
+                // m_TempRenderTexture.dimension = TextureDimension.Tex2D;
+                // m_TempRenderTexture.useMipMap = true;
+                // m_TempRenderTexture.autoGenerateMips = false;
+                // m_TempRenderTexture.name = CoreUtils.GetRenderTargetAutoName(m_ProbeSize, m_ProbeSize, 1, RenderTextureFormat.ARGBHalf, "PlanarReflectionTemp", mips: true);
+                // m_TempRenderTexture.Create();
 
                 m_ConvolutionTargetTexture = new RenderTexture(m_ProbeSize, m_ProbeSize, 1, RenderTextureFormat.ARGBHalf);
                 m_ConvolutionTargetTexture.hideFlags = HideFlags.HideAndDontSave;
@@ -96,19 +96,21 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             CoreUtils.DrawFullScreen(cmd, m_ConvertTextureMaterial, m_ConvertTextureMPB);
         }
 
-        Texture ConvolveProbeTexture(CommandBuffer cmd, Texture texture)
+        Texture ConvolveProbeTexture(CommandBuffer cmd, Texture texture, out Vector4 sourceScaleOffset)
         {
             // Probes can be either Cubemaps (for baked probes) or RenderTextures (for realtime probes)
             Texture2D texture2D = texture as Texture2D;
             RenderTexture renderTexture = texture as RenderTexture;
 
             RenderTexture convolutionSourceTexture = null;
-            if (texture2D != null)
+
+            // TODO: disabled code path because planar reflection probe baking is currently disabled
+            if (texture2D != null && false)
             {
                 // if the size if different from the cache probe size or if the input texture format is compressed, we need to convert it
                 // 1) to a format for which we can generate mip maps
                 // 2) to the proper reflection probe cache size
-                var sizeMismatch = texture2D.width != m_ProbeSize || texture2D.height != m_ProbeSize;
+                var sizeMismatch = true; // TODO //texture2D.width != m_ProbeSize || texture2D.height != m_ProbeSize;
                 var formatMismatch = texture2D.format != TextureFormat.RGBAHalf; // Temporary RT for convolution is always FP16
                 if (formatMismatch || sizeMismatch)
                 {
@@ -135,24 +137,21 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 if (renderTexture.dimension != TextureDimension.Tex2D)
                 {
                     Debug.LogError("Planar Realtime reflection probe should always be a 2D RenderTexture.");
+                    sourceScaleOffset = Vector4.zero;
                     return null;
                 }
 
-                // TODO: Do a different case for downsizing, in this case, instead of doing ConvertTexture just use the relevant mipmaps.
-                var sizeMismatch = renderTexture.width != m_ProbeSize || renderTexture.height != m_ProbeSize;
-                if (sizeMismatch)
-                {
-                    ConvertTexture(cmd, renderTexture, m_TempRenderTexture);
-                    convolutionSourceTexture = m_TempRenderTexture;
-                }
-                else
-                    convolutionSourceTexture = renderTexture;
+                convolutionSourceTexture = renderTexture;
                 // Generate unfiltered mipmaps as a base for convolution
                 // TODO: Make sure that we don't first convolve everything on the GPU with the legacy code path executed after rendering the probe.
                 cmd.GenerateMips(convolutionSourceTexture);
             }
 
-            m_IBLFilterGGX.FilterPlanarTexture(cmd, convolutionSourceTexture, m_ConvolutionTargetTexture);
+            // TODO: profile if it's faster with the viewport (it should with many small planar and one big atlas)
+            float scaleX = m_ConvolutionTargetTexture.width / (float)texture.width;
+            float scaleY = m_ConvolutionTargetTexture.height / (float)texture.height;
+            sourceScaleOffset = new Vector4(1.0f / scaleX, 1.0f / scaleY, 0, 0);
+            m_IBLFilterGGX.FilterPlanarTexture(cmd, convolutionSourceTexture, m_ConvolutionTargetTexture, scaleX, scaleY);
 
             return m_ConvolutionTargetTexture;
         }
@@ -170,7 +169,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         // For now baking is done directly but will be time sliced in the future. Just preparing the code here.
                         m_ProbeBakingState[scaleOffset] = ProbeFilteringState.Convolving;
 
-                        Texture convolvedTexture = ConvolveProbeTexture(cmd, texture);
+                        Vector4 sourceScaleOffset;
+                        Texture convolvedTexture = ConvolveProbeTexture(cmd, texture, out sourceScaleOffset);
                         if (convolvedTexture == null)
                             return Vector4.zero;
 
@@ -180,13 +180,15 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         }
                         else
                         {
-                            m_TextureAtlas.UpdateTexture(cmd, texture, convolvedTexture, ref scaleOffset);
+                            m_TextureAtlas.UpdateTexture(cmd, texture, convolvedTexture, ref scaleOffset, sourceScaleOffset);
                         }
 
                         m_ProbeBakingState[scaleOffset] = ProbeFilteringState.Ready;
                     }
                 }
             }
+            else
+                Debug.LogError("No more space in the planar reflection probe atlas");
 
             return scaleOffset;
         }
@@ -208,9 +210,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             int instanceId = texture.GetInstanceID();
             bool needsUpdate = false;
 
-            m_TextureHashes.TryGetValue(instanceId, out savedTextureHash);
-
-            if (savedTextureHash != currentTextureHash)
+            if (!m_TextureHashes.TryGetValue(instanceId, out savedTextureHash) || savedTextureHash != currentTextureHash)
             {
                 m_TextureHashes[instanceId] = currentTextureHash;
                 needsUpdate = true;
@@ -224,10 +224,16 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return m_TextureAtlas.AtlasTexture;
         }
 
+
         public void Clear(CommandBuffer cmd)
         {
             m_TextureAtlas.ResetAllocator();
             m_TextureAtlas.ClearTarget(cmd);
+        }
+
+        public void ClearAtlasAllocator()
+        {
+            m_TextureAtlas.ResetAllocator();
         }
 
         internal static long GetApproxCacheSizeInByte(int nbElement, int resolution, int sliceSize)

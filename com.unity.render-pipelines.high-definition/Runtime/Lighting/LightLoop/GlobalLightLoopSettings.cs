@@ -85,7 +85,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             cookieAreaTextureSize = AreaCookieResolution.AreaCookieResolution128,
             cookieAreaTextureArraySize = 16,
 
-            planarReflectionProbeCacheSize = 2,
             planarReflectionAtlasSize = PlanarReflectionAtlasResolution.PlanarReflectionResolution1024,
             reflectionProbeCacheSize = 64,
             reflectionCubemapSize = CubeReflectionResolution.CubeReflectionResolution256,
@@ -98,6 +97,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             maxAreaLightsOnScreen = 64,
             maxEnvLightsOnScreen = 64,
             maxDecalsOnScreen = 512,
+            maxPlanarReflectionOnScreen = 16,
         };
 
         [FormerlySerializedAs("cookieSize")]
@@ -109,7 +109,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public AreaCookieResolution cookieAreaTextureSize;
         public int cookieAreaTextureArraySize;
 
-        public int planarReflectionProbeCacheSize;
         [FormerlySerializedAs("planarReflectionTextureSize")]
         public PlanarReflectionAtlasResolution planarReflectionAtlasSize;
         public int reflectionProbeCacheSize;
@@ -126,5 +125,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public int maxAreaLightsOnScreen;
         public int maxEnvLightsOnScreen;
         public int maxDecalsOnScreen;
+        public int maxPlanarReflectionOnScreen;
     }
 }

@@ -174,9 +174,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             {
                 // == 4. ==
                 var cubemapSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.reflectionCubemapSize;
-                var planarSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize;
                 var cubeRT = HDRenderUtilities.CreateReflectionProbeRenderTarget(cubemapSize);
-                var planarRT = HDRenderUtilities.CreatePlanarProbeRenderTarget(planarSize);
 
                 handle.EnterStage(
                     (int)BakingStages.ReflectionProbes,
@@ -197,13 +195,15 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     var instanceId = states[index].instanceID;
                     var probe = (HDProbe)EditorUtility.InstanceIDToObject(instanceId);
                     var cacheFile = GetGICacheFileForHDProbe(states[index].probeBakingHash);
+                    var planarRT = HDRenderUtilities.CreatePlanarProbeRenderTarget((int)probe.resolution);
 
                     // Get from cache or render the probe
                     if (!File.Exists(cacheFile))
                         RenderAndWriteToFile(probe, cacheFile, cubeRT, planarRT);
+                    
+                    planarRT.Release();
                 }
                 cubeRT.Release();
-                planarRT.Release();
 
                 // Copy texture from cache
                 for (int i = 0; i < addCount; ++i)
@@ -318,17 +318,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
 
             var cubemapSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.reflectionCubemapSize;
-            var planarSize = (int)hdPipeline.currentPlatformRenderPipelineSettings.lightLoopSettings.planarReflectionAtlasSize;
 
             var cubeRT = HDRenderUtilities.CreateReflectionProbeRenderTarget(cubemapSize);
-            var planarRT = HDRenderUtilities.CreatePlanarProbeRenderTarget(planarSize);
 
             // Render and write the result to disk
             for (int i = 0; i < bakedProbes.Count; ++i)
             {
                 var probe = bakedProbes[i];
                 var bakedTexturePath = HDBakingUtilities.GetBakedTextureFilePath(probe);
+                var planarRT = HDRenderUtilities.CreatePlanarProbeRenderTarget((int)probe.resolution);
                 RenderAndWriteToFile(probe, bakedTexturePath, cubeRT, planarRT);
+                planarRT.Release();
             }
 
             // AssetPipeline bug
@@ -368,7 +368,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             AssetDatabase.StopAssetEditing();
 
             cubeRT.Release();
-            planarRT.Release();
 
             return true;
         }

@@ -187,6 +187,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public int m_MaxDecalsOnScreen;
         public int m_MaxLightsOnScreen;
         public int m_MaxEnvLightsOnScreen;
+        public int m_MaxPlanarReflectionOnScreen;
 
         // Static keyword is required here else we get a "DestroyBuffer can only be called from the main thread"
         ComputeBuffer m_DirectionalLightDatas = null;
@@ -516,12 +517,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_MaxDecalsOnScreen = lightLoopSettings.maxDecalsOnScreen;
             m_MaxEnvLightsOnScreen = lightLoopSettings.maxEnvLightsOnScreen;
             m_MaxLightsOnScreen = m_MaxDirectionalLightsOnScreen + m_MaxPunctualLightsOnScreen + m_MaxAreaLightsOnScreen + m_MaxEnvLightsOnScreen;
+            m_MaxPlanarReflectionOnScreen = lightLoopSettings.maxPlanarReflectionOnScreen;
 
             m_lightList = new LightList();
             m_lightList.Allocate();
             m_Env2DCaptureVP.Clear();
             m_Env2DCaptureForward.Clear();
-            for (int i = 0, c = Mathf.Max(1, m_MaxEnvLightsOnScreen); i < c; ++i)
+            for (int i = 0, c = Mathf.Max(1, m_MaxPlanarReflectionOnScreen); i < c; ++i)
             {
                 m_Env2DCaptureVP.Add(Matrix4x4.identity);
                 m_Env2DCaptureForward.Add(0);
@@ -557,11 +559,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             // For planar reflection we only convolve with the GGX filter, otherwise it would be too expensive
             GraphicsFormat planarProbeCacheFormat = gLightLoopSettings.planarReflectionCacheCompressed ? GraphicsFormat.RGB_BC6H_UFloat : GraphicsFormat.R16G16B16A16_UNorm;
-            int reflectionPlanarSize = gLightLoopSettings.planarReflectionProbeCacheSize;
-            int reflectionPlanarResolution = (int)gLightLoopSettings.planarReflectionAtlasSize;
-            if (ReflectionProbeCache.GetApproxCacheSizeInByte(reflectionPlanarSize, reflectionPlanarResolution, 1) > k_MaxCacheSize)
-                reflectionPlanarSize = ReflectionProbeCache.GetMaxCacheSizeForWeightInByte(k_MaxCacheSize, reflectionPlanarResolution, 1);
-            m_ReflectionPlanarProbeCache = new PlanarReflectionProbeCache(hdAsset, (IBLFilterGGX)iBLFilterBSDFArray[0], reflectionPlanarSize, reflectionPlanarResolution, planarProbeCacheFormat, true);
+            int reflectionPlanarAtlasSize = (int)gLightLoopSettings.planarReflectionAtlasSize;
+            m_ReflectionPlanarProbeCache = new PlanarReflectionProbeCache(hdAsset, (IBLFilterGGX)iBLFilterBSDFArray[0], reflectionPlanarAtlasSize, planarProbeCacheFormat, true);
 
             s_GenAABBKernel = buildScreenAABBShader.FindKernel("ScreenBoundsAABB");
             s_GenAABBKernel_Oblique = buildScreenAABBShader.FindKernel("ScreenBoundsAABB_Oblique");
@@ -1506,6 +1505,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             var capturePosition = Vector3.zero;
             var influenceToWorld = probe.influenceToWorld;
+            Vector4 atlasScaleOffset = Vector4.zero;
 
             // 31 bits index, 1 bit cache type
             var envIndex = int.MinValue;
@@ -1516,10 +1516,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         if (probe.mode == ProbeSettings.Mode.Realtime
                             && !hdCamera.frameSettings.IsEnabled(FrameSettingsField.RealtimePlanarReflection))
                             break;
+                        // If the max number of planar on screen is reached
+                        if (lightIndex >= m_MaxPlanarReflectionOnScreen)
+                            break;
 
-                        var fetchIndex = m_ReflectionPlanarProbeCache.FetchSlice(cmd, probe.texture);
+                        Debug.Log("Planar: " + lightIndex + ", " + probe.name);
+
+                        var scaleOffset = m_ReflectionPlanarProbeCache.FetchSlice(cmd, probe.texture);
                         // Indices start at 1, because -0 == 0, we can know from the bit sign which cache to use
-                        envIndex = fetchIndex == Vector4.zero ? int.MinValue : -(lightIndex + 1);
+                        envIndex = scaleOffset == Vector4.zero ? int.MinValue : -(lightIndex + 1);
+                        
+                        atlasScaleOffset = scaleOffset;
 
                         var renderData = planarProbe.renderData;
                         var worldToCameraRHSMatrix = renderData.worldToCameraRHS;
@@ -1597,6 +1604,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             envLightData.influencePositionRWS = influenceToWorld.GetColumn(3);
 
             envLightData.envIndex = envIndex;
+            envLightData.atlasScaleOffset = atlasScaleOffset;
 
             // Proxy data
             var proxyToWorld = probe.proxyToWorld;
@@ -2135,6 +2143,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     // Not necessary yet but call it for future modification with sphere influence volume
                     CoreUnsafeUtils.QuickSort(m_SortKeys, 0, sortCount - 1); // Call our own quicksort instead of Array.Sort(sortKeys, 0, sortCount) so we don't allocate memory (note the SortCount-1 that is different from original call).
 
+                    // TODO: Instead of clearing the atlas layout at each frame, we must do a defragmentation
+                    // when there is no more space in the atlas.
+                    m_ReflectionPlanarProbeCache.ClearAtlasAllocator();
+
                     for (int sortIndex = 0; sortIndex < sortCount; ++sortIndex)
                     {
                         // In 1. we have already classify and sorted the light, we need to use this sorted order here
@@ -2252,6 +2264,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             if (!m_CookieAtlas.AddTexture(cmd, ref scaleBias, cookie))
             {
+                Debug.LogError("No more space in the cookie atlas");
                 return Vector4.zero;
             }
 

@@ -25,28 +25,28 @@ namespace UnityEngine.Experimental.Rendering
             return (int)Mathf.Pow(2, mipPadding) * 2;
         }
         
-        void Blit2DTexturePadding(CommandBuffer cmd, Vector4 scaleBias, Texture texture)
+        void Blit2DTexturePadding(CommandBuffer cmd, Vector4 scaleBias, Texture texture, Vector4 sourceScaleOffset)
         {
             int mipCount = GetTextureMipmapCount(texture.width, texture.height);
             int pixelPadding = GetTexturePadding();
             Vector2 textureSize = GetPowerOfTwoTextureSize(texture);
             bool bilinear = texture.filterMode != FilterMode.Point;
 
-            using (new ProfilingSample(cmd, "Blit cubemap texture"))
+            using (new ProfilingSample(cmd, "Blit texture with padding"))
             {
                 for (int mipLevel = 0; mipLevel < mipCount; mipLevel++)
                 {
                     cmd.SetRenderTarget(m_AtlasTexture, mipLevel);
-                    HDUtils.BlitPaddedQuad(cmd, texture, textureSize, new Vector4(1, 1, 0, 0), scaleBias, mipLevel, bilinear, pixelPadding);
+                    HDUtils.BlitPaddedQuad(cmd, texture, textureSize, sourceScaleOffset, scaleBias, mipLevel, bilinear, pixelPadding);
                 }
             }
         }
 
-        protected override void BlitTexture(CommandBuffer cmd, Vector4 scaleBias, Texture texture)
+        protected override void BlitTexture(CommandBuffer cmd, Vector4 scaleBias, Texture texture, Vector4 sourceScaleOffset)
         {
             // We handle ourself the 2D blit because cookies needs mipPadding for trilinear filtering
             if (Is2D(texture))
-                Blit2DTexturePadding(cmd, scaleBias, texture);
+                Blit2DTexturePadding(cmd, scaleBias, texture, sourceScaleOffset);
         }
 
         void TextureSizeToPowerOfTwo(Texture texture, ref int width, ref int height)
@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Rendering
         }
 
         // Override the behavior when we add a texture so all non-pot textures are blitted to a pot target zone
-        protected override bool AllocateTexture(CommandBuffer cmd, ref Vector4 scaleBias, Texture texture, int width, int height)
+        protected override bool AllocateTexture(CommandBuffer cmd, ref Vector4 scaleBias, Texture texture, int width, int height, Vector4 sourceScaleOffset)
         {
             // This atlas only supports square textures
             if (height != width)
@@ -73,16 +73,16 @@ namespace UnityEngine.Experimental.Rendering
 
             TextureSizeToPowerOfTwo(texture, ref height, ref width);
 
-            return base.AllocateTexture(cmd, ref scaleBias, texture, width, height);
+            return base.AllocateTexture(cmd, ref scaleBias, texture, width, height, sourceScaleOffset);
         }
         
-        public override bool AddTexture(CommandBuffer cmd, ref Vector4 scaleBias, Texture texture)
+        public override bool AddTexture(CommandBuffer cmd, ref Vector4 scaleBias, Texture texture, Vector4 sourceScaleOffset)
         {
             // If the texture is 2D or already cached we have nothing to do in this function
-            if (base.AddTexture(cmd, ref scaleBias, texture))
+            if (base.AddTexture(cmd, ref scaleBias, texture, sourceScaleOffset))
                 return true;
 
-            return AllocateTexture(cmd, ref scaleBias, texture, texture.width, texture.height);
+            return AllocateTexture(cmd, ref scaleBias, texture, texture.width, texture.height, sourceScaleOffset);
         }
     }
 }

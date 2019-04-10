@@ -89,7 +89,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public Vector4 doubleBufferedViewportScale {
             get
             {
-                if (HDDynamicResolutionHandler.instance.HardwareDynamicResIsEnabled())
+                if (HDDynamicResolutionHandler.instance.HardwareDynamicResIsEnabled(camera.allowDynamicResolution))
                 {
                     return new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
                 }
@@ -101,7 +101,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             get
             {
-                if (HDDynamicResolutionHandler.instance.HardwareDynamicResIsEnabled())
+                if (HDDynamicResolutionHandler.instance.HardwareDynamicResIsEnabled(camera.allowDynamicResolution))
                 {
                     return new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
                 }
@@ -875,7 +875,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             var hdPipeline = (HDRenderPipeline)RenderPipelineManager.currentPipeline;
 
             return rtHandleSystem.Alloc(Vector2.one, filterMode: FilterMode.Point, colorFormat: (GraphicsFormat)hdPipeline.currentPlatformRenderPipelineSettings.colorBufferFormat,
-                                        enableRandomWrite: true, useMipMap: true, autoGenerateMips: false, xrInstancing: true,
+                                        enableRandomWrite: true, useMipMap: true, autoGenerateMips: false, useDynamicScale: true, xrInstancing: true,
                                         name: string.Format("CameraColorBufferMipChain{0}", frameIndex));
         }
 

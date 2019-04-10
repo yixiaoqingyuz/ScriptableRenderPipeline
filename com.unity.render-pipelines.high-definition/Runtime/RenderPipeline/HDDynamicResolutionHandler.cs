@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -31,6 +31,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         private float m_PrevHWScaleWidth = 1.0f;
         private float m_PrevHWScaleHeight = 1.0f;
+        private Vector2Int m_LastScaledSize = new Vector2Int(0, 0);
 
         private DynamicResScalePolicyType m_ScalerType = DynamicResScalePolicyType.ReturnsMinMaxLerpFactor;
 
@@ -97,6 +98,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             ProcessSettings(settings);
 
+            if (!m_Enabled) return;
+
             if (!m_ForcingRes)
             {
                 if(m_ScalerType == DynamicResScalePolicyType.ReturnsMinMaxLerpFactor)
@@ -117,7 +120,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 m_PrevFraction = m_CurrentFraction;
                 hasSwitchedResolution = true;
 
-                if (HardwareDynamicResIsEnabled())
+                if (type == DynamicResolutionType.Hardware)
                 {
                     ScalableBufferManager.ResizeBuffers(m_CurrentFraction, m_CurrentFraction);
                 }
@@ -127,7 +130,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             else
             {
                 // Unity can change the scale factor by itself so we need to trigger the Action if that happens as well.
-                if (HardwareDynamicResIsEnabled()) 
+                if (type == DynamicResolutionType.Hardware) 
                 {
                     if(ScalableBufferManager.widthScaleFactor != m_PrevHWScaleWidth  ||
                         ScalableBufferManager.heightScaleFactor != m_PrevHWScaleHeight)
@@ -146,33 +149,45 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             return m_Enabled && m_CurrentFraction != 1.0f && type == DynamicResolutionType.Software;
         }
-        public bool HardwareDynamicResIsEnabled()
+        public bool HardwareDynamicResIsEnabled(bool cameraRequest)
         {
-            return false;
-            // This has lots of problems with platform. Momentarily disabling it until we solve the issues.
-            // return m_Enabled && type == DynamicResolutionType.Hardware;
+            return cameraRequest && m_Enabled && type == DynamicResolutionType.Hardware;
+        }
+
+        public bool RequestsHardwareDynamicResolution()
+        {
+            return type == DynamicResolutionType.Hardware;
+        }
+
+        public bool DynamicResolutionEnabled()
+        {
+            return m_Enabled && m_CurrentFraction != 1.0f;
         }
 
         public Vector2Int GetRTHandleScale(Vector2Int size)
         {
             cachedOriginalSize = size;
 
-            if(!m_Enabled)
+            if (!m_Enabled)
             {
                 return size;
             }
 
             float scaleFractionX = m_CurrentFraction;
             float scaleFractionY = m_CurrentFraction;
-            if(HardwareDynamicResIsEnabled())
+            if (type == DynamicResolutionType.Hardware)
             {
                 scaleFractionX = ScalableBufferManager.widthScaleFactor;
                 scaleFractionY = ScalableBufferManager.heightScaleFactor;
             }
 
             Vector2Int scaledSize = new Vector2Int(Mathf.CeilToInt(size.x * scaleFractionX), Mathf.CeilToInt(size.y * scaleFractionY));
-            scaledSize.x += (1 & scaledSize.x);
-            scaledSize.y += (1 & scaledSize.y);
+            if (type != DynamicResolutionType.Hardware)
+            {
+                scaledSize.x += (1 & scaledSize.x);
+                scaledSize.y += (1 & scaledSize.y);
+            }
+            m_LastScaledSize = scaledSize;
 
             return scaledSize;
         }
@@ -182,5 +197,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return m_Enabled ? m_CurrentFraction : 1.0f;
         }
 
+        public Vector2Int GetLastScaledSize()
+        {
+            return m_LastScaledSize;
+        }
     }
 }

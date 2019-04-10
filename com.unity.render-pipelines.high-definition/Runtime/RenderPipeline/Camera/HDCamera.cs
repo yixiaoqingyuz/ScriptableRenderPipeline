@@ -804,6 +804,21 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
+        public void Dispose()
+        {
+            if (xrViewConstantsGpu != null)
+            {
+                xrViewConstantsGpu.Dispose();
+                xrViewConstantsGpu = null;
+            }
+
+            if (m_HistoryRTSystem != null)
+            {
+                m_HistoryRTSystem.Dispose();
+                m_HistoryRTSystem = null;
+            }
+        }
+
         // Will return NULL if the camera does not exist.
         public static HDCamera Get(MultipassCamera multipassCamera)
         {

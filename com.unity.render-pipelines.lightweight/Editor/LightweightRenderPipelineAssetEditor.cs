@@ -259,7 +259,7 @@ namespace UnityEditor.Rendering.LWRP
             EditorGUILayout.EndFoldoutHeaderGroup();
         }
 
-        void DrawQualitySettings()
+        public void DrawQualitySettings()
         {
             m_QualitySettingsFoldout.value = EditorGUILayout.BeginFoldoutHeaderGroup(m_QualitySettingsFoldout.value, Styles.qualitySettingsText);
             if (m_QualitySettingsFoldout.value)

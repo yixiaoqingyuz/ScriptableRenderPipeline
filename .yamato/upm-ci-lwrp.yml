@@ -59,9 +59,8 @@ projects:
 {{ project.packagename }}_{{ editor.version }}:
   name: Pack and Test {{ project.packagename }} version {{ editor.version }}
   agent:
-    name: Windows64
-    type: Unity::VM::GPU
-    image: sdet/gamecode_win10:latest
+    type: Unity::VM
+    image: package-ci/win10:stable
     flavor: m1.large
   commands:
    - npm install git+ssh://git@gitlab.cds.internal.unity3d.com:upm-packages/project-templates/upm-template-utils.git#performance-package -g --no-progress

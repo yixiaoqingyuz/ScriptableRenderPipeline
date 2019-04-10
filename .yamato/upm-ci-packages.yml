@@ -23,9 +23,8 @@ projects:
 all_package_ci:
   name: Pack and test all packages
   agent:
-    name: Windows64
-    type: Unity::VM::GPU
-    image: sdet/gamecode_win10:latest
+    type: Unity::VM
+    image: package-ci/win10:stable
     flavor: m1.large
   commands:
   {% for project in projects %}
@@ -40,3 +39,28 @@ all_package_ci:
       paths:
       - "**/upm-ci~/test-results/**/*"
       - "**/upm-ci~/packages/**/*.tgz"
+
+publish:
+  name: Publish all packages
+  agent:
+    type: Unity::VM
+    image: package-ci/win10:stable
+    flavor: m1.large
+  commands:
+  {% for project in projects %}
+  {% for editor in editors %}
+    - npm install upm-ci-utils -g --registry https://api.bintray.com/npm/unity/unity-npm
+    - cd {{ project.packagename }} && upm-ci package publish
+  {% endfor %}
+  {% endfor %}
+#  triggers:
+#    tags:
+#      only:
+#        - /^(r|R)(c|C)-\d+\.\d+\.\d+(-preview(\.\d+)?)?$/
+#        - /^(r|R)elease-\d+\.\d+\.\d+(-preview(\.\d+)?)?$/
+  artifacts:
+    artifacts.zip:
+      paths:
+        - "upm-ci~/packages/*.tgz"
+  dependencies:
+    - all_package_ci

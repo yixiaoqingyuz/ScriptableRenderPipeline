@@ -7,31 +7,33 @@ namespace UnityEditor.Rendering.LookDev
     [Serializable]
     internal class GizmoState
     {
-        [SerializeField]
-        private Vector2 m_Point1;
-        [SerializeField]
-        private Vector2 m_Point2;
-        [SerializeField]
-        private Vector2 m_Center = Vector2.zero;
-        [SerializeField]
-        private float m_Angle = 0.0f;
-        [SerializeField]
-        private float m_Length = 0.2f;
-        [SerializeField]
-        private Vector4 m_Plane;
-        [SerializeField]
-        private Vector4 m_PlaneOrtho;
+        public const float thickness = 0.0028f;
+        public const float thicknessSelected = 0.015f;
+        public const float circleRadius = 0.014f;
+        public const float circleRadiusSelected = 0.03f;
+        public const float blendFactorCircleRadius = 0.01f;
+        public const float blendFactorCircleRadiusSelected = 0.03f;
+
+        [field: SerializeField]
+        public Vector2 point1 { get; private set; }
+        [field: SerializeField]
+        public Vector2 point2 { get; private set; }
+        [field: SerializeField]
+        public Vector2 center { get; private set; } = Vector2.zero;
+        [field: SerializeField]
+        public float angle { get; private set; }
+        [field: SerializeField]
+        public float length { get; private set; } = 0.2f;
+        [field: SerializeField]
+        public Vector4 plane { get; private set; }
+        [field: SerializeField]
+        public Vector4 planeOrtho { get; private set; }
         
-        public Vector2 point1 => m_Point1;
-        public Vector2 point2 => m_Point2;
-        public Vector2 center => m_Center;
-        public float angle => m_Angle;
-        public float length => m_Length;
-        public Vector4 plane => m_Plane;
-        public Vector4 planeOrtho => m_PlaneOrtho;
+        public float blendFactorMaxGizmoDistance
+            => length - circleRadius - blendFactorCircleRadius;
 
         public GizmoState()
-            => Update(m_Center, m_Length, m_Angle);
+            => Update(center, length, angle);
         
         private Vector4 Get2DPlane(Vector2 firstPoint, float angle)
         {
@@ -61,33 +63,33 @@ namespace UnityEditor.Rendering.LookDev
 
         public void Update(Vector2 point1, Vector2 point2)
         {
-            m_Point1 = point1;
-            m_Point2 = point2;
-            m_Center = (point1 + point2) * 0.5f;
-            m_Length = (point2 - point1).magnitude * 0.5f;
+            this.point1 = point1;
+            this.point2 = point2;
+            center = (point1 + point2) * 0.5f;
+            length = (point2 - point1).magnitude * 0.5f;
 
-            Vector3 verticalPlane = Get2DPlane(m_Center, 0.0f);
+            Vector3 verticalPlane = Get2DPlane(center, 0.0f);
             float side = Vector3.Dot(new Vector3(point1.x, point1.y, 1.0f), verticalPlane);
-            m_Angle = (Mathf.Deg2Rad * Vector2.Angle(new Vector2(0.0f, 1.0f), (point1 - point2).normalized));
+            angle = (Mathf.Deg2Rad * Vector2.Angle(new Vector2(0.0f, 1.0f), (point1 - point2).normalized));
             if (side > 0.0f)
-                m_Angle = 2.0f * Mathf.PI - m_Angle;
+                angle = 2.0f * Mathf.PI - angle;
 
-            m_Plane = Get2DPlane(m_Center, m_Angle);
-            m_PlaneOrtho = Get2DPlane(m_Center, m_Angle + 0.5f * (float)Mathf.PI);
+            plane = Get2DPlane(center, angle);
+            planeOrtho = Get2DPlane(center, angle + 0.5f * (float)Mathf.PI);
         }
 
         public void Update(Vector2 center, float length, float angle)
         {
-            m_Center = center;
-            m_Length = length;
-            m_Angle = angle;
+            this.center = center;
+            this.length = length;
+            this.angle = angle;
 
-            m_Plane = Get2DPlane(m_Center, m_Angle);
-            m_PlaneOrtho = Get2DPlane(m_Center, m_Angle + 0.5f * (float)Mathf.PI);
+            plane = Get2DPlane(center, angle);
+            planeOrtho = Get2DPlane(center, angle + 0.5f * (float)Mathf.PI);
 
-            Vector2 dir = new Vector2(m_PlaneOrtho.x, m_PlaneOrtho.y);
-            m_Point1 = m_Center + dir * m_Length;
-            m_Point2 = m_Center - dir * m_Length;
+            Vector2 dir = new Vector2(planeOrtho.x, planeOrtho.y);
+            point1 = center + dir * length;
+            point2 = center - dir * length;
         }
     }
 }

@@ -186,4 +186,79 @@ namespace UnityEditor.Rendering.LookDev
                 light.enabled = visible;
         }
     }
+    
+    class StageCache
+    {
+        const string firstStageName = "LookDevFirstView";
+        const string secondStageName = "LookDevSecondView";
+
+        Stage[] m_Stages;
+        Context m_Contexts;
+
+        public Stage this[ViewIndex index]
+            => m_Stages[(int)index];
+
+        public bool initialized { get; private set; }
+
+        public StageCache(IDataProvider dataProvider, Context contexts)
+        {
+            m_Contexts = contexts;
+            m_Stages = new Stage[2]
+            {
+                InitStage(ViewIndex.First, dataProvider),
+                InitStage(ViewIndex.Second, dataProvider)
+            };
+            initialized = true;
+        }
+        
+        Stage InitStage(ViewIndex index, IDataProvider dataProvider)
+        {
+            Stage stage;
+            switch (index)
+            {
+                case ViewIndex.First:
+                    stage = new Stage(firstStageName);
+                    stage.camera.backgroundColor = Compositer.firstViewGizmoColor;
+                    break;
+                case ViewIndex.Second:
+                    stage = new Stage(secondStageName);
+                    stage.camera.backgroundColor = Compositer.secondViewGizmoColor;
+                    break;
+                default:
+                    throw new ArgumentException("Unknown ViewIndex: " + index);
+            }
+
+            CustomRenderSettings renderSettings = dataProvider.GetEnvironmentSetup();
+            if (Unsupported.SetOverrideRenderSettings(stage.scene))
+            {
+                RenderSettings.defaultReflectionMode = renderSettings.defaultReflectionMode;
+                RenderSettings.customReflection = renderSettings.customReflection;
+                RenderSettings.skybox = renderSettings.skybox;
+                RenderSettings.ambientMode = renderSettings.ambientMode;
+                Unsupported.useScriptableRenderPipeline = true;
+                Unsupported.RestoreOverrideRenderSettings();
+            }
+            else
+                throw new System.Exception("Stage's scene was not created correctly");
+
+            dataProvider.SetupCamera(stage.camera);
+
+            return stage;
+        }
+
+        public void UpdateScene(ViewIndex index)
+        {
+            Stage stage = this[index];
+            stage.Clear();
+            var viewContent = m_Contexts.GetViewContent(index);
+            if (viewContent == null)
+            {
+                viewContent.prefabInstanceInPreview = null;
+                return;
+            }
+
+            if (viewContent.contentPrefab != null && !viewContent.contentPrefab.Equals(null))
+                viewContent.prefabInstanceInPreview = stage.InstantiateIntoStage(viewContent.contentPrefab);
+        }
+    }
 }

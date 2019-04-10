@@ -201,7 +201,7 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
     uint2 tileCoord = groupId;
 
 #ifdef ENABLE_MSAA
-    float depth = LOAD_TEXTURE2D(_CameraDepthValues, pixelCoord.xy).z;
+    float depth = LOAD_TEXTURE2D_X(_CameraDepthValues, pixelCoord.xy).z;
 #else
     float depth = LoadCameraDepth(pixelCoord.xy);
 #endif
@@ -209,13 +209,16 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
     if (depth == UNITY_RAW_FAR_CLIP_VALUE)
         return;
 
-    int outputIndex = COORD_TEXTURE2D_X(pixelCoord);
     PositionInputs posInput = GetPositionInput_Stereo(pixelCoord.xy, _ScreenSize.zw, depth, UNITY_MATRIX_I_VP, UNITY_MATRIX_V, tileCoord, unity_StereoEyeIndex);
     float3 positionWS = posInput.positionWS + _WorldSpaceCameraPos;
 
+    NormalData normalData;
+    DecodeFromNormalBuffer(posInput.positionSS, normalData);
+
     uint begin = 0;
 
-    uint voxelResolution = _VxShadowMapsBuffer[begin];
+    float scale = asfloat(_VxShadowMapsBuffer[begin]);
+    uint maxScale = _VxShadowMapsBuffer[begin + 1];
     float4x4 worldToShadowMatrix =
     {
         asfloat(_VxShadowMapsBuffer[begin +  2]),
@@ -239,20 +242,21 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
         asfloat(_VxShadowMapsBuffer[begin + 17]),
     };
 
-    //positionWS.y += _VoxelUpBias;
-    positionWS.y += 0.01;
+    uint voxelResolution = 1 << maxScale;
+    float normalBias = 2.0 * (scale / voxelResolution);
+
+    positionWS += (normalData.normalWS * normalBias);
+
     float3 posNDC = mul(worldToShadowMatrix, float4(positionWS, 1.0)).xyz;
     float3 posP = posNDC * (float)voxelResolution;
     float3 posF = floor(posP);
     float3 lerpWeight = posP - posF;
 
     uint3 posQ = (uint3)posP;
-    posQ.z -= 2;
-    //posQ.z -= _VoxelZBias;
 
     if (any(posQ >= (voxelResolution.xxx - 1)))
     {
-        _DeferredShadowTextureUAV[outputIndex] = 0.0;
+        _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = 0.0;
         return;
     }
 
@@ -264,7 +268,7 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
 
     if (result.w == 0)
     {
-        _DeferredShadowTextureUAV[outputIndex] = result.y ? 0.0 : 1.0;
+        _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = result.y ? 0.0 : 1.0;
         return;
     }
 
@@ -275,7 +279,7 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
 
     if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0)
     {
-        _DeferredShadowTextureUAV[outputIndex] = results[0].y ? 0.0 : 1.0;
+        _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = results[0].y ? 0.0 : 1.0;
         return;
     }
 
@@ -287,13 +291,13 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
     if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0 &&
         results[4].w == 0 && results[5].w == 0 && results[6].w == 0 && results[7].w == 0)
     {
-        _DeferredShadowTextureUAV[outputIndex] = results[0].y ? 0.0 : 1.0;
+        _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = results[0].y ? 0.0 : 1.0;
         return;
     }
 
     attenuation = TravereTrilinearSampleVxShadowMap(begin, posQ, results, lerpWeight);
 #endif
 
-    _DeferredShadowTextureUAV[outputIndex] = 1.0 - attenuation;
+    _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = 1.0 - attenuation;
 }
 //seongdae;vxsm

@@ -305,7 +305,7 @@ float InitContactShadow(PositionInputs posInput)
     // We use this property to have a neutral value for contact shadows that doesn't consume a sampler and work also with compute shader (i.e use ImageLoad)
     // We store inverse contact shadow so neutral is white. So either we sample inside or outside the texture it return 1 in case of neutral
     //return 1.0 - LOAD_TEXTURE2D_X(_DeferredShadowTexture, posInput.positionSS).x; //seongdae;vxsm;origin
-    return 1.0 - LOAD_TEXTURE2D(_DeferredContactShadowTexture, posInput.positionSS).x; //seongdae;vxsm
+    return 1.0 - LOAD_TEXTURE2D_X(_DeferredContactShadowTexture, posInput.positionSS).x; //seongdae;vxsm
 }
 
 float GetContactShadow(LightLoopContext lightLoopContext, int contactShadowIndex)
@@ -316,7 +316,7 @@ float GetContactShadow(LightLoopContext lightLoopContext, int contactShadowIndex
 //seongdae;vxsm
 float InitVxShadow(PositionInputs posInput)
 {
-    return 1.0 - LOAD_TEXTURE2D(_DeferredVxShadowTexture, posInput.positionSS).x;
+    return 1.0 - LOAD_TEXTURE2D_X(_DeferredVxShadowTexture, posInput.positionSS).x;
 }
 
 float GetVxShadow(LightLoopContext lightLoopContext)

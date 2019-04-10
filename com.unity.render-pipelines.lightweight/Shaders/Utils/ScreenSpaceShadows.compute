@@ -85,7 +85,8 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
 #endif
     uint begin = 0;
 
-    uint voxelResolution = _VxShadowMapsBuffer[begin];
+    float scale = asfloat(_VxShadowMapsBuffer[begin]);
+    uint maxScale = _VxShadowMapsBuffer[begin + 1];
     float4x4 worldToShadowMatrix =
     {
         asfloat(_VxShadowMapsBuffer[begin + 2]),
@@ -109,8 +110,11 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
         asfloat(_VxShadowMapsBuffer[begin + 17]),
     };
 
-    //positionWS.y += _VoxelUpBias;
-    positionWS.y += 0.01;
+    uint voxelResolution = 1 << maxScale;
+    float bias = (scale / voxelResolution);
+
+    positionWS.y += bias;
+
     float3 posNDC = mul(worldToShadowMatrix, float4(positionWS, 1.0)).xyz;
     float3 posP = posNDC * (float)voxelResolution;
     float3 posF = floor(posP);
@@ -118,7 +122,6 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
 
     uint3 posQ = (uint3)posP;
     posQ.z -= 2;
-    //posQ.z -= _VoxelZBias;
 
     if (any(posQ >= (voxelResolution.xxx - 1)))
     {

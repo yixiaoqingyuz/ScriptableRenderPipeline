@@ -775,6 +775,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             m_ContactShadows = VolumeManager.instance.stack.GetComponent<ContactShadows>();
             m_EnableContactShadow = m_FrameSettings.IsEnabled(FrameSettingsField.ContactShadows) && m_ContactShadows.enable.value && m_ContactShadows.length.value > 0;
+            m_EnableVxShadow = m_FrameSettings.IsEnabled(FrameSettingsField.Shadow) && m_FrameSettings.IsEnabled(FrameSettingsField.VxShadows); //seongdae;vxsm
             m_indirectLightingController = VolumeManager.instance.stack.GetComponent<IndirectLightingController>();
 
             // Cluster
@@ -2742,7 +2743,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             bool needsContactShadows = (m_CurrentSunLight != null && sunShadowData != null && sunShadowData.contactShadows) || m_DominantLightIndex != -1;
             if (!m_EnableContactShadow || !needsContactShadows)
             {
-                cmd.SetGlobalTexture(HDShaderIDs._DeferredContactShadowTexture, Texture2D.blackTexture);
+                cmd.SetGlobalTexture(HDShaderIDs._DeferredContactShadowTexture, TextureXR.GetBlackTexture());
                 return;
             }
             cmd.SetGlobalTexture(HDShaderIDs._DeferredContactShadowTexture, deferredShadowRT);
@@ -2757,7 +2758,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             bool needsVxShadows = (hasSunLight && hasSunVxShadow) || m_DominantLightIndex != -1;
             if (!m_EnableVxShadow || !needsVxShadows)
             {
-                cmd.SetGlobalTexture(HDShaderIDs._DeferredVxShadowTexture, Texture2D.blackTexture);
+                cmd.SetGlobalTexture(HDShaderIDs._DeferredVxShadowTexture, TextureXR.GetBlackTexture());
                 return;
             }
             cmd.SetGlobalTexture(HDShaderIDs._DeferredVxShadowTexture, deferredShadowRT);

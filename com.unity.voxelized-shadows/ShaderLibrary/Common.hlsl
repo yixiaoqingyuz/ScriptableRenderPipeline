@@ -256,10 +256,10 @@ void TraverseVxShadowMapPosQ2x2x2(uint begin, uint3 posQ_0, out uint4 results[8]
         nodeIndex4_0.y = intersected4_0.y ? _VxShadowMapsBuffer[nextIndex4_0.y] : nodeIndex4_0.y;
         nodeIndex4_0.z = intersected4_0.z ? _VxShadowMapsBuffer[nextIndex4_0.z] : nodeIndex4_0.z;
         nodeIndex4_0.w = intersected4_0.w ? _VxShadowMapsBuffer[nextIndex4_0.w] : nodeIndex4_0.w;
-nodeIndex4_1.x = intersected4_1.x ? _VxShadowMapsBuffer[nextIndex4_1.x] : nodeIndex4_1.x;
-nodeIndex4_1.y = intersected4_1.y ? _VxShadowMapsBuffer[nextIndex4_1.y] : nodeIndex4_1.y;
-nodeIndex4_1.z = intersected4_1.z ? _VxShadowMapsBuffer[nextIndex4_1.z] : nodeIndex4_1.z;
-nodeIndex4_1.w = intersected4_1.w ? _VxShadowMapsBuffer[nextIndex4_1.w] : nodeIndex4_1.w;
+        nodeIndex4_1.x = intersected4_1.x ? _VxShadowMapsBuffer[nextIndex4_1.x] : nodeIndex4_1.x;
+        nodeIndex4_1.y = intersected4_1.y ? _VxShadowMapsBuffer[nextIndex4_1.y] : nodeIndex4_1.y;
+        nodeIndex4_1.z = intersected4_1.z ? _VxShadowMapsBuffer[nextIndex4_1.z] : nodeIndex4_1.z;
+        nodeIndex4_1.w = intersected4_1.w ? _VxShadowMapsBuffer[nextIndex4_1.w] : nodeIndex4_1.w;
     }
 
     results[0] = uint4(nodeIndex4_0.x, lit4_0.x, shadowed4_0.x, intersected4_0.x);
@@ -469,7 +469,8 @@ float TravereTrilinearSampleVxShadowMap(uint begin, uint3 posQ_0, uint4 innerRes
 
 float PointSampleVxShadowing(uint begin, float3 positionWS)
 {
-    uint voxelResolution = _VxShadowMapsBuffer[begin];
+    uint maxScale = _VxShadowMapsBuffer[begin + 1];
+    uint voxelResolution = 1 << maxScale;
     float4x4 worldToShadowMatrix =
     {
         asfloat(_VxShadowMapsBuffer[begin + 2]),

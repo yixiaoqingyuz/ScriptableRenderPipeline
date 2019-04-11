@@ -119,7 +119,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         // We can't do it in place as the color pyramid has to be read while writing to the color
         // buffer in some cases (e.g. refraction, distortion)
         // Returns the number of mips
-        public int RenderColorGaussianPyramid(CommandBuffer cmd, Vector2Int size, Texture source, RenderTexture destination, float viewportScaleX = -1.0f, float viewportScaleY = -1.0f)
+        public int RenderColorGaussianPyramid(CommandBuffer cmd, Vector2Int size, Texture source, RenderTexture destination)
         {
             // Select between Tex2D and Tex2DArray versions of the kernels
             int kernelIndex = (source.dimension == TextureDimension.Tex2DArray) ? kKernelTex2DArray : kKernelTex2D;
@@ -178,27 +178,19 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     );
                 }
 
-                //Vector2 currentRTHandleSize = new Vector2(m_TempDownsamplePyramid[kernelIndex].rt.width * 2.0f, m_TempDownsamplePyramid[kernelIndex].rt.height * 2.0f);
-                Vector2 currentRTHandleSize = new Vector2(source.width, source.height);
-                // In some cases, we do not have a camera to get the correct scale from (i.e. planar probes). In those cases we'll compute the scale factor as appropiate manually.
-                bool validViewportScalePassed = viewportScaleX > 0 && viewportScaleY > 0;
-                // This set of scales is to account the usual RTHandle system.
-                float rtHandleScaleX = validViewportScalePassed ? viewportScaleX : destination.width / currentRTHandleSize.x;
-                float rtHandleScaleY = validViewportScalePassed ? viewportScaleY : destination.height / currentRTHandleSize.y;
-
                 // Copies src mip0 to dst mip0
                 m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, source);
-                m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(validViewportScalePassed ? viewportScaleX : (float)size.x / destination.width, validViewportScalePassed ? viewportScaleY : (float)size.y / destination.height, 0f, 0f));
+                m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4((float)size.x / source.width, (float)size.y / source.height, 0f, 0f));
                 m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, 0f);
                 cmd.SetRenderTarget(destination, 0, CubemapFace.Unknown, -1);
                 cmd.SetViewport(new Rect(0, 0, srcMipWidth, srcMipHeight));
                 cmd.DrawProcedural(Matrix4x4.identity, HDUtils.GetBlitMaterial(source.dimension), 0, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
 
-                // Note: smaller mips are excluded as we don't need them and the gaussian compute works
-                // on 8x8 blocks
                 int finalTargetMipWidth = destination.width;
                 int finalTargetMipHeight = destination.height;
 
+                // Note: smaller mips are excluded as we don't need them and the gaussian compute works
+                // on 8x8 blocks
                 while (srcMipWidth >= 8 || srcMipHeight >= 8)
                 {
                     int dstMipWidth  = Mathf.Max(1, srcMipWidth  >> 1);
@@ -219,6 +211,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         cmd.DrawProcedural(Matrix4x4.identity, HDUtils.GetBlitMaterial(source.dimension), 1, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
                     }
 
+                    // In this mip generation process, source viewport can be smaller than the source render target itself because of the RTHandle system
+                    // We are not using the scale provided by the RTHandle system for two reasons:
+                    // - Source might be a planar probe which will not be scaled by the system (since it's actually the final target of probe rendering at the exact size)
+                    // - When computing mip size, depending on even/odd sizes, the scale computed for mip 0 might miss a texel at the border.
+                    //   This can result in a shift in the mip map downscale that depends on the render target size rather than the actual viewport
+                    //   (Two rendering at the same viewport size but with different RTHandle reference size would yield different results which can break automated testing)
+                    // So in the end we compute a specific scale for downscale and blur passes at each mip level.
+
                     // Scales for Blur
                     scaleX = ((float)dstMipWidth / m_TempDownsamplePyramid[kernelIndex].rt.width);
                     scaleY = ((float)dstMipHeight / m_TempDownsamplePyramid[kernelIndex].rt.height);
@@ -229,7 +229,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                         m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempDownsamplePyramid[kernelIndex]);
                         m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
-                        m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(rtHandleScaleX * (dstMipWidth - 0.5f) / tempTargetWidth, rtHandleScaleY * (dstMipHeight - 0.5f) / tempTargetHeight, rtHandleScaleX / tempTargetWidth, 0f));
+                        m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(scaleX * (dstMipWidth - 0.5f) / tempTargetWidth, scaleY * (dstMipHeight - 0.5f) / tempTargetHeight, scaleX / tempTargetWidth, 0f));
                         m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
                         cmd.SetRenderTarget(m_TempColorTargets[kernelIndex], 0, CubemapFace.Unknown, -1);
                         cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
@@ -241,7 +241,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     {
                         m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempColorTargets[kernelIndex]);
                         m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
-                        m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(rtHandleScaleX * (dstMipWidth - 0.5f) / tempTargetWidth, rtHandleScaleY * (dstMipHeight - 0.5f) / tempTargetHeight, 0f, rtHandleScaleY / tempTargetHeight));
+                        m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(scaleX * (dstMipWidth - 0.5f) / tempTargetWidth, scaleY * (dstMipHeight - 0.5f) / tempTargetHeight, 0f, scaleY / tempTargetHeight));
                         m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
                         cmd.SetRenderTarget(destination, srcMipLevel + 1, CubemapFace.Unknown, -1);
                         cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));

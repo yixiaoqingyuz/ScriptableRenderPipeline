@@ -34,7 +34,7 @@ public class LWGraphicsTests
         //{
             if (Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer)
             {
-                Assume.That(false);
+                Assume.That(false, "Stereo LWRP tests do not run on MacOSX.");
             }
             else
             {

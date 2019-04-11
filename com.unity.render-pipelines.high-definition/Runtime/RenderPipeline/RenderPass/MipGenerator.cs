@@ -178,9 +178,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     );
                 }
 
+                float sourceScaleX = (float)size.x / source.width;
+                float sourceScaleY = (float)size.y / source.height;
+
                 // Copies src mip0 to dst mip0
                 m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, source);
-                m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4((float)size.x / source.width, (float)size.y / source.height, 0f, 0f));
+                m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(sourceScaleX, sourceScaleY, 0f, 0f));
                 m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, 0f);
                 cmd.SetRenderTarget(destination, 0, CubemapFace.Unknown, -1);
                 cmd.SetViewport(new Rect(0, 0, srcMipWidth, srcMipHeight));
@@ -229,7 +232,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                         m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempDownsamplePyramid[kernelIndex]);
                         m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
-                        m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(scaleX * (dstMipWidth - 0.5f) / tempTargetWidth, scaleY * (dstMipHeight - 0.5f) / tempTargetHeight, scaleX / tempTargetWidth, 0f));
+                        m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(sourceScaleX * (dstMipWidth - 0.5f) / tempTargetWidth, sourceScaleY * (dstMipHeight - 0.5f) / tempTargetHeight, sourceScaleX / tempTargetWidth, 0f));
                         m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
                         cmd.SetRenderTarget(m_TempColorTargets[kernelIndex], 0, CubemapFace.Unknown, -1);
                         cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
@@ -241,7 +244,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     {
                         m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempColorTargets[kernelIndex]);
                         m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
-                        m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(scaleX * (dstMipWidth - 0.5f) / tempTargetWidth, scaleY * (dstMipHeight - 0.5f) / tempTargetHeight, 0f, scaleY / tempTargetHeight));
+                        m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(sourceScaleX * (dstMipWidth - 0.5f) / tempTargetWidth, sourceScaleY * (dstMipHeight - 0.5f) / tempTargetHeight, 0f, sourceScaleY / tempTargetHeight));
                         m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
                         cmd.SetRenderTarget(destination, srcMipLevel + 1, CubemapFace.Unknown, -1);
                         cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));

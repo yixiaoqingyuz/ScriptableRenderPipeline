@@ -178,17 +178,13 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     );
                 }
 
-                Vector2 currentRTHandleSize = new Vector2(m_TempDownsamplePyramid[kernelIndex].rt.width * 2.0f, m_TempDownsamplePyramid[kernelIndex].rt.height * 2.0f);
+                //Vector2 currentRTHandleSize = new Vector2(m_TempDownsamplePyramid[kernelIndex].rt.width * 2.0f, m_TempDownsamplePyramid[kernelIndex].rt.height * 2.0f);
+                Vector2 currentRTHandleSize = new Vector2(source.width, source.height);
                 // In some cases, we do not have a camera to get the correct scale from (i.e. planar probes). In those cases we'll compute the scale factor as appropiate manually.
                 bool validViewportScalePassed = viewportScaleX > 0 && viewportScaleY > 0;
                 // This set of scales is to account the usual RTHandle system.
                 float rtHandleScaleX = validViewportScalePassed ? viewportScaleX : destination.width / currentRTHandleSize.x;
                 float rtHandleScaleY = validViewportScalePassed ? viewportScaleY : destination.height / currentRTHandleSize.y;
-                // This set of scales is to account for differences between the temp rendertarget (that lives in the normal rt handle system) and the destination.
-                float tmpRTScaleX = currentRTHandleSize.x * destination.texelSize.x;
-                float tmpRTScaleY = currentRTHandleSize.y * destination.texelSize.y;
-
-
 
                 // Copies src mip0 to dst mip0
                 m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, source);
@@ -200,31 +196,39 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                 // Note: smaller mips are excluded as we don't need them and the gaussian compute works
                 // on 8x8 blocks
+                int finalTargetMipWidth = destination.width;
+                int finalTargetMipHeight = destination.height;
+
                 while (srcMipWidth >= 8 || srcMipHeight >= 8)
                 {
                     int dstMipWidth  = Mathf.Max(1, srcMipWidth  >> 1);
                     int dstMipHeight = Mathf.Max(1, srcMipHeight >> 1);
 
-                    // This scale is to account for the fact that we store in top mip the whole mip chain for the tmp target.
-                    float tmpRTMipScaleX = (float)dstMipWidth / tempTargetWidth;
-                    float tmpRTMipScaleY = (float)dstMipHeight / tempTargetHeight;
+                    // Scale for downsample
+                    float scaleX = ((float)srcMipWidth / finalTargetMipWidth);
+                    float scaleY = ((float)srcMipHeight / finalTargetMipHeight);
 
                     using (new ProfilingSample(cmd, "Downsample", CustomSamplerId.ColorPyramid.GetSampler()))
                     {
                         // Downsample.
                         m_PropertyBlock.SetTexture(HDShaderIDs._BlitTexture, destination);
-                        m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(rtHandleScaleX * tmpRTScaleX, rtHandleScaleY * tmpRTScaleY, 0f, 0f));
+                        m_PropertyBlock.SetVector(HDShaderIDs._BlitScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
                         m_PropertyBlock.SetFloat(HDShaderIDs._BlitMipLevel, srcMipLevel);
                         cmd.SetRenderTarget(m_TempDownsamplePyramid[kernelIndex], 0, CubemapFace.Unknown, -1);
                         cmd.SetViewport(new Rect(0, 0, dstMipWidth, dstMipHeight));
                         cmd.DrawProcedural(Matrix4x4.identity, HDUtils.GetBlitMaterial(source.dimension), 1, MeshTopology.Triangles, 3, 1, m_PropertyBlock);
                     }
 
+                    // Scales for Blur
+                    scaleX = ((float)dstMipWidth / m_TempDownsamplePyramid[kernelIndex].rt.width);
+                    scaleY = ((float)dstMipHeight / m_TempDownsamplePyramid[kernelIndex].rt.height);
+
                     // Blur horizontal.
                     using (new ProfilingSample(cmd, "Blur horizontal", CustomSamplerId.ColorPyramid.GetSampler()))
                     {
+
                         m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempDownsamplePyramid[kernelIndex]);
-                        m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(rtHandleScaleX * tmpRTMipScaleX, rtHandleScaleY * tmpRTMipScaleY, 0f, 0f));
+                        m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
                         m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(rtHandleScaleX * (dstMipWidth - 0.5f) / tempTargetWidth, rtHandleScaleY * (dstMipHeight - 0.5f) / tempTargetHeight, rtHandleScaleX / tempTargetWidth, 0f));
                         m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
                         cmd.SetRenderTarget(m_TempColorTargets[kernelIndex], 0, CubemapFace.Unknown, -1);
@@ -236,7 +240,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     using (new ProfilingSample(cmd, "Blur vertical", CustomSamplerId.ColorPyramid.GetSampler()))
                     {
                         m_PropertyBlock.SetTexture(HDShaderIDs._Source, m_TempColorTargets[kernelIndex]);
-                        m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(rtHandleScaleX * tmpRTMipScaleX, rtHandleScaleY * tmpRTMipScaleY, 0f, 0f));
+                        m_PropertyBlock.SetVector(HDShaderIDs._SrcScaleBias, new Vector4(scaleX, scaleY, 0f, 0f));
                         m_PropertyBlock.SetVector(HDShaderIDs._SrcUvLimits, new Vector4(rtHandleScaleX * (dstMipWidth - 0.5f) / tempTargetWidth, rtHandleScaleY * (dstMipHeight - 0.5f) / tempTargetHeight, 0f, rtHandleScaleY / tempTargetHeight));
                         m_PropertyBlock.SetFloat(HDShaderIDs._SourceMip, 0);
                         cmd.SetRenderTarget(destination, srcMipLevel + 1, CubemapFace.Unknown, -1);
@@ -247,6 +251,9 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     srcMipLevel++;
                     srcMipWidth  = srcMipWidth  >> 1;
                     srcMipHeight = srcMipHeight >> 1;
+
+                    finalTargetMipWidth = finalTargetMipWidth >> 1;
+                    finalTargetMipHeight = finalTargetMipHeight >> 1;
                 }
             }
             else

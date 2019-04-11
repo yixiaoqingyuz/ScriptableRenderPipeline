@@ -151,7 +151,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             float scaleX = (float)texture.width / m_ConvolutionTargetTexture.width;
             float scaleY = (float)texture.height / m_ConvolutionTargetTexture.height;
             sourceScaleOffset = new Vector4(scaleX, scaleY, 0, 0);
-            m_IBLFilterGGX.FilterPlanarTexture(cmd, convolutionSourceTexture, m_ConvolutionTargetTexture, 1.0f, 1.0f);
+            m_IBLFilterGGX.FilterPlanarTexture(cmd, convolutionSourceTexture, m_ConvolutionTargetTexture);
 
             return m_ConvolutionTargetTexture;
         }

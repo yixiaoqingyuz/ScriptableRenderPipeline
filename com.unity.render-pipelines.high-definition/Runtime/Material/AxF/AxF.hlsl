@@ -2040,7 +2040,7 @@ IndirectLighting EvaluateBSDF_Env(  LightLoopContext lightLoopContext,
     IBLMipLevel = GetEnvMipLevel(lightData, preLightData.iblPerceptualRoughness);
 
     // Sample the pre-integrated environment lighting
-    float4  preLD = SampleEnv(lightLoopContext, lightData.envIndex, lightData.atlasScaleOffset, environmentSamplingDirectionWS_UnderCoat, IBLMipLevel);
+    float4  preLD = SampleEnv(lightLoopContext, lightData.envIndex, environmentSamplingDirectionWS_UnderCoat, IBLMipLevel);
     weight *= preLD.w; // Used by planar reflection to discard pixel
 
     float3  envLighting = bsdfData.specularColor * preLightData.specularFGD * preLD.xyz;
@@ -2073,7 +2073,7 @@ IndirectLighting EvaluateBSDF_Env(  LightLoopContext lightLoopContext,
         float   coeff = _CarPaint2_CTCoeffs[lobeIndex];
 
         float   lobeMipLevel = PerceptualRoughnessToMipmapLevel(preLightData.iblPerceptualRoughness[lobeIndex]);
-        float4  preLD = SampleEnv(lightLoopContext, lightData.envIndex, lightData.atlasScaleOffset, lightWS_UnderCoat, lobeMipLevel);
+        float4  preLD = SampleEnv(lightLoopContext, lightData.envIndex, lightWS_UnderCoat, lobeMipLevel);
 
         envLighting += coeff * preLightData.specularCTFGD[lobeIndex] * preLD.xyz;
         sumWeights += preLD.w;
@@ -2092,7 +2092,7 @@ IndirectLighting EvaluateBSDF_Env(  LightLoopContext lightLoopContext,
     // Sample flakes
     //TODO_FLAKES
     float   flakesMipLevel = 0;   // Flakes are supposed to be perfect mirrors
-    envLighting += preLightData.flakesFGD * CarPaint_BTF(thetaH, thetaD, bsdfData) * SampleEnv(lightLoopContext, lightData.envIndex, lightData.atlasScaleOffset, lightWS_UnderCoat, flakesMipLevel).xyz;
+    envLighting += preLightData.flakesFGD * CarPaint_BTF(thetaH, thetaD, bsdfData) * SampleEnv(lightLoopContext, lightData.envIndex, lightWS_UnderCoat, flakesMipLevel).xyz;
 
     weight *= sumWeights / CARPAINT2_LOBE_COUNT;
 
@@ -2103,7 +2103,7 @@ IndirectLighting EvaluateBSDF_Env(  LightLoopContext lightLoopContext,
     IBLMipLevel = GetEnvMipLevel(lightData, preLightData.iblPerceptualRoughness);
 
     // Sample the actual environment lighting
-    float4  preLD = SampleEnv(lightLoopContext, lightData.envIndex, lightData.atlasScaleOffset, lightWS_UnderCoat, IBLMipLevel);
+    float4  preLD = SampleEnv(lightLoopContext, lightData.envIndex, lightWS_UnderCoat, IBLMipLevel);
     float3  envLighting;
     
     envLighting = preLightData.specularCTFGD * 4.0 * ENVIRONMENT_LD_FUDGE_FACTOR * GetBRDFColor(thetaH, thetaD);
@@ -2134,7 +2134,7 @@ IndirectLighting EvaluateBSDF_Env(  LightLoopContext lightLoopContext,
         envLighting *= 1.0 - preLightData.coatFGD;
 
         // Then add the environment lighting reflected by the clearcoat (with mip level 0, like mirror)
-        float4  preLD = SampleEnv(lightLoopContext, lightData.envIndex, lightData.atlasScaleOffset, lightWS_Clearcoat, 0.0);
+        float4  preLD = SampleEnv(lightLoopContext, lightData.envIndex, lightWS_Clearcoat, 0.0);
         envLighting += preLightData.coatFGD * preLD.xyz * bsdfData.clearcoatColor;
     }
 

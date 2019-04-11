@@ -17,6 +17,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public fixed float _Env2DCaptureVP[s_MaxEnv2DLight * 4 * 4];
         [HLSLArray(s_MaxEnv2DLight * 3, typeof(float))]
         public fixed float _Env2DCaptureForward[s_MaxEnv2DLight * 3];
+        [HLSLArray(s_MaxEnv2DLight, typeof(Vector4))]
+        public fixed float _Env2DAtlasScaleOffset[s_MaxEnv2DLight * 3];
 
         public uint _DirectionalLightCount;
 

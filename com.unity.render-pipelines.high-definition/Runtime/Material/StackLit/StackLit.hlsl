@@ -3895,7 +3895,7 @@ IndirectLighting EvaluateBSDF_Env(  LightLoopContext lightLoopContext,
             iblMipLevel = PerceptualRoughnessToMipmapLevel(preLightData.iblPerceptualRoughness[i]);
         }
 
-        float4 preLD = SampleEnv(lightLoopContext, lightData.envIndex, lightData.atlasScaleOffset, R[i], iblMipLevel);
+        float4 preLD = SampleEnv(lightLoopContext, lightData.envIndex, R[i], iblMipLevel);
         // Used by planar reflection to discard pixel:
         tempWeight[i] *= preLD.a;
 

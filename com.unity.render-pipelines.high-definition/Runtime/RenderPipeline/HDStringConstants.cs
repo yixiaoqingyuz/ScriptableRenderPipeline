@@ -153,6 +153,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public static readonly int _Env2DTextures = Shader.PropertyToID("_Env2DTextures");
         public static readonly int _Env2DCaptureVP = Shader.PropertyToID("_Env2DCaptureVP");
         public static readonly int _Env2DCaptureForward = Shader.PropertyToID("_Env2DCaptureForward");
+        public static readonly int _Env2DAtlasScaleOffset = Shader.PropertyToID("_Env2DAtlasScaleOffset");
         public static readonly int _DirectionalLightDatas = Shader.PropertyToID("_DirectionalLightDatas");
         public static readonly int _DirectionalLightCount = Shader.PropertyToID("_DirectionalLightCount");
         public static readonly int _LightDatas = Shader.PropertyToID("_LightDatas");

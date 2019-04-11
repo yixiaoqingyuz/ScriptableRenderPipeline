@@ -211,6 +211,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         TextureCacheCubemap m_CubeCookieTexArray;
         List<Matrix4x4> m_Env2DCaptureVP = new List<Matrix4x4>();
         List<float> m_Env2DCaptureForward = new List<float>();
+        List<Vector4> m_Env2DAtlasScaleOffset = new List<Vector4>();
 
         // Structure for cookies used by area lights
         public LTCAreaLightCookieManager areaLightCookieManager { get { return m_AreaLightCookieManager; } }
@@ -525,12 +526,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_lightList.Allocate();
             m_Env2DCaptureVP.Clear();
             m_Env2DCaptureForward.Clear();
+            m_Env2DAtlasScaleOffset.Clear();
             for (int i = 0, c = Mathf.Max(1, m_MaxPlanarReflectionOnScreen); i < c; ++i)
             {
                 m_Env2DCaptureVP.Add(Matrix4x4.identity);
                 m_Env2DCaptureForward.Add(0);
                 m_Env2DCaptureForward.Add(0);
                 m_Env2DCaptureForward.Add(0);
+                m_Env2DAtlasScaleOffset.Add(Vector4.zero);
             }
 
             GlobalLightLoopSettings gLightLoopSettings = hdAsset.currentPlatformRenderPipelineSettings.lightLoopSettings;
@@ -1547,6 +1550,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         m_Env2DCaptureForward[lightIndex * 3 + 0] = capturedForwardWS.x;
                         m_Env2DCaptureForward[lightIndex * 3 + 1] = capturedForwardWS.y;
                         m_Env2DCaptureForward[lightIndex * 3 + 2] = capturedForwardWS.z;
+
+                        m_Env2DAtlasScaleOffset[lightIndex] = scaleOffset;
                         break;
                     }
                 case HDAdditionalReflectionData _:
@@ -1604,7 +1609,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             envLightData.influencePositionRWS = influenceToWorld.GetColumn(3);
 
             envLightData.envIndex = envIndex;
-            envLightData.atlasScaleOffset = atlasScaleOffset;
 
             // Proxy data
             var proxyToWorld = probe.proxyToWorld;
@@ -2684,6 +2688,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 cmd.SetGlobalTexture(HDShaderIDs._Env2DTextures, m_ReflectionPlanarProbeCache.GetTexCache());
                 cmd.SetGlobalMatrixArray(HDShaderIDs._Env2DCaptureVP, m_Env2DCaptureVP);
                 cmd.SetGlobalFloatArray(HDShaderIDs._Env2DCaptureForward, m_Env2DCaptureForward);
+                cmd.SetGlobalVectorArray(HDShaderIDs._Env2DAtlasScaleOffset, m_Env2DAtlasScaleOffset);
 
                 cmd.SetGlobalBuffer(HDShaderIDs._DirectionalLightDatas, m_DirectionalLightDatas);
                 cmd.SetGlobalInt(HDShaderIDs._DirectionalLightCount, m_lightList.directionalLights.Count);

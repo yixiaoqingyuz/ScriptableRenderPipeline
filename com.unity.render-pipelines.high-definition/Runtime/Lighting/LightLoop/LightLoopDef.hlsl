@@ -100,7 +100,7 @@ bool IsEnvIndexTexture2D(int index) { return index < 0; }
 // EnvIndex can also be use to fetch in another array of struct (to  atlas information etc...).
 // Cubemap      : texCoord = direction vector
 // Texture2D    : texCoord = projectedPositionWS - lightData.capturePosition
-float4 SampleEnv(LightLoopContext lightLoopContext, int index, float4 atlasScaleOffset, float3 texCoord, float lod, int sliceIdx = 0)
+float4 SampleEnv(LightLoopContext lightLoopContext, int index, float3 texCoord, float lod, int sliceIdx = 0)
 {
     // 31 bit index, 1 bit cache type
     uint cacheType = IsEnvIndexCubemap(index) ? ENVCACHETYPE_CUBEMAP : ENVCACHETYPE_TEXTURE2D;
@@ -118,8 +118,8 @@ float4 SampleEnv(LightLoopContext lightLoopContext, int index, float4 atlasScale
             float3 ndc = ComputeNormalizedDeviceCoordinatesWithZ(texCoord, _Env2DCaptureVP[index]);
 
             // Apply atlas scale and offset
-            float2 scale = atlasScaleOffset.xy;
-            float2 offset = atlasScaleOffset.zw;
+            float2 scale = _Env2DAtlasScaleOffset[index].xy;
+            float2 offset = _Env2DAtlasScaleOffset[index].zw;
             float2 atlasCoords = ndc.xy * scale + offset;
 
             color.rgb = SAMPLE_TEXTURE2D_LOD(_Env2DTextures, s_trilinear_clamp_sampler, atlasCoords, lod).rgb;

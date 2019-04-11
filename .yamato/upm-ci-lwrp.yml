@@ -49,8 +49,7 @@ projects:
   artifacts:
     logs:
       paths:
-        - "**/upm-ci~/test-results/**/*"
-        
+        - "**/upm-ci~/test-results/**/*"       
 {% endfor %}
 {% endfor %}
 {% endfor %}

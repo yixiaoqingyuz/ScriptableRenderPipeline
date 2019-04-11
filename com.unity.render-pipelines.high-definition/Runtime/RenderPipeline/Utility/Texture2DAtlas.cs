@@ -136,10 +136,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         protected bool m_UseMipMaps;
         protected GraphicsFormat m_Format;
         protected AtlasAllocator m_AtlasAllocator = null;
-        protected Dictionary<IntPtr, Vector4> m_AllocationCache = new Dictionary<IntPtr, Vector4>();
-        protected Dictionary<IntPtr, uint> m_RenderTextureUpdateCache = new Dictionary<IntPtr, uint>();
+        protected Dictionary<int, Vector4> m_AllocationCache = new Dictionary<int, Vector4>();
+        protected Dictionary<int, uint> m_RenderTextureUpdateCache = new Dictionary<int, uint>();
 
-        static readonly Vector4 fullScreenScaleOffset = new Vector4(1, 1, 0, 0);
+        static readonly Vector4 fullScaleOffset = new Vector4(1, 1, 0, 0);
 
         public RTHandleSystem.RTHandle AtlasTexture
         {
@@ -184,7 +184,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public void ClearTarget(CommandBuffer cmd)
         {
             // clear the atlas by blitting a black texture
-            BlitTexture(cmd, fullScreenScaleOffset, Texture2D.blackTexture, fullScreenScaleOffset);
+            BlitTexture(cmd, fullScaleOffset, Texture2D.blackTexture, fullScaleOffset);
         }
 
         protected int GetTextureMipmapCount(int width, int height)
@@ -215,23 +215,33 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        protected virtual void BlitTexture(CommandBuffer cmd, Vector4 scaleOffset, Texture texture, Vector4 sourceScaleOffset)
+        public virtual void BlitTexture(CommandBuffer cmd, Vector4 scaleOffset, Texture texture, Vector4 sourceScaleOffset)
         {
             // This atlas only support 2D texture so we only blit 2D textures
             if (Is2D(texture))
                 Blit2DTexture(cmd, scaleOffset, texture, sourceScaleOffset);
         }
 
-        protected virtual bool AllocateTexture(CommandBuffer cmd, ref Vector4 scaleOffset, Texture texture, int width, int height, Vector4 sourceScaleOffset)
+        public virtual bool AllocateTexture(CommandBuffer cmd, ref Vector4 scaleOffset, Texture texture, int width, int height)
         {
-            if (width <= 0 && height <= 0)
-                return false;
+            bool allocated = AllocateTextureWithoutBlit(texture, width, height, ref scaleOffset);
+
+            if (allocated)
+            {
+                BlitTexture(cmd, scaleOffset, texture, fullScaleOffset);
+            }
+
+            return allocated;
+        }
+
+        public virtual bool AllocateTextureWithoutBlit(Texture texture, int width, int height, ref Vector4 scaleOffset)
+        {
+            scaleOffset = Vector4.zero;
             
             if (m_AtlasAllocator.Allocate(ref scaleOffset, width, height))
             {
                 scaleOffset.Scale(new Vector4(1.0f / m_Width, 1.0f / m_Height, 1.0f / m_Width, 1.0f / m_Height));
-                BlitTexture(cmd, scaleOffset, texture, sourceScaleOffset);
-                m_AllocationCache.Add(texture.GetNativeTexturePtr(), scaleOffset);
+                m_AllocationCache.Add(texture.GetInstanceID(), scaleOffset);
                 return true;
             }
             else
@@ -240,11 +250,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
         }
 
-        protected bool IsCached(out Vector4 scaleOffset, Texture texture, Vector4 sourceScaleOffset)
+        protected bool IsCached(out Vector4 scaleOffset, Texture texture)
         {
             bool                cached = false;
             RenderTexture       rt = texture as RenderTexture;
-            IntPtr              key = texture.GetNativeTexturePtr();
+            int                 key = texture.GetInstanceID();
 
             if (m_AllocationCache.TryGetValue(key, out scaleOffset))
                 cached = true;
@@ -255,7 +265,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         protected bool NeedsUpdate(Texture texture)
         {
             RenderTexture   rt = texture as RenderTexture;
-            IntPtr          key = texture.GetNativeTexturePtr();
+            int             key = texture.GetInstanceID();
 
             // Update the render texture if needed
             if (rt != null)
@@ -272,39 +282,41 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return false;
         }
 
-        public virtual bool AddTexture(CommandBuffer cmd, ref Vector4 scaleOffset, Texture texture, Vector4 sourceScaleOffset)
+        public virtual bool AddTexture(CommandBuffer cmd, ref Vector4 scaleOffset, Texture texture)
         {
-            if (IsCached(out scaleOffset, texture, sourceScaleOffset))
-            {
-                if (NeedsUpdate(texture))
-                    BlitTexture(cmd, scaleOffset, texture, sourceScaleOffset);
+            if (IsCached(out scaleOffset, texture))
                 return true;
-            }
             
             // We only support 2D texture in this class, support for other textures are provided by child classes (ex: PowerOfTwoTextureAtlas)
             if (!Is2D(texture))
                 return false;
 
-            return AllocateTexture(cmd, ref scaleOffset, texture, texture.width, texture.height, sourceScaleOffset);
+            return AllocateTexture(cmd, ref scaleOffset, texture, texture.width, texture.height);
         }
 
-        public virtual bool AddTexture(CommandBuffer cmd, ref Vector4 scaleOffset, Texture texture)
+        public virtual bool Contains(Texture texture, out Vector4 scaleOffset)
         {
-            return AddTexture(cmd, ref scaleOffset, texture, fullScreenScaleOffset);
+            return IsCached(out scaleOffset, texture);
         }
 
-        public virtual bool UpdateTexture(CommandBuffer cmd, Texture oldTexture, Texture newTexture, ref Vector4 scaleOffset, Vector4 sourceScaleOffset)
+        public virtual bool UpdateTexture(CommandBuffer cmd, Texture oldTexture, Texture newTexture, ref Vector4 scaleOffset, Vector4 sourceScaleOffset, bool updateIfNeeded = true)
         {
             // In case the old texture is here, we Blit the new one at the scale offset of the old one
-            if (IsCached(out scaleOffset, oldTexture, sourceScaleOffset))
+            if (IsCached(out scaleOffset, oldTexture))
             {
-                BlitTexture(cmd, scaleOffset, newTexture, sourceScaleOffset);
+                if (updateIfNeeded && NeedsUpdate(newTexture))
+                    BlitTexture(cmd, scaleOffset, newTexture, sourceScaleOffset);
                 return true;
             }
             else // else we try to allocate the updated texture
             {
-                return AllocateTexture(cmd, ref scaleOffset, newTexture, newTexture.width, newTexture.height, sourceScaleOffset);
+                return AllocateTexture(cmd, ref scaleOffset, newTexture, newTexture.width, newTexture.height);
             }
+        }
+
+        public virtual bool UpdateTexture(CommandBuffer cmd, Texture texture, ref Vector4 scaleOffset, bool updateIfNeeded = true)
+        {
+            return UpdateTexture(cmd, texture, texture, ref scaleOffset, fullScaleOffset, updateIfNeeded);
         }
     }
 }

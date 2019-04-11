@@ -151,7 +151,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             float scaleX = (float)texture.width / m_ConvolutionTargetTexture.width;
             float scaleY = (float)texture.height / m_ConvolutionTargetTexture.height;
             sourceScaleOffset = new Vector4(scaleX, scaleY, 0, 0);
-            m_IBLFilterGGX.FilterPlanarTexture(cmd, convolutionSourceTexture, m_ConvolutionTargetTexture, 1, 1);
+            m_IBLFilterGGX.FilterPlanarTexture(cmd, convolutionSourceTexture, m_ConvolutionTargetTexture, 1.0f, 1.0f);
 
             return m_ConvolutionTargetTexture;
         }
@@ -160,37 +160,58 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             Vector4 scaleOffset = Vector4.zero;
 
-            if (m_TextureAtlas.AddTexture(cmd, ref scaleOffset, texture))
+            if (m_TextureAtlas.Contains(texture, out scaleOffset))
             {
+                // If the texture is already in the atlas, we update it only if needed
                 if (NeedsUpdate(texture) || m_ProbeBakingState[scaleOffset] != ProbeFilteringState.Ready)
-                {
-                    using (new ProfilingSample(cmd, "Convolve Planar Reflection Probe"))
-                    {
-                        // For now baking is done directly but will be time sliced in the future. Just preparing the code here.
-                        m_ProbeBakingState[scaleOffset] = ProbeFilteringState.Convolving;
-
-                        Vector4 sourceScaleOffset;
-                        Texture convolvedTexture = ConvolveProbeTexture(cmd, texture, out sourceScaleOffset);
-                        if (convolvedTexture == null)
-                            return Vector4.zero;
-
-                        if (m_PerformBC6HCompression)
-                        {
-                            throw new NotImplementedException("BC6H Support not implemented for PlanarReflectionProbeCache");
-                        }
-                        else
-                        {
-                            m_TextureAtlas.UpdateTexture(cmd, texture, convolvedTexture, ref scaleOffset, sourceScaleOffset);
-                        }
-
-                        m_ProbeBakingState[scaleOffset] = ProbeFilteringState.Ready;
-                    }
-                }
+                    if (!UpdatePlanarTexture(cmd, texture, ref scaleOffset))
+                        Debug.LogError("Can't convolve or update the planar reflection render target");
             }
-            else
-                Debug.LogError("No more space in the planar reflection probe atlas");
+            else // Either we add it to the atlas
+                if (!UpdatePlanarTexture(cmd, texture, ref scaleOffset))
+                    Debug.LogError("No more space in the planar reflection probe atlas");
 
             return scaleOffset;
+        }
+
+        bool UpdatePlanarTexture(CommandBuffer cmd, Texture texture, ref Vector4 scaleOffset)
+        {
+            bool    success = false;
+
+            using (new ProfilingSample(cmd, "Convolve Planar Reflection Probe"))
+            {
+                // For now baking is done directly but will be time sliced in the future. Just preparing the code here.
+                m_ProbeBakingState[scaleOffset] = ProbeFilteringState.Convolving;
+
+                Vector4 sourceScaleOffset;
+                Texture convolvedTexture = ConvolveProbeTexture(cmd, texture, out sourceScaleOffset);
+                if (convolvedTexture == null)
+                    return false;
+
+                if (m_PerformBC6HCompression)
+                {
+                    throw new NotImplementedException("BC6H Support not implemented for PlanarReflectionProbeCache");
+                }
+                else
+                {
+                    if (m_TextureAtlas.Contains(texture, out scaleOffset))
+                        success = m_TextureAtlas.UpdateTexture(cmd, texture, convolvedTexture, ref scaleOffset, sourceScaleOffset);
+                    else
+                    {
+                        // Reserve space for the rendertarget and then blit the result of the convolution at this
+                        // location, we don't use the UpdateTexture because it will keep the reference to the
+                        // temporary target used to convolve the result of the probe rendering.
+                        if (!m_TextureAtlas.AllocateTextureWithoutBlit(texture, texture.width, texture.height, ref scaleOffset))
+                            return false;
+                        m_TextureAtlas.BlitTexture(cmd, scaleOffset, convolvedTexture, sourceScaleOffset);
+                        success = true;
+                    }
+                }
+
+                m_ProbeBakingState[scaleOffset] = ProbeFilteringState.Ready;
+            }
+
+            return success;
         }
 
         public uint GetTextureHash(Texture texture)

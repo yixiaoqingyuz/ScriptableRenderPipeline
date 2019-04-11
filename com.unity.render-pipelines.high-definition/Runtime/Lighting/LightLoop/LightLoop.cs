@@ -2262,7 +2262,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         {
             Vector4 scaleBias = Vector4.zero;
 
-            if (!m_CookieAtlas.AddTexture(cmd, ref scaleBias, cookie))
+            if (!m_CookieAtlas.UpdateTexture(cmd, cookie, ref scaleBias))
             {
                 Debug.LogError("No more space in the cookie atlas");
                 return Vector4.zero;

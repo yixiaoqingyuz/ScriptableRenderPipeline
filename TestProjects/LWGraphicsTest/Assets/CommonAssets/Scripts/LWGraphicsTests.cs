@@ -30,8 +30,8 @@ public class LWGraphicsTests
         
         Scene scene = SceneManager.GetActiveScene();
 
-        if (scene.name.Substring(3, 4).Equals("_xr_"))
-        {
+        // if (scene.name.Substring(3, 4).Equals("_xr_"))
+        //{
             if (Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer)
             {
                 Assume.That(false);
@@ -55,14 +55,14 @@ public class LWGraphicsTests
 
                 ImageAssert.AreEqual(testCase.ReferenceImage, cameras.Where(x => x != null), settings.ImageComparisonSettings);
             }
-        }
+       /* }
         else
         {
             for (int i = 0; i < settings.WaitFrames; i++)
                 yield return null;
 
             ImageAssert.AreEqual(testCase.ReferenceImage, cameras.Where(x => x != null), settings.ImageComparisonSettings);
-        }
+        }*/
     }
 
 #if UNITY_EDITOR

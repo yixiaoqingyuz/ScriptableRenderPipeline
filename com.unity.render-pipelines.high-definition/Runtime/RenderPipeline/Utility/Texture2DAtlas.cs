@@ -162,6 +162,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 colorFormat: m_Format,
                 wrapMode: TextureWrapMode.Clamp,
                 useMipMap: useMipMap,
+                autoGenerateMips: false,
                 name: name
             );
 

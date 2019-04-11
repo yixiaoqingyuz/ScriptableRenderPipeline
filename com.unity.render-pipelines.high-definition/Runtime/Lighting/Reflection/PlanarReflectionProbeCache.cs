@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         int                     m_ProbeSize;
         IBLFilterGGX            m_IBLFilterGGX;
         PowerOfTwoTextureAtlas  m_TextureAtlas;
-        RenderTexture           m_TempRenderTexture;
+        RenderTexture           m_TempRenderTexture = null;
         RenderTexture           m_ConvolutionTargetTexture;
         Dictionary<Vector4, ProbeFilteringState> m_ProbeBakingState = new Dictionary<Vector4, ProbeFilteringState>();
         Material                m_ConvertTextureMaterial;
@@ -59,12 +59,12 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 // m_TempRenderTexture.name = CoreUtils.GetRenderTargetAutoName(m_ProbeSize, m_ProbeSize, 1, RenderTextureFormat.ARGBHalf, "PlanarReflectionTemp", mips: true);
                 // m_TempRenderTexture.Create();
 
-                m_ConvolutionTargetTexture = new RenderTexture(m_ProbeSize, m_ProbeSize, 1, RenderTextureFormat.ARGBHalf);
+                m_ConvolutionTargetTexture = new RenderTexture(m_ProbeSize, m_ProbeSize, 0, RenderTextureFormat.ARGBHalf);
                 m_ConvolutionTargetTexture.hideFlags = HideFlags.HideAndDontSave;
                 m_ConvolutionTargetTexture.dimension = TextureDimension.Tex2D;
                 m_ConvolutionTargetTexture.useMipMap = true;
                 m_ConvolutionTargetTexture.autoGenerateMips = false;
-                m_ConvolutionTargetTexture.name = CoreUtils.GetRenderTargetAutoName(m_ProbeSize, m_ProbeSize, 1, RenderTextureFormat.ARGBHalf, "PlanarReflectionConvolution", mips: true);
+                m_ConvolutionTargetTexture.name = CoreUtils.GetRenderTargetAutoName(m_ProbeSize, m_ProbeSize, 0, RenderTextureFormat.ARGBHalf, "PlanarReflectionConvolution", mips: true);
                 m_ConvolutionTargetTexture.enableRandomWrite = true;
                 m_ConvolutionTargetTexture.Create();
             }
@@ -148,10 +148,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
 
             // TODO: profile if it's faster with the viewport (it should with many small planar and one big atlas)
-            float scaleX = m_ConvolutionTargetTexture.width / (float)texture.width;
-            float scaleY = m_ConvolutionTargetTexture.height / (float)texture.height;
-            sourceScaleOffset = new Vector4(1.0f / scaleX, 1.0f / scaleY, 0, 0);
-            m_IBLFilterGGX.FilterPlanarTexture(cmd, convolutionSourceTexture, m_ConvolutionTargetTexture, scaleX, scaleY);
+            float scaleX = (float)texture.width / m_ConvolutionTargetTexture.width;
+            float scaleY = (float)texture.height / m_ConvolutionTargetTexture.height;
+            sourceScaleOffset = new Vector4(scaleX, scaleY, 0, 0);
+            m_IBLFilterGGX.FilterPlanarTexture(cmd, convolutionSourceTexture, m_ConvolutionTargetTexture, 1, 1);
 
             return m_ConvolutionTargetTexture;
         }

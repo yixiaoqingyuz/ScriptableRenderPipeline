@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - Added ViewConstants StructuredBuffer to simplify XR rendering
+- Added multipass support for VR
+- Added XR SDK integration (multipass only)
 
 ### Fixed
 - Fixed deserialization crash at runtime
@@ -35,9 +37,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added an HD scene color node which allow to sample the scene color with mips and a toggle to remove the exposure.
 - Added safeguard on HD scene creation if default scene not set in the wizard
 - Added Low res transparency rendering pass. 
-- Added ViewConstants StructuredBuffer to help with management of XR instanced views
-- Added multipass support for VR
-- Added XR SDK integration (multipass only)
 
 ### Fixed
 - Fixed HDRI sky intensity lux mode

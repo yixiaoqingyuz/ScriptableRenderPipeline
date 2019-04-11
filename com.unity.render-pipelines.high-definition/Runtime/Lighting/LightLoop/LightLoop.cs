@@ -1793,7 +1793,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 var worldToView = s_FlipMatrixLHSRHS * viewMatrix;
                 var rightEyeWorldToView = Matrix4x4.identity;
 
-                // XRTODO: support more than 2 views
                 if (hdCamera.xr.instancingEnabled)
                 {
                     if (hdCamera.xr.viewCount == 2)

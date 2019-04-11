@@ -129,12 +129,13 @@ void SplatmapMix(float4 uvMainAndLM, float4 uvSplat01, float4 uvSplat23, inout h
     mixedDiffuse += diffAlbedo[3] * half4(_DiffuseRemapScale3.rgb * splatControl.aaa, 1.0h);
 
 #ifdef _NORMALMAP
-    half4 nrm = 0.0f;
-    nrm += SAMPLE_TEXTURE2D(_Normal0, sampler_Normal0, uvSplat01.xy) * splatControl.r;
-    nrm += SAMPLE_TEXTURE2D(_Normal1, sampler_Normal0, uvSplat01.zw) * splatControl.g;
-    nrm += SAMPLE_TEXTURE2D(_Normal2, sampler_Normal0, uvSplat23.xy) * splatControl.b;
-    nrm += SAMPLE_TEXTURE2D(_Normal3, sampler_Normal0, uvSplat23.zw) * splatControl.a;
-    mixedNormal = UnpackNormal(nrm);
+    half3 nrm = 0.0f;
+    nrm += splatControl.r * UnpackNormalScale(SAMPLE_TEXTURE2D(_Normal0, sampler_Normal0, uvSplat01.xy), _NormalScale0);
+    nrm += splatControl.g * UnpackNormalScale(SAMPLE_TEXTURE2D(_Normal1, sampler_Normal0, uvSplat01.zw), _NormalScale1);
+    nrm += splatControl.b * UnpackNormalScale(SAMPLE_TEXTURE2D(_Normal2, sampler_Normal0, uvSplat23.xy), _NormalScale2);
+    nrm += splatControl.a * UnpackNormalScale(SAMPLE_TEXTURE2D(_Normal3, sampler_Normal0, uvSplat23.zw), _NormalScale3);
+    nrm.z += 1e-5f;     // avoid risk of NaN when normalizing.
+    mixedNormal = normalize(nrm.xyz);
 #endif
 }
 

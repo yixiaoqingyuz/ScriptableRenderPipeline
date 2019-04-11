@@ -1,10 +1,11 @@
 using System;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEditor;
 
 namespace UnityEditor.Rendering.LWRP
 {
-    internal class TerrainLitShaderGUI : ShaderGUI, ITerrainLayerCustomUI
+    internal class TerrainLitShaderGUI : UnityEditor.ShaderGUI, ITerrainLayerCustomUI
     {
         private class StylesLayer
         {

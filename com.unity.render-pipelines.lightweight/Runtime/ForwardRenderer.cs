@@ -57,7 +57,7 @@ namespace UnityEngine.Rendering.LWRP
             m_AdditionalLightsShadowCasterPass = new AdditionalLightsShadowCasterPass(RenderPassEvent.BeforeRenderingShadows);
             m_DepthPrepass = new DepthOnlyPass(RenderPassEvent.BeforeRenderingPrepasses, RenderQueueRange.opaque, data.opaqueLayerMask);
             m_ScreenSpaceShadowResolvePass = new ScreenSpaceShadowResolvePass(RenderPassEvent.BeforeRenderingPrepasses, screenspaceShadowsMaterial);
-            m_ScreenSpaceShadowComputePass = new ScreenSpaceShadowComputePass(RenderPassEvent.BeforeRenderingPrepasses, data.screenSpaceShadowComputeShader); //seongdae;vxsm
+            m_ScreenSpaceShadowComputePass = new ScreenSpaceShadowComputePass(RenderPassEvent.BeforeRenderingPrepasses, data.shaders.screenSpaceShadowCS); //seongdae;vxsm
             m_RenderOpaqueForwardPass = new DrawObjectsPass("Render Opaques", true, RenderPassEvent.BeforeRenderingOpaques, RenderQueueRange.opaque, data.opaqueLayerMask, m_DefaultStencilState, stencilData.stencilReference);
             m_CopyDepthPass = new CopyDepthPass(RenderPassEvent.BeforeRenderingOpaques, copyDepthMaterial);
             m_OpaquePostProcessPass = new PostProcessPass(RenderPassEvent.BeforeRenderingOpaques, true);

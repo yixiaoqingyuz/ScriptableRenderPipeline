@@ -217,7 +217,7 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
 
     uint begin = 0;
 
-    float scale = asfloat(_VxShadowMapsBuffer[begin]);
+    float volumeScale = asfloat(_VxShadowMapsBuffer[begin]);
     uint maxScale = _VxShadowMapsBuffer[begin + 1];
     float4x4 worldToShadowMatrix =
     {
@@ -236,14 +236,11 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
         asfloat(_VxShadowMapsBuffer[begin + 12]),
         asfloat(_VxShadowMapsBuffer[begin + 13]),
 
-        asfloat(_VxShadowMapsBuffer[begin + 14]),
-        asfloat(_VxShadowMapsBuffer[begin + 15]),
-        asfloat(_VxShadowMapsBuffer[begin + 16]),
-        asfloat(_VxShadowMapsBuffer[begin + 17]),
+        0.0, 0.0, 0.0, 1.0,
     };
 
     uint voxelResolution = 1 << maxScale;
-    float normalBias = 2.0 * (scale / voxelResolution);
+    float normalBias = 2.0 * (volumeScale / voxelResolution);
 
     positionWS += (normalData.normalWS * normalBias);
 
@@ -268,7 +265,8 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
 
     if (result.w == 0)
     {
-        _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = result.y ? 0.0 : 1.0;
+        attenuation = result.y ? 0.0 : 1.0;
+        _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = attenuation;
         return;
     }
 
@@ -279,7 +277,15 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
 
     if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0)
     {
-        _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = results[0].y ? 0.0 : 1.0;
+        float4 attenuation4 = float4(
+            results[0].y ? 0.0 : 1.0,
+            results[1].y ? 0.0 : 1.0,
+            results[2].y ? 0.0 : 1.0,
+            results[3].y ? 0.0 : 1.0);
+        attenuation4.xy = lerp(attenuation4.xz, attenuation4.yw, lerpWeight.x);
+
+        attenuation = lerp(attenuation4.x, attenuation4.y, lerpWeight.y);
+        _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = attenuation;
         return;
     }
 
@@ -291,7 +297,22 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
     if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0 &&
         results[4].w == 0 && results[5].w == 0 && results[6].w == 0 && results[7].w == 0)
     {
-        _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = results[0].y ? 0.0 : 1.0;
+        float4 attenuation4_0 = float4(
+            results[0].y ? 0.0 : 1.0,
+            results[2].y ? 0.0 : 1.0,
+            results[4].y ? 0.0 : 1.0,
+            results[6].y ? 0.0 : 1.0);
+        float4 attenuation4_1 = float4(
+            results[1].y ? 0.0 : 1.0,
+            results[3].y ? 0.0 : 1.0,
+            results[5].y ? 0.0 : 1.0,
+            results[7].y ? 0.0 : 1.0);
+
+        attenuation4_0 = lerp(attenuation4_0, attenuation4_1, lerpWeight.x);
+        attenuation4_0.xy = lerp(attenuation4_0.xz, attenuation4_0.yw, lerpWeight.y);
+
+        attenuation = lerp(attenuation4_0.x, attenuation4_0.y, lerpWeight.z);
+        _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = attenuation;
         return;
     }
 

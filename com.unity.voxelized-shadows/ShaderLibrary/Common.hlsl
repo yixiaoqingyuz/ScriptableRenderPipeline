@@ -2,6 +2,7 @@
 #define UNITY_VX_SHADOWMAPS_COMMON_INCLUDED
 
 #define USE_EMULATE_COUNTBITS
+#define ATTRIBUTE_VALUES 14
 
 StructuredBuffer<uint> _VxShadowMapsBuffer;
 
@@ -55,7 +56,7 @@ uint CalculateRescale(uint srcPosbit, uint dstPosbit)
 
 void TraverseVxShadowMapPosQ(uint begin, uint3 posQ, out uint4 result)
 {
-    uint vxsmOffset = begin + 18;
+    uint vxsmOffset = begin + ATTRIBUTE_VALUES;
     uint maxScale = _VxShadowMapsBuffer[begin + 1];
 
     uint nodeIndex = 0;
@@ -98,7 +99,7 @@ void TraverseVxShadowMapPosQ(uint begin, uint3 posQ, out uint4 result)
 
 void TraverseVxShadowMapPosQ2x2(uint begin, uint3 posQ_0, out uint4 results[4])
 {
-    uint vxsmOffset = begin + 18;
+    uint vxsmOffset = begin + ATTRIBUTE_VALUES;
     uint maxScale = _VxShadowMapsBuffer[begin + 1];
 
     uint3 posQ_1 = posQ_0 + uint3(1, 0, 0);
@@ -165,7 +166,7 @@ void TraverseVxShadowMapPosQ2x2(uint begin, uint3 posQ_0, out uint4 results[4])
 
 void TraverseVxShadowMapPosQ2x2x2(uint begin, uint3 posQ_0, out uint4 results[8])
 {
-    uint vxsmOffset = begin + 18;
+    uint vxsmOffset = begin + ATTRIBUTE_VALUES;
     uint maxScale = _VxShadowMapsBuffer[begin + 1];
 
     uint3 posQ_1 = posQ_0 + uint3(1, 0, 0);
@@ -274,14 +275,14 @@ void TraverseVxShadowMapPosQ2x2x2(uint begin, uint3 posQ_0, out uint4 results[8]
 
 float TraversePointSampleVxShadowMap(uint begin, uint3 posQ, uint4 innerResult)
 {
-    uint attribute = begin + 18;
+    uint vxsmOffset = begin + ATTRIBUTE_VALUES;
     uint nodeIndex = innerResult.x;
 
     uint3 leaf = posQ % uint3(8, 8, 8);
-    uint leafIndex = _VxShadowMapsBuffer[attribute + nodeIndex + leaf.z];
+    uint leafIndex = _VxShadowMapsBuffer[vxsmOffset + nodeIndex + leaf.z];
 
-    uint bitmask0 = _VxShadowMapsBuffer[attribute + leafIndex];
-    uint bitmask1 = _VxShadowMapsBuffer[attribute + leafIndex + 1];
+    uint bitmask0 = _VxShadowMapsBuffer[vxsmOffset + leafIndex];
+    uint bitmask1 = _VxShadowMapsBuffer[vxsmOffset + leafIndex + 1];
     uint bitmask = leaf.y < 4 ? bitmask0 : bitmask1;
 
     uint maskShift = leaf.x + 8 * (leaf.y % 4);
@@ -294,8 +295,8 @@ float TraversePointSampleVxShadowMap(uint begin, uint3 posQ, uint4 innerResult)
 
 float TraverseBilinearSampleVxShadowMap(uint begin, uint3 posQ_0, uint4 innerResults[4], float2 lerpWeight)
 {
-    uint attribute = begin + 18;
-    uint4 nodeIndex4 = attribute + uint4(
+    uint vxsmOffset = begin + ATTRIBUTE_VALUES;
+    uint4 nodeIndex4 = vxsmOffset + uint4(
         innerResults[0].x,
         innerResults[1].x,
         innerResults[2].x,
@@ -309,7 +310,7 @@ float TraverseBilinearSampleVxShadowMap(uint begin, uint3 posQ_0, uint4 innerRes
     uint4 leaf4_y = uint4(posQ_0.y % 8, posQ_1.y % 8, posQ_2.y % 8, posQ_3.y % 8);
     uint4 leaf4_z = uint4(posQ_0.z % 8, posQ_1.z % 8, posQ_2.z % 8, posQ_3.z % 8);
 
-    uint4 leafIndex = attribute + uint4(
+    uint4 leafIndex = vxsmOffset + uint4(
         _VxShadowMapsBuffer[nodeIndex4.x + leaf4_z.x],
         _VxShadowMapsBuffer[nodeIndex4.y + leaf4_z.y],
         _VxShadowMapsBuffer[nodeIndex4.z + leaf4_z.z],
@@ -357,13 +358,13 @@ float TraverseBilinearSampleVxShadowMap(uint begin, uint3 posQ_0, uint4 innerRes
 
 float TravereTrilinearSampleVxShadowMap(uint begin, uint3 posQ_0, uint4 innerResults[8], float3 lerpWeight)
 {
-    uint attribute = begin + 18;
-    uint4 nodeIndex4_0 = attribute + uint4(
+    uint vxsmOffset = begin + ATTRIBUTE_VALUES;
+    uint4 nodeIndex4_0 = vxsmOffset + uint4(
         innerResults[0].x,
         innerResults[1].x,
         innerResults[2].x,
         innerResults[3].x);
-    uint4 nodeIndex4_1 = attribute + uint4(
+    uint4 nodeIndex4_1 = vxsmOffset + uint4(
         innerResults[4].x,
         innerResults[5].x,
         innerResults[6].x,
@@ -384,12 +385,12 @@ float TravereTrilinearSampleVxShadowMap(uint begin, uint3 posQ_0, uint4 innerRes
     uint4 leaf4_y1 = uint4(posQ_4.y % 8, posQ_5.y % 8, posQ_6.y % 8, posQ_7.y % 8);
     uint4 leaf4_z1 = uint4(posQ_4.z % 8, posQ_5.z % 8, posQ_6.z % 8, posQ_7.z % 8);
 
-    uint4 leafIndex_0 = attribute + uint4(
+    uint4 leafIndex_0 = vxsmOffset + uint4(
         _VxShadowMapsBuffer[nodeIndex4_0.x + leaf4_z0.x],
         _VxShadowMapsBuffer[nodeIndex4_0.y + leaf4_z0.y],
         _VxShadowMapsBuffer[nodeIndex4_0.z + leaf4_z0.z],
         _VxShadowMapsBuffer[nodeIndex4_0.w + leaf4_z0.w]);
-    uint4 leafIndex_1 = attribute + uint4(
+    uint4 leafIndex_1 = vxsmOffset + uint4(
         _VxShadowMapsBuffer[nodeIndex4_1.x + leaf4_z1.x],
         _VxShadowMapsBuffer[nodeIndex4_1.y + leaf4_z1.y],
         _VxShadowMapsBuffer[nodeIndex4_1.z + leaf4_z1.z],
@@ -488,10 +489,7 @@ float PointSampleVxShadowing(uint begin, float3 positionWS)
         asfloat(_VxShadowMapsBuffer[begin + 12]),
         asfloat(_VxShadowMapsBuffer[begin + 13]),
 
-        asfloat(_VxShadowMapsBuffer[begin + 14]),
-        asfloat(_VxShadowMapsBuffer[begin + 15]),
-        asfloat(_VxShadowMapsBuffer[begin + 16]),
-        asfloat(_VxShadowMapsBuffer[begin + 17]),
+        0.0, 0.0, 0.0, 1.0,
     };
 
     float3 posNDC = mul(worldToShadowMatrix, float4(positionWS, 1.0)).xyz;

@@ -85,7 +85,7 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
 #endif
     uint begin = 0;
 
-    float scale = asfloat(_VxShadowMapsBuffer[begin]);
+    float volumeScale = asfloat(_VxShadowMapsBuffer[begin]);
     uint maxScale = _VxShadowMapsBuffer[begin + 1];
     float4x4 worldToShadowMatrix =
     {
@@ -104,14 +104,11 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
         asfloat(_VxShadowMapsBuffer[begin + 12]),
         asfloat(_VxShadowMapsBuffer[begin + 13]),
 
-        asfloat(_VxShadowMapsBuffer[begin + 14]),
-        asfloat(_VxShadowMapsBuffer[begin + 15]),
-        asfloat(_VxShadowMapsBuffer[begin + 16]),
-        asfloat(_VxShadowMapsBuffer[begin + 17]),
+        0.0, 0.0, 0.0, 1.0,
     };
 
     uint voxelResolution = 1 << maxScale;
-    float bias = (scale / voxelResolution);
+    float bias = (volumeScale / voxelResolution);
 
     positionWS.y += bias;
 
@@ -150,7 +147,14 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
 
     if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0)
     {
-        attenuation = results[0].y ? attenuation : 0.0;
+        float4 attenuation4 = float4(
+            results[0].y ? attenuation : 0.0,
+            results[1].y ? attenuation : 0.0,
+            results[2].y ? attenuation : 0.0,
+            results[3].y ? attenuation : 0.0);
+        attenuation4.xy = lerp(attenuation4.xz, attenuation4.yw, lerpWeight.x);
+
+        attenuation = lerp(attenuation4.x, attenuation4.y, lerpWeight.y);
         attenuation = LerpWhiteTo(attenuation, shadowStrength);
         _ScreenSpaceShadowOutput[pixelCoord] = attenuation;
         return;
@@ -165,7 +169,21 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
     if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0 &&
         results[4].w == 0 && results[5].w == 0 && results[6].w == 0 && results[7].w == 0)
     {
-        attenuation = results[0].y ? attenuation : 0.0;
+        float4 attenuation4_0 = float4(
+            results[0].y ? attenuation : 0.0,
+            results[2].y ? attenuation : 0.0,
+            results[4].y ? attenuation : 0.0,
+            results[6].y ? attenuation : 0.0);
+        float4 attenuation4_1 = float4(
+            results[1].y ? attenuation : 0.0,
+            results[3].y ? attenuation : 0.0,
+            results[5].y ? attenuation : 0.0,
+            results[7].y ? attenuation : 0.0);
+
+        attenuation4_0    = lerp(attenuation4_0, attenuation4_1, lerpWeight.x);
+        attenuation4_0.xy = lerp(attenuation4_0.xz, attenuation4_0.yw, lerpWeight.y);
+
+        attenuation = lerp(attenuation4_0.x, attenuation4_0.y, lerpWeight.z);
         attenuation = LerpWhiteTo(attenuation, shadowStrength);
         _ScreenSpaceShadowOutput[pixelCoord] = attenuation;
         return;

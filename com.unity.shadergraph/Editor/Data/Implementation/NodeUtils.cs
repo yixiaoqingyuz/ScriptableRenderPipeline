@@ -290,6 +290,31 @@ namespace UnityEditor.Graphing
             return new string(arr);
         }
 
+        public static bool ValidateSlotName(string inName, out string errorMessage)
+        {
+            //check for invalid characters in slot name
+            string invalidCharacters = "<>-_!@#$%^&*";
+            foreach (var character in invalidCharacters)
+            {
+                if (inName.Contains(character))
+                {
+                    errorMessage = string.Format("Slot name contains invalid character {0}", invalidCharacters);
+                    return true;
+                }
+            }
+
+            //if characters are valid, check for digits that would error declaration
+            if (Char.IsDigit(inName.FirstOrDefault()))
+            {
+                errorMessage = "Slot name cannot start with digit";
+                return true;
+            }
+
+            //if clean, return null and false
+            errorMessage = null;
+            return false;
+        }
+
         public static string FloatToShaderValue(float value)
         {
             if (Single.IsPositiveInfinity(value))

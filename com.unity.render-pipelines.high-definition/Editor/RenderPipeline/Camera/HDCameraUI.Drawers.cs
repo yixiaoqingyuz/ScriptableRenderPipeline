@@ -184,7 +184,6 @@ namespace UnityEditor.Experimental.Rendering.HDPipeline
 
         static void Drawer_FieldVolumeLayerMask(SerializedHDCamera p, Editor owner)
         {
-            
             EditorGUILayout.PropertyField(p.volumeLayerMask, volumeLayerMaskContent);
         }
         static void Drawer_FieldVolumeAnchorOverride(SerializedHDCamera p, Editor owner)

@@ -4,10 +4,8 @@
 // When a pass has 2+ views, hardware instancing will be active.
 // To avoid allocating every frame, XRView is a struct and XRPass is pooled.
 
-// XRTODO(2019.3) Deprecate legacy code
-// XRTODO(2020.1) Remove legacy code
-#if UNITY_2019_3_OR_NEWER
-    //#define USE_XR_SDK
+#if UNITY_2019_3_OR_NEWER && ENABLE_VR
+#define USE_XR_SDK
 #endif
 
 using System;

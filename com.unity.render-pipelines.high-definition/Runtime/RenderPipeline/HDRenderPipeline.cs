@@ -316,6 +316,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             m_ApplyDistortionMaterial = CoreUtils.CreateEngineMaterial(asset.renderPipelineResources.shaders.applyDistortionPS);
 
             InitializeDebugMaterials();
+            XRDebugMenu.Reset();
 
             m_MaterialList.ForEach(material => material.Build(asset));
 
@@ -1016,7 +1017,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             {
                 // With XR multi-pass enabled, each camera can be rendered multiple times with different parameters
-                m_XRSystem.SetupFrame(cameras, ref multipassCameras, m_DebugDisplaySettings.GetXRDebugMode());
+                m_XRSystem.SetupFrame(cameras, ref multipassCameras);
 
                 // Culling loop
                 foreach (var multipassCamera in multipassCameras)
@@ -2165,14 +2166,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             if (hdCamera.xr.enabled)
             {
-                //cullingParams = hdCamera.xr.cullingParameters;
-
                 if (!m_XRSystem.GetCullingParameters(camera, hdCamera.xr, out cullingParams))
                     return false;
             }
             else
             {
-                // XRTODO: remove stereo passdown?
                 if (!camera.TryGetCullingParameters(camera.stereoEnabled, out cullingParams))
                     return false;
             }

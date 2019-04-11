@@ -63,8 +63,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         static int[] s_MaterialFullScreenDebugValues = null;
         static GUIContent[] s_MsaaSamplesDebugStrings = null;
         static int[] s_MsaaSamplesDebugValues = null;
-        static GUIContent[] s_XRModeDebugStrings = null;
-        static int[] s_XRModeDebugValues = null;
 
         static List<GUIContent> s_CameraNames = new List<GUIContent>();
         static GUIContent[] s_CameraNamesStrings = null;
@@ -86,7 +84,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public FalseColorDebugSettings falseColorDebugSettings = new FalseColorDebugSettings();
             public DecalsDebugSettings decalsDebugSettings = new DecalsDebugSettings();
             public MSAASamples msaaSamples = MSAASamples.None;
-            public XRSystem.DebugMode xrDebugMode = XRSystem.DebugMode.None;
 
             // Raytracing
 #if ENABLE_RAYTRACING
@@ -113,7 +110,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             public int terrainTextureEnumIndex;
             public int colorPickerDebugModeEnumIndex;
             public int msaaSampleDebugModeEnumIndex;
-            public int xrDebugModeEnumIndex;
             public int debugCameraToFreezeEnumIndex;
         }
         DebugData m_Data;
@@ -137,10 +133,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 .ToArray();
             s_MsaaSamplesDebugValues = (int[])Enum.GetValues(typeof(MSAASamples));
 
-            s_XRModeDebugStrings = Enum.GetNames(typeof(XRSystem.DebugMode))
-                .Select(t => new GUIContent(t))
-                .ToArray();
-            s_XRModeDebugValues = (int[])Enum.GetValues(typeof(XRSystem.DebugMode));
+            XRDebugMenu.Init();
 
             m_Data = new DebugData();
         }
@@ -175,11 +168,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         public ColorPickerDebugMode GetDebugColorPickerMode()
         {
             return data.colorPickerDebugSettings.colorPickerMode;
-        }
-
-        public XRSystem.DebugMode GetXRDebugMode()
-        {
-            return data.xrDebugMode;
         }
 
         public bool IsCameraFreezeEnabled()
@@ -701,10 +689,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                 new DebugUI.EnumField { displayName = "Freeze Camera for culling", getter = () => data.debugCameraToFreeze, setter = value => data.debugCameraToFreeze = value, enumNames = s_CameraNamesStrings, enumValues = s_CameraNamesValues, getIndex = () => data.debugCameraToFreezeEnumIndex, setIndex = value => data.debugCameraToFreezeEnumIndex = value },
             });
 
-            widgetList.AddRange(new DebugUI.Widget[]
-            {
-                new DebugUI.EnumField { displayName = "XR Debug Mode", getter = () => (int)data.xrDebugMode, setter = value => data.xrDebugMode = (XRSystem.DebugMode)value, enumNames = s_XRModeDebugStrings, enumValues = s_XRModeDebugValues, getIndex = () => data.xrDebugModeEnumIndex, setIndex = value => data.xrDebugModeEnumIndex = value },
-            });
+            XRDebugMenu.AddWidgets(widgetList, RefreshRenderingDebug);
 
             m_DebugRenderingItems = widgetList.ToArray();
             var panel = DebugManager.instance.GetPanel(k_PanelRendering, true);

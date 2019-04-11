@@ -2898,8 +2898,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             using (new ProfilingSample(cmd, "Screen Space Vx Shadow", CustomSamplerId.TPScreenSpaceShadows.GetSampler()))
             {
-                Matrix4x4 translatedMatrix = Matrix4x4.Translate(hdCamera.worldSpaceCameraPos);
-
                 bool msaaEnabled = hdCamera.frameSettings.IsEnabled(FrameSettingsField.MSAA);
                 int kernel = -1;
 

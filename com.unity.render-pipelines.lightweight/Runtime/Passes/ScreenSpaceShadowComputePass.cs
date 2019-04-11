@@ -151,7 +151,7 @@ namespace UnityEngine.Rendering.LWRP
                 else
                     blendModeName = "NoBlend";
 
-                string filteringName = "NoFilter";
+                string filteringName = "Nearest";
                 switch (shadowData.mainLightVxShadowQuality)
                 {
                     case 1: filteringName = "Bilinear";  break;
@@ -184,8 +184,8 @@ namespace UnityEngine.Rendering.LWRP
 
             var vxShadowMapsBuffer = VxShadowMapsManager.instance.VxShadowMapsBuffer;
 
-            int voxelZBias = dirVxShadowMap.voxelZBias;
-            float voxelUpBias = dirVxShadowMap.voxelUpBias * (dirVxShadowMap.volumeScale / dirVxShadowMap.voxelResolutionInt);
+            int voxelZBias = 2;
+            float voxelUpBias = 1 * (dirVxShadowMap.volumeScale / dirVxShadowMap.voxelResolutionInt);
 
             cmd.SetComputeMatrixParam(computeShader, VxShadowMapConstantBuffer._InvViewProjMatrixID, viewProjMatrix.inverse);
             cmd.SetComputeVectorParam(computeShader, VxShadowMapConstantBuffer._ScreenSizeID, new Vector4(screenSizeX, screenSizeY, invScreenSizeX, invScreenSizeY));

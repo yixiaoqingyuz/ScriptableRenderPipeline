@@ -127,7 +127,7 @@ float EvaluateRuntimeSunVxShadow(LightLoopContext lightLoopContext, PositionInpu
         float3 positionWS = posInput.positionWS + _WorldSpaceCameraPos;
 
         uint begin = 0;
-        float attenuation = PointSampleVxShadowing(begin, positionWS);
+        float attenuation = NearestSampleVxShadowing(begin, positionWS);
 
         return attenuation;
     }

@@ -1,11 +1,11 @@
 
-#pragma kernel BlendDynamicShadowsNoFilter  CSMain=BlendDynamicShadowsNoFilter  WITH_DYNAMIC_SHADOWS NO_FILTERING
-#pragma kernel BlendDynamicShadowsBilinear  CSMain=BlendDynamicShadowsBilinear  WITH_DYNAMIC_SHADOWS BILINEAR_FILTERING
-#pragma kernel BlendDynamicShadowsTrilinear CSMain=BlendDynamicShadowsTrilinear WITH_DYNAMIC_SHADOWS TRILINEAR_FILTERING
+#pragma kernel BlendDynamicShadowsNearest   CSMain=BlendDynamicShadowsNearest   WITH_DYNAMIC_SHADOWS NEAREST_SAMPLE
+#pragma kernel BlendDynamicShadowsBilinear  CSMain=BlendDynamicShadowsBilinear  WITH_DYNAMIC_SHADOWS BILINEAR_SAMPLE
+#pragma kernel BlendDynamicShadowsTrilinear CSMain=BlendDynamicShadowsTrilinear WITH_DYNAMIC_SHADOWS TRILINEAR_SAMPLE
 
-#pragma kernel NoBlendNoFilter              CSMain=NoBlendNoFilter              NO_FILTERING
-#pragma kernel NoBlendBilinear              CSMain=NoBlendBilinear              BILINEAR_FILTERING
-#pragma kernel NoBlendTrilinear             CSMain=NoBlendTrilinear             TRILINEAR_FILTERING
+#pragma kernel NoBlendNearest               CSMain=NoBlendNearest               NEAREST_SAMPLE
+#pragma kernel NoBlendBilinear              CSMain=NoBlendBilinear              BILINEAR_SAMPLE
+#pragma kernel NoBlendTrilinear             CSMain=NoBlendTrilinear             TRILINEAR_SAMPLE
 
 #define TILE_SIZE 8
 
@@ -85,29 +85,29 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
 #endif
     uint begin = 0;
 
-    float volumeScale = asfloat(_VxShadowMapsBuffer[begin]);
-    uint maxScale = _VxShadowMapsBuffer[begin + 1];
+    float volumeScale = asfloat(_VxShadowMapsBuffer[begin + 1]);
+    uint dagScale = _VxShadowMapsBuffer[begin + 2];
     float4x4 worldToShadowMatrix =
     {
-        asfloat(_VxShadowMapsBuffer[begin + 2]),
-        asfloat(_VxShadowMapsBuffer[begin + 3]),
-        asfloat(_VxShadowMapsBuffer[begin + 4]),
-        asfloat(_VxShadowMapsBuffer[begin + 5]),
+        asfloat(_VxShadowMapsBuffer[begin +  3]),
+        asfloat(_VxShadowMapsBuffer[begin +  4]),
+        asfloat(_VxShadowMapsBuffer[begin +  5]),
+        asfloat(_VxShadowMapsBuffer[begin +  6]),
 
-        asfloat(_VxShadowMapsBuffer[begin + 6]),
-        asfloat(_VxShadowMapsBuffer[begin + 7]),
-        asfloat(_VxShadowMapsBuffer[begin + 8]),
-        asfloat(_VxShadowMapsBuffer[begin + 9]),
-
+        asfloat(_VxShadowMapsBuffer[begin +  7]),
+        asfloat(_VxShadowMapsBuffer[begin +  8]),
+        asfloat(_VxShadowMapsBuffer[begin +  9]),
         asfloat(_VxShadowMapsBuffer[begin + 10]),
+
         asfloat(_VxShadowMapsBuffer[begin + 11]),
         asfloat(_VxShadowMapsBuffer[begin + 12]),
         asfloat(_VxShadowMapsBuffer[begin + 13]),
+        asfloat(_VxShadowMapsBuffer[begin + 14]),
 
         0.0, 0.0, 0.0, 1.0,
     };
 
-    uint voxelResolution = 1 << maxScale;
+    uint voxelResolution = 1 << dagScale;
     float bias = (volumeScale / voxelResolution);
 
     positionWS.y += bias;
@@ -127,9 +127,9 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
         return;
     }
 
-#if NO_FILTERING
+#if NEAREST_SAMPLE
     uint4 result;
-    TraverseVxShadowMapPosQ(begin, posQ, result);
+    TraverseVxShadowMapPosQ(begin, OFFSET_DIR, posQ, result);
 
     if (result.w == 0)
     {
@@ -139,11 +139,11 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
         return;
     }
 
-    float attenuationVxsm = TraversePointSampleVxShadowMap(begin, posQ, result);
+    float attenuationVxsm = TraverseNearestSampleVxShadowMap(begin, OFFSET_DIR, posQ, result);
     attenuation = min(attenuation, attenuationVxsm);
-#elif BILINEAR_FILTERING
+#elif BILINEAR_SAMPLE
     uint4 results[4];
-    TraverseVxShadowMapPosQ2x2(begin, posQ, results);
+    TraverseVxShadowMapPosQ2x2(begin, OFFSET_DIR, posQ, results);
 
     if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0)
     {
@@ -160,11 +160,11 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
         return;
     }
 
-    float attenuationVxsm = TraverseBilinearSampleVxShadowMap(begin, posQ, results, lerpWeight.xy);
+    float attenuationVxsm = TraverseBilinearSampleVxShadowMap(begin, OFFSET_DIR, posQ, results, lerpWeight.xy);
     attenuation = min(attenuation, attenuationVxsm);
-#elif TRILINEAR_FILTERING
+#elif TRILINEAR_SAMPLE
     uint4 results[8];
-    TraverseVxShadowMapPosQ2x2x2(begin, posQ, results);
+    TraverseVxShadowMapPosQ2x2x2(begin, OFFSET_DIR, posQ, results);
 
     if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0 &&
         results[4].w == 0 && results[5].w == 0 && results[6].w == 0 && results[7].w == 0)
@@ -189,7 +189,7 @@ void CSMain(uint2 groupThreadId : SV_GroupThreadID, uint2 groupId : SV_GroupID)
         return;
     }
 
-    float attenuationVxsm = TravereTrilinearSampleVxShadowMap(begin, posQ, results, lerpWeight);
+    float attenuationVxsm = TravereTrilinearSampleVxShadowMap(begin, OFFSET_DIR, posQ, results, lerpWeight);
     attenuation = min(attenuation, attenuationVxsm);
 #endif
 

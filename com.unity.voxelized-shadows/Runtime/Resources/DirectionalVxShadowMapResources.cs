@@ -8,7 +8,7 @@ namespace UnityEngine.Experimental.VoxelizedShadows
         [HideInInspector] public Quaternion Rotation;
         [HideInInspector] public float VolumeScale;
         [HideInInspector] public int VoxelResolution;
-        [HideInInspector] public int MaxScale;
+        [HideInInspector] public int dagScale;
         [HideInInspector] public Matrix4x4 WorldToShadowMatrix;
         [HideInInspector] public uint[] Data;
     }

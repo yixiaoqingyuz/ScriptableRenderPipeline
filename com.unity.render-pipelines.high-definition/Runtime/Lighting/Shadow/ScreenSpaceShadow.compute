@@ -2,12 +2,12 @@
 #pragma kernel DeferredContactShadow                DEFERRED_CONTACT_SHADOW_GENERIC=DeferredContactShadow
 #pragma kernel DeferredContactShadowMSAA            DEFERRED_CONTACT_SHADOW_GENERIC=DeferredContactShadowMSAA         ENABLE_MSAA
 //seongdae;vxsm
-#pragma kernel DeferredVxShadowNoFilter             DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowNoFilter               NO_FILTERING
-#pragma kernel DeferredVxShadowBiFilter             DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowBiFilter               BILINEAR_FILTERING
-#pragma kernel DeferredVxShadowTriFilter            DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowTriFilter              TRILINEAR_FILTERING
-#pragma kernel DeferredVxShadowNoFilterMSAA         DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowNoFilterMSAA           NO_FILTERING        ENABLE_MSAA
-#pragma kernel DeferredVxShadowBiFilterMSAA         DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowBiFilterMSAA           BILINEAR_FILTERING  ENABLE_MSAA
-#pragma kernel DeferredVxShadowTriFilterMSAA        DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowTriFilterMSAA          TRILINEAR_FILTERING ENABLE_MSAA
+#pragma kernel DeferredVxShadowNearest              DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowNearest                NEAREST_SAMPLE
+#pragma kernel DeferredVxShadowBilinear             DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowBilinear               BILINEAR_SAMPLE
+#pragma kernel DeferredVxShadowTrilinear            DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowTrilinear              TRILINEAR_SAMPLE
+#pragma kernel DeferredVxShadowNearestMSAA          DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowNearestMSAA            NEAREST_SAMPLE   ENABLE_MSAA
+#pragma kernel DeferredVxShadowBilinearMSAA         DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowBilinearMSAA           BILINEAR_SAMPLE  ENABLE_MSAA
+#pragma kernel DeferredVxShadowTrilinearMSAA        DEFERRED_VX_SHADOW_GENERIC=DeferredVxShadowTrilinearMSAA          TRILINEAR_SAMPLE ENABLE_MSAA
 //seongdae;vxsm
 
 #ifdef SHADER_API_PSSL
@@ -217,29 +217,29 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
 
     uint begin = 0;
 
-    float volumeScale = asfloat(_VxShadowMapsBuffer[begin]);
-    uint maxScale = _VxShadowMapsBuffer[begin + 1];
+    float volumeScale = asfloat(_VxShadowMapsBuffer[begin + 1]);
+    uint dagScale = _VxShadowMapsBuffer[begin + 2];
     float4x4 worldToShadowMatrix =
     {
-        asfloat(_VxShadowMapsBuffer[begin +  2]),
         asfloat(_VxShadowMapsBuffer[begin +  3]),
         asfloat(_VxShadowMapsBuffer[begin +  4]),
         asfloat(_VxShadowMapsBuffer[begin +  5]),
-
         asfloat(_VxShadowMapsBuffer[begin +  6]),
+
         asfloat(_VxShadowMapsBuffer[begin +  7]),
         asfloat(_VxShadowMapsBuffer[begin +  8]),
         asfloat(_VxShadowMapsBuffer[begin +  9]),
-
         asfloat(_VxShadowMapsBuffer[begin + 10]),
+
         asfloat(_VxShadowMapsBuffer[begin + 11]),
         asfloat(_VxShadowMapsBuffer[begin + 12]),
         asfloat(_VxShadowMapsBuffer[begin + 13]),
+        asfloat(_VxShadowMapsBuffer[begin + 14]),
 
         0.0, 0.0, 0.0, 1.0,
     };
 
-    uint voxelResolution = 1 << maxScale;
+    uint voxelResolution = 1 << dagScale;
     float normalBias = 2.0 * (volumeScale / voxelResolution);
 
     positionWS += (normalData.normalWS * normalBias);
@@ -259,9 +259,9 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
 
     float attenuation = 1.0;
 
-#if NO_FILTERING
+#if NEAREST_SAMPLE
     uint4 result;
-    TraverseVxShadowMapPosQ(begin, posQ, result);
+    TraverseVxShadowMapPosQ(begin, OFFSET_DIR, posQ, result);
 
     if (result.w == 0)
     {
@@ -270,10 +270,10 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
         return;
     }
 
-    attenuation = TraversePointSampleVxShadowMap(begin, posQ, result);
-#elif BILINEAR_FILTERING
+    attenuation = TraverseNearestSampleVxShadowMap(begin, OFFSET_DIR, posQ, result);
+#elif BILINEAR_SAMPLE
     uint4 results[4];
-    TraverseVxShadowMapPosQ2x2(begin, posQ, results);
+    TraverseVxShadowMapPosQ2x2(begin, OFFSET_DIR, posQ, results);
 
     if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0)
     {
@@ -289,10 +289,10 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
         return;
     }
 
-    attenuation = TraverseBilinearSampleVxShadowMap(begin, posQ, results, lerpWeight.xy);
-#elif TRILINEAR_FILTERING
+    attenuation = TraverseBilinearSampleVxShadowMap(begin, OFFSET_DIR, posQ, results, lerpWeight.xy);
+#elif TRILINEAR_SAMPLE
     uint4 results[8];
-    TraverseVxShadowMapPosQ2x2x2(begin, posQ, results);
+    TraverseVxShadowMapPosQ2x2x2(begin, OFFSET_DIR, posQ, results);
 
     if (results[0].w == 0 && results[1].w == 0 && results[2].w == 0 && results[3].w == 0 &&
         results[4].w == 0 && results[5].w == 0 && results[6].w == 0 && results[7].w == 0)
@@ -316,7 +316,7 @@ void DEFERRED_VX_SHADOW_GENERIC(uint2 groupThreadId : SV_GroupThreadID, uint2 gr
         return;
     }
 
-    attenuation = TravereTrilinearSampleVxShadowMap(begin, posQ, results, lerpWeight);
+    attenuation = TravereTrilinearSampleVxShadowMap(begin, OFFSET_DIR, posQ, results, lerpWeight);
 #endif
 
     _DeferredShadowTextureUAV[COORD_TEXTURE2D_X(pixelCoord)] = 1.0 - attenuation;

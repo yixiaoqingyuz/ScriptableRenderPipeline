@@ -2,7 +2,9 @@
 #define UNITY_VX_SHADOWMAPS_COMMON_INCLUDED
 
 #define USE_EMULATE_COUNTBITS
-#define ATTRIBUTE_VALUES 14
+#define OFFSET_DIR 15
+#define OFFSET_POINT 15 // TODO : define it for point light
+#define OFFSET_SPOT 15 // TODO : define it for spot light
 
 StructuredBuffer<uint> _VxShadowMapsBuffer;
 
@@ -54,13 +56,13 @@ uint CalculateRescale(uint srcPosbit, uint dstPosbit)
     return 32 - emulateCLZ(srcPosbit ^ dstPosbit);
 }
 
-void TraverseVxShadowMapPosQ(uint begin, uint3 posQ, out uint4 result)
+void TraverseVxShadowMapPosQ(uint begin, uint typeOffset, uint3 posQ, out uint4 result)
 {
-    uint vxsmOffset = begin + ATTRIBUTE_VALUES;
-    uint maxScale = _VxShadowMapsBuffer[begin + 1];
+    uint vxsmOffset = begin + typeOffset;
+    uint dagScale = _VxShadowMapsBuffer[begin + 2];
 
     uint nodeIndex = 0;
-    uint scale = maxScale;
+    uint scale = dagScale;
 
     bool lit = false;
     bool shadowed = false;
@@ -97,17 +99,17 @@ void TraverseVxShadowMapPosQ(uint begin, uint3 posQ, out uint4 result)
     result = uint4(nodeIndex, lit, shadowed, intersected);
 }
 
-void TraverseVxShadowMapPosQ2x2(uint begin, uint3 posQ_0, out uint4 results[4])
+void TraverseVxShadowMapPosQ2x2(uint begin, uint typeOffset, uint3 posQ_0, out uint4 results[4])
 {
-    uint vxsmOffset = begin + ATTRIBUTE_VALUES;
-    uint maxScale = _VxShadowMapsBuffer[begin + 1];
+    uint vxsmOffset = begin + typeOffset;
+    uint dagScale = _VxShadowMapsBuffer[begin + 2];
 
     uint3 posQ_1 = posQ_0 + uint3(1, 0, 0);
     uint3 posQ_2 = posQ_0 + uint3(0, 1, 0);
     uint3 posQ_3 = posQ_0 + uint3(1, 1, 0);
 
     uint4 nodeIndex4 = 0;
-    uint scale = maxScale;
+    uint scale = dagScale;
 
     bool4 lit4 = false;
     bool4 shadowed4 = false;
@@ -164,10 +166,10 @@ void TraverseVxShadowMapPosQ2x2(uint begin, uint3 posQ_0, out uint4 results[4])
     results[3] = uint4(nodeIndex4.w, lit4.w, shadowed4.w, intersected4.w);
 }
 
-void TraverseVxShadowMapPosQ2x2x2(uint begin, uint3 posQ_0, out uint4 results[8])
+void TraverseVxShadowMapPosQ2x2x2(uint begin, uint typeOffset, uint3 posQ_0, out uint4 results[8])
 {
-    uint vxsmOffset = begin + ATTRIBUTE_VALUES;
-    uint maxScale = _VxShadowMapsBuffer[begin + 1];
+    uint vxsmOffset = begin + typeOffset;
+    uint dagScale = _VxShadowMapsBuffer[begin + 2];
 
     uint3 posQ_1 = posQ_0 + uint3(1, 0, 0);
     uint3 posQ_2 = posQ_0 + uint3(0, 1, 0);
@@ -179,7 +181,7 @@ void TraverseVxShadowMapPosQ2x2x2(uint begin, uint3 posQ_0, out uint4 results[8]
 
     uint4 nodeIndex4_0 = 0;
     uint4 nodeIndex4_1 = 0;
-    uint scale = maxScale;
+    uint scale = dagScale;
 
     bool4 lit4_0 = false;
     bool4 lit4_1 = false;
@@ -273,9 +275,9 @@ void TraverseVxShadowMapPosQ2x2x2(uint begin, uint3 posQ_0, out uint4 results[8]
     results[7] = uint4(nodeIndex4_1.w, lit4_1.w, shadowed4_1.w, intersected4_1.w);
 }
 
-float TraversePointSampleVxShadowMap(uint begin, uint3 posQ, uint4 innerResult)
+float TraverseNearestSampleVxShadowMap(uint begin, uint typeOffset, uint3 posQ, uint4 innerResult)
 {
-    uint vxsmOffset = begin + ATTRIBUTE_VALUES;
+    uint vxsmOffset = begin + typeOffset;
     uint nodeIndex = innerResult.x;
 
     uint3 leaf = posQ % uint3(8, 8, 8);
@@ -293,9 +295,9 @@ float TraversePointSampleVxShadowMap(uint begin, uint3 posQ, uint4 innerResult)
     return attenuation;
 }
 
-float TraverseBilinearSampleVxShadowMap(uint begin, uint3 posQ_0, uint4 innerResults[4], float2 lerpWeight)
+float TraverseBilinearSampleVxShadowMap(uint begin, uint typeOffset, uint3 posQ_0, uint4 innerResults[4], float2 lerpWeight)
 {
-    uint vxsmOffset = begin + ATTRIBUTE_VALUES;
+    uint vxsmOffset = begin + typeOffset;
     uint4 nodeIndex4 = vxsmOffset + uint4(
         innerResults[0].x,
         innerResults[1].x,
@@ -356,9 +358,9 @@ float TraverseBilinearSampleVxShadowMap(uint begin, uint3 posQ_0, uint4 innerRes
     return attenuation4.x;
 }
 
-float TravereTrilinearSampleVxShadowMap(uint begin, uint3 posQ_0, uint4 innerResults[8], float3 lerpWeight)
+float TravereTrilinearSampleVxShadowMap(uint begin, uint typeOffset, uint3 posQ_0, uint4 innerResults[8], float3 lerpWeight)
 {
-    uint vxsmOffset = begin + ATTRIBUTE_VALUES;
+    uint vxsmOffset = begin + typeOffset;
     uint4 nodeIndex4_0 = vxsmOffset + uint4(
         innerResults[0].x,
         innerResults[1].x,
@@ -468,26 +470,26 @@ float TravereTrilinearSampleVxShadowMap(uint begin, uint3 posQ_0, uint4 innerRes
     return lerp(attenuation4_0.x, attenuation4_1.x, lerpWeight.z);
 }
 
-float PointSampleVxShadowing(uint begin, float3 positionWS)
+float NearestSampleVxShadowing(uint begin, float3 positionWS)
 {
-    uint maxScale = _VxShadowMapsBuffer[begin + 1];
-    uint voxelResolution = 1 << maxScale;
+    uint dagScale = _VxShadowMapsBuffer[begin + 2];
+    uint voxelResolution = 1 << dagScale;
     float4x4 worldToShadowMatrix =
     {
-        asfloat(_VxShadowMapsBuffer[begin + 2]),
-        asfloat(_VxShadowMapsBuffer[begin + 3]),
-        asfloat(_VxShadowMapsBuffer[begin + 4]),
-        asfloat(_VxShadowMapsBuffer[begin + 5]),
+        asfloat(_VxShadowMapsBuffer[begin +  3]),
+        asfloat(_VxShadowMapsBuffer[begin +  4]),
+        asfloat(_VxShadowMapsBuffer[begin +  5]),
+        asfloat(_VxShadowMapsBuffer[begin +  6]),
 
-        asfloat(_VxShadowMapsBuffer[begin + 6]),
-        asfloat(_VxShadowMapsBuffer[begin + 7]),
-        asfloat(_VxShadowMapsBuffer[begin + 8]),
-        asfloat(_VxShadowMapsBuffer[begin + 9]),
-
+        asfloat(_VxShadowMapsBuffer[begin +  7]),
+        asfloat(_VxShadowMapsBuffer[begin +  8]),
+        asfloat(_VxShadowMapsBuffer[begin +  9]),
         asfloat(_VxShadowMapsBuffer[begin + 10]),
+
         asfloat(_VxShadowMapsBuffer[begin + 11]),
         asfloat(_VxShadowMapsBuffer[begin + 12]),
         asfloat(_VxShadowMapsBuffer[begin + 13]),
+        asfloat(_VxShadowMapsBuffer[begin + 14]),
 
         0.0, 0.0, 0.0, 1.0,
     };
@@ -500,12 +502,12 @@ float PointSampleVxShadowing(uint begin, float3 positionWS)
         return 1;
 
     uint4 result;
-    TraverseVxShadowMapPosQ(begin, posQ, result);
+    TraverseVxShadowMapPosQ(begin, OFFSET_DIR, posQ, result);
 
     if (result.w == 0)
         return result.y ? 1 : 0;
 
-    float attenuation = TraversePointSampleVxShadowMap(begin, posQ, result);
+    float attenuation = TraverseNearestSampleVxShadowMap(begin, OFFSET_DIR, posQ, result);
 
     return attenuation;
 }

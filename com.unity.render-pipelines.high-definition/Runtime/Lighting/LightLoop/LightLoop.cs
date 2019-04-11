@@ -993,7 +993,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
             else
             {
-                lightData.cookieMode = CookieMode.Clamp;
+                lightData.cookieMode = CookieMode.None;
             }
 
             if (additionalShadowData)

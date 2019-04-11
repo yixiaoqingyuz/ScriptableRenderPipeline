@@ -29,7 +29,7 @@ namespace UnityEditor.ShaderGraph.Drawing
 
         protected override bool canCopySelection
         {
-            get { return selection.OfType<IShaderNodeView>().Any(x => x.node.canCopyNode) || selection.OfType<Group>().Any() || selection.OfType<BlackboardField>().Any(); }
+            get { return selection.OfType<Node>().Any() || selection.OfType<Group>().Any() || selection.OfType<BlackboardField>().Any(); }
         }
 
         public MaterialGraphView(GraphData graph) : this()
@@ -466,7 +466,7 @@ namespace UnityEditor.ShaderGraph.Drawing
 
                 if (isNormalMap)
                     node.textureType = TextureType.Normal;
-                    
+
                 var inputslot = node.FindInputSlot<Texture2DInputMaterialSlot>(SampleTexture2DNode.TextureInputId);
                 if (inputslot != null)
                     inputslot.texture = texture2D;

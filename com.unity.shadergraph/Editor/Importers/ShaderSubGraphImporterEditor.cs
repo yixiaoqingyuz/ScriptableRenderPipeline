@@ -9,7 +9,6 @@ namespace UnityEditor.ShaderGraph
     class ShaderSubGraphImporterEditor : ScriptedImporterEditor
     {
         public override bool showImportedObject => Unsupported.IsDeveloperMode();
-        protected override bool needsApplyRevert => false;
 
         public override void OnInspectorGUI()
         {

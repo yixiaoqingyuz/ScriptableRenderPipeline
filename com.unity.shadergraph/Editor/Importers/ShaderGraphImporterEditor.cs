@@ -11,8 +11,6 @@ namespace UnityEditor.ShaderGraph
     [CustomEditor(typeof(ShaderGraphImporter))]
     class ShaderGraphImporterEditor : ScriptedImporterEditor
     {
-        protected override bool needsApplyRevert => false;
-
         public override void OnInspectorGUI()
         {
             if (GUILayout.Button("Open Shader Editor"))

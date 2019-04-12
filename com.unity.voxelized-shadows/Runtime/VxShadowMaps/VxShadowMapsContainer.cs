@@ -3,8 +3,8 @@ using UnityEngine;
 namespace UnityEngine.Experimental.VoxelizedShadows
 {
     [ExecuteAlways]
-    [AddComponentMenu("Rendering/VxShadowMaps/VxShadowMapContainer", 100)]
-    public class VxShadowMapContainer : MonoBehaviour
+    [AddComponentMenu("Rendering/VxShadowMaps/VxShadowMapsContainer", 100)]
+    public class VxShadowMapsContainer : MonoBehaviour
     {
         public VxShadowMapsResources Resources = null;
         public float Size = 0;

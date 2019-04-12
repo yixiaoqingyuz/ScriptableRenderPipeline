@@ -20,7 +20,10 @@ namespace UnityEngine.Experimental.VoxelizedShadows
         private List<DirectionalVxShadowMap> _dirVxShadowMapList = new List<DirectionalVxShadowMap>();
         private List<PointVxShadowMap> _pointVxShadowMapList = new List<PointVxShadowMap>();
         private List<SpotVxShadowMap> _spotVxShadowMapList = new List<SpotVxShadowMap>();
+
         private VxShadowMap _vxShadowMapOnStage = null;
+
+
 
         private static VxShadowMapsManager _instance = null;
         public static VxShadowMapsManager instance
@@ -176,14 +179,14 @@ namespace UnityEngine.Experimental.VoxelizedShadows
 
         public void LoadResources(VxShadowMapsResources resources)
         {
-            int count = resources.Asset.Length;
+            int count = resources.Vxsms.Length;
             int stride = 4;
 
             if (_vxShadowMapsBuffer != null)
                 _vxShadowMapsBuffer.Release();
 
             _vxShadowMapsBuffer = new ComputeBuffer(count, stride);
-            _vxShadowMapsBuffer.SetData(resources.Asset);
+            _vxShadowMapsBuffer.SetData(resources.Vxsms);
         }
         public void Unloadresources()
         {

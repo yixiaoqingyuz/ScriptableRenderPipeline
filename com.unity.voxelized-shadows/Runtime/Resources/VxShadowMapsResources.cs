@@ -22,6 +22,6 @@ namespace UnityEngine.Experimental.VoxelizedShadows
     public class VxShadowMapsResources : ScriptableObject
     {
         [HideInInspector] public VxShadowsLight[] Table;
-        [HideInInspector] public uint[] Asset;
+        [HideInInspector] public uint[] Vxsms;
     }
 }

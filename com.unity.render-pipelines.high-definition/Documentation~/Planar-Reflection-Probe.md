@@ -1,8 +1,8 @@
 # Planar Reflection Probe
 
-Planar Reflection Probes are one of the [Reflection Probes](Reflection-Probes-Intro.html) that the High Definition Render Pipeline (HDRP) provides to help you create reactive and accurate reflective Materials.
+The Planar Reflection Probe component is one of the types of [Reflection Probe](Reflection-Probes-Intro.html) that the High Definition Render Pipeline (HDRP) provides to help you create reactive and accurate reflective Materials.
 
-Properties
+# Properties
 
 Planar Reflection Probes share many properties with the the [built-in render pipeline Reflection Probe](<https://docs.unity3d.com/Manual/class-ReflectionProbe.html>), and the [HDRP cubemap Reflection Probe](Reflection-Probe.html).
 

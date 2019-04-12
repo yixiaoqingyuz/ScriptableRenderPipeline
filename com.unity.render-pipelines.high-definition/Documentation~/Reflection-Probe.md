@@ -1,8 +1,8 @@
 # Reflection Probe
 
-Reflection Probes are one of the [Reflection Probes](Reflection-Probes-Intro.html) that the High Definition Render Pipeline (HDRP) provides to help you create reactive and accurate reflective Materials.
+The Reflection Probe component is one of the types of [Reflection Probe](Reflection-Probes-Intro.html) that the High Definition Render Pipeline (HDRP) provides to help you create reactive and accurate reflective Materials.
 
-Properties
+# Properties
 
 The HDRP Reflection Probe uses the [built-in render pipeline Reflection Probe](https://docs.unity3d.com/Manual/class-ReflectionProbe.html) as a base, and thus shares many properties with the built-in version. HDRP Reflection Probes also share many properties with the [HDRP Planar Reflection Probe](Planar-Reflection-Probe.html).
 
@@ -12,7 +12,9 @@ The HDRP Reflection Probe uses the [built-in render pipeline Reflection Probe](h
 
 | **Property**      | **Description**                                              |
 | ----------------- | ------------------------------------------------------------ |
-| **Realtime Mode** | A Reflection Probe updates in real time. Use this property to tell HDRP how often to update the Probe.<br />**Every Frame** updates the Probe’s capture data every frame.<br />**On Enable** updates the Probe’s capture data each time Unity calls the component’s `OnEnable()` function. This occurs whenever you enable the component in the Inspector or activate the GameObject that the component attaches to. |
+| **Type**          | Use the drop-down to select the mode this Reflection Probe uses to capture a view of the Scene. Reflective Materials query this capture to process reflections for their surface.<br />**Realtime**: Makes the Reflection Probe capture a view of the Scene in real time. Use the **Realtime Mode** property to set the time period.<br />**Custom**: Allows you to assign a cubemap Texture to act as the Reflection Probe's captured view of the Scene. Use the **Texture** property to assign the cubemap.<br />**Baked**: Makes the Reflection Probe use a static cubemap Texture at runtime. You must bake this Texture before you build your Unity Project. |
+| **Realtime Mode** | Use the drop-down to select how often the Reflection Probe should capture a view of the Scene.<br />Select **Realtime** from the **Type** drop-down to expose this property.<br />**Every Frame**: Updates the Probe’s capture data every frame.<br />**On Enable**: Updates the Probe’s capture data each time Unity calls the component’s `OnEnable()` function. This occurs whenever you enable the component in the Inspector or activate the GameObject that the component attaches to. |
+| **Texture**       | Assign a Texture for the Reflection Probe to use as its captured view of the Scene.<br />Select **Custom** from the **Type** drop-down to expose this property. |
 
 ## Projection Settings
 

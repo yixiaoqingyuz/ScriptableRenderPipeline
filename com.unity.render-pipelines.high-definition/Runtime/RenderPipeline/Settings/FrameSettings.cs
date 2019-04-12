@@ -300,8 +300,8 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             bitDatas = new BitArray128(new uint[] {
                 (uint)FrameSettingsField.Shadow,
                 (uint)FrameSettingsField.ContactShadows,
-                (uint)FrameSettingsField.VxShadows, //seongdae;vxsm
                 (uint)FrameSettingsField.ShadowMask,
+                (uint)FrameSettingsField.VxShadows, //seongdae;vxsm
                 (uint)FrameSettingsField.SSAO,
                 (uint)FrameSettingsField.SubsurfaceScattering,
                 (uint)FrameSettingsField.Transmission,   // Caution: this is only for debug, it doesn't save the cost of Transmission execution

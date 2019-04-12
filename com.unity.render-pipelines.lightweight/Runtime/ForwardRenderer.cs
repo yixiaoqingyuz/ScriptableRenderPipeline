@@ -102,10 +102,10 @@ namespace UnityEngine.Rendering.LWRP
             }
 
             //bool mainLightShadows = m_MainLightShadowCasterPass.Setup(ref renderingData); //seongdae;vxsm;origin
-            bool mainLightDynamicShadows = m_MainLightShadowCasterPass.Setup(ref renderingData);
+            bool mainLightDynamicShadows = m_MainLightShadowCasterPass.Setup(ref renderingData); //seongdae;vxsm
             bool additionalLightShadows = m_AdditionalLightsShadowCasterPass.Setup(ref renderingData);
             //bool resolveShadowsInScreenSpace = mainLightShadows && renderingData.shadowData.requiresScreenSpaceShadowResolve; //seongdae;vxsm;origin
-            bool resolveShadowsInScreenSpace = mainLightDynamicShadows && renderingData.shadowData.requiresScreenSpaceShadowResolve;
+            bool resolveShadowsInScreenSpace = mainLightDynamicShadows && renderingData.shadowData.requiresScreenSpaceShadowResolve; //seongdae;vxsm
             bool computeShadowsInScreenSpace = renderingData.shadowData.requiresScreenSpaceShadowCompute; //seongdae;vxsm
 
             // Depth prepass is generated in the following cases:

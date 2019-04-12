@@ -180,8 +180,7 @@ namespace UnityEngine.Rendering.LWRP
             SupportedRenderingFeatures.active = new SupportedRenderingFeatures()
             {
                 reflectionProbeModes = SupportedRenderingFeatures.ReflectionProbeModes.None,
-                //defaultMixedLightingModes = SupportedRenderingFeatures.LightmapMixedBakeModes.Subtractive, //seongdae;vxsm;origin
-                defaultMixedLightingModes = SupportedRenderingFeatures.LightmapMixedBakeModes.IndirectOnly, //seongdae;vxsm
+                defaultMixedLightingModes = SupportedRenderingFeatures.LightmapMixedBakeModes.Subtractive,
                 mixedLightingModes = SupportedRenderingFeatures.LightmapMixedBakeModes.Subtractive | SupportedRenderingFeatures.LightmapMixedBakeModes.IndirectOnly,
                 lightmapBakeTypes = LightmapBakeType.Baked | LightmapBakeType.Mixed,
                 lightmapsModes = LightmapsMode.CombinedDirectional | LightmapsMode.NonDirectional,

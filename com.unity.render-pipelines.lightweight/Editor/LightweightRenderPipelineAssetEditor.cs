@@ -294,7 +294,6 @@ namespace UnityEditor.Rendering.LWRP
                 EditorGUILayout.PropertyField(m_SoftShadowsSupportedProp, Styles.supportsSoftShadows);
                 EditorGUILayout.PropertyField(m_VxShadowsSupportedProp, Styles.supportsVxShadows); //seongdae;vxsm
                 CoreEditorUtils.DrawPopup(Styles.vxShadowsQualityText, m_VxShadowsQualityProp, Styles.vxShadowsQualityOptions); //seongdae;vxsm
-                VxShadowsQuality vxShadowMapsQuality = (VxShadowsQuality)m_VxShadowsQualityProp.intValue; //seongdae;vxsm
                 EditorGUI.indentLevel--;
                 EditorGUILayout.Space();
                 EditorGUILayout.Space();

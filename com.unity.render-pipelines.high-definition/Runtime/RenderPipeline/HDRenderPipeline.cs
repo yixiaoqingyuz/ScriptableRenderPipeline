@@ -1722,7 +1722,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     m_LightLoop.SetScreenSpaceContactShadowsTexture(hdCamera, m_ScreenSpaceContactShadowsBuffer, cmd); //seongdae;vxsm
 
                     //PushFullScreenDebugTexture(hdCamera, cmd, m_ScreenSpaceShadowsBuffer, FullScreenDebugMode.ContactShadows); //seongdae;vxsm;origin
-                    PushFullScreenDebugTexture(hdCamera, cmd, m_ScreenSpaceContactShadowsBuffer, FullScreenDebugMode.ContactShadows); //seongdae;vxsm;
+                    PushFullScreenDebugTexture(hdCamera, cmd, m_ScreenSpaceContactShadowsBuffer, FullScreenDebugMode.ContactShadows); //seongdae;vxsm
                 }
                 //seongdae;vxsm
                 if (!hdCamera.frameSettings.VxShadowsRunAsync())

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using UnityEditor.ShaderGraph;
 using UnityEngine;
 
@@ -290,23 +291,26 @@ namespace UnityEditor.Graphing
             return new string(arr);
         }
 
-        public static bool ValidateSlotName(string inName, out string errorMessage)
+        private static string GetDisplaySafeName(string input)
         {
-            //check for invalid characters in slot name
-            string invalidCharacters = "<>-_!@#$%^&*";
-            foreach (var character in invalidCharacters)
+            //strip valid display characters from slot name
+            //current valid characters are whitespace and ( ) _ separators
+            StringBuilder cleanName = new StringBuilder();
+            foreach (var c in input)
             {
-                if (inName.Contains(character))
-                {
-                    errorMessage = string.Format("Slot name contains invalid character {0}", invalidCharacters);
-                    return true;
-                }
+                if (c != ' ' && c != '(' && c != ')' && c != '_')
+                    cleanName.Append(c);
             }
 
-            //if characters are valid, check for digits that would error declaration
-            if (Char.IsDigit(inName.FirstOrDefault()))
+            return cleanName.ToString();
+        }
+
+        public static bool ValidateSlotName(string inName, out string errorMessage)
+        {
+            //check for invalid characters between display safe and hlsl safe name
+            if (GetDisplaySafeName(inName) != GetHLSLSafeName(inName))
             {
-                errorMessage = "Slot name cannot start with digit";
+                errorMessage = "Slot name(s) found invalid character(s). Valid characters: A-Z, a-z, 0-9, _ ( ) ";
                 return true;
             }
 

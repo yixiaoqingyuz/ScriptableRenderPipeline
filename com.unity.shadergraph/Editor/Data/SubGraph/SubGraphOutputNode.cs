@@ -49,7 +49,7 @@ namespace UnityEditor.ShaderGraph
 
             foreach (var slot in slots)
             {
-                var error = NodeUtils.ValidateSlotName(slot.displayName, out string errorMessage);
+                var error = NodeUtils.ValidateSlotName(slot.RawDisplayName(), out string errorMessage);
                 if (error)
                 {
                     owner.AddValidationError(tempId, errorMessage);

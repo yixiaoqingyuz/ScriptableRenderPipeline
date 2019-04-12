@@ -401,7 +401,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         ContactShadows m_ContactShadows = null;
         bool m_EnableContactShadow = false;
-        bool m_EnableVxShadow = false; //seongdae;vxsm
+        bool m_EnableVxShadows = false; //seongdae;vxsm
 
         IndirectLightingController m_indirectLightingController = null;
 
@@ -775,7 +775,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
             m_ContactShadows = VolumeManager.instance.stack.GetComponent<ContactShadows>();
             m_EnableContactShadow = m_FrameSettings.IsEnabled(FrameSettingsField.ContactShadows) && m_ContactShadows.enable.value && m_ContactShadows.length.value > 0;
-            m_EnableVxShadow = m_FrameSettings.IsEnabled(FrameSettingsField.Shadow) && m_FrameSettings.IsEnabled(FrameSettingsField.VxShadows); //seongdae;vxsm
+            m_EnableVxShadows = m_FrameSettings.IsEnabled(FrameSettingsField.Shadow) && m_FrameSettings.IsEnabled(FrameSettingsField.VxShadows); //seongdae;vxsm
             m_indirectLightingController = VolumeManager.instance.stack.GetComponent<IndirectLightingController>();
 
             // Cluster
@@ -962,6 +962,22 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             return true;
         }
 
+        //seongdae;vxsm
+        bool CanRenderVxShadows(Light lightComponent, out VxShadowMap vxsm)
+        {
+            if (m_FrameSettings.IsEnabled(FrameSettingsField.VxShadows) == false)
+            {
+                vxsm = null;
+                return false;
+            }
+
+            vxsm = lightComponent.GetComponent<VxShadowMap>();
+            bool vxsmEnabled = vxsm != null && vxsm.IsValid();
+
+            return vxsmEnabled;
+        }
+        //seongdae;vxsm
+
         public bool GetDirectionalLightData(CommandBuffer cmd, GPULightType gpuLightType, VisibleLight light, Light lightComponent, HDAdditionalLightData additionalLightData, AdditionalShadowData additionalShadowData, int lightIndex, int shadowIndex, DebugDisplaySettings debugDisplaySettings, int sortedIndex)
         {
             // Clamp light list to the maximum allowed lights on screen to avoid ComputeBuffer overflow
@@ -1027,18 +1043,17 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             }
 
             //seongdae;vxsm
-            var dirVxsm = lightComponent.gameObject.GetComponent<DirectionalVxShadowMap>();
-            if (dirVxsm != null && dirVxsm.IsValid())
+            if (CanRenderVxShadows(lightComponent, out VxShadowMap vxsm))
             {
-                switch (dirVxsm.shadowsBlendMode)
+                if (vxsm.shadowsBlendMode == ShadowsBlendMode.OnlyVxShadowMaps)
                 {
-                    case ShadowsBlendMode.OnlyVxShadowMaps:    lightData.vxShadowsValues = 1; break;
-                    case ShadowsBlendMode.BlendDynamicShadows: lightData.vxShadowsValues = 2; break;
-                }
-
-                //
-                if (dirVxsm.shadowsBlendMode == ShadowsBlendMode.OnlyVxShadowMaps)
+                    lightData.vxShadowsValues = 1;
                     m_CurrentShadowSortedSunLightIndex = sortedIndex;
+                }
+                else if (vxsm.shadowsBlendMode == ShadowsBlendMode.BlendDynamicShadows)
+                {
+                    lightData.vxShadowsValues = 2;
+                }
             }
             else
             {
@@ -2003,7 +2018,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                         if (additionalLightData.WillRenderShadows())
                         #endif
                         {
-                                int shadowRequestCount;
+                            int shadowRequestCount;
                             shadowIndex = additionalLightData.UpdateShadowRequest(hdCamera, m_ShadowManager, light, cullResults, lightIndex, out shadowRequestCount);
 
 #if UNITY_EDITOR
@@ -2756,7 +2771,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             bool hasSunLight = m_CurrentSunLight != null && sunShadowData != null;
             bool hasSunVxShadow = dirVxShadowMap != null && dirVxShadowMap.IsValid();
             bool needsVxShadows = (hasSunLight && hasSunVxShadow) || m_DominantLightIndex != -1;
-            if (!m_EnableVxShadow || !needsVxShadows)
+            if (!m_EnableVxShadows || !needsVxShadows)
             {
                 cmd.SetGlobalTexture(HDShaderIDs._DeferredVxShadowTexture, TextureXR.GetBlackTexture());
                 return;
@@ -2901,7 +2916,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             bool hasSunLight = m_CurrentSunLight != null && sunShadowData != null;
             bool hasSunVxShadow = dirVxShadowMap != null && dirVxShadowMap.IsValid();
             bool needsVxShadows = (hasSunLight && hasSunVxShadow) || m_DominantLightIndex != -1;
-            if (!m_EnableVxShadow || !needsVxShadows)
+            if (!m_EnableVxShadows || !needsVxShadows)
             {
                 return;
             }

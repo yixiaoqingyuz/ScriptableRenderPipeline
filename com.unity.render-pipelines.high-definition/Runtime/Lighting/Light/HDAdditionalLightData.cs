@@ -233,6 +233,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         HDShadowRequest[]   shadowRequests;
         bool                m_WillRenderShadows;
+        bool                m_WillRenderVxShadows; //seongdae;vxsm
         int[]               m_ShadowRequestIndices;
 
         [System.NonSerialized]
@@ -268,11 +269,11 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
         int GetShadowRequestCount()
         {
             //seongdae;vxsm
-            // todo : this should be for not only directional vxsm, but also other light type
-            var dirVxsm = GetComponent<DirectionalVxShadowMap>();
-            if (dirVxsm != null && dirVxsm.IsValid())
+            if (m_WillRenderVxShadows)
             {
-                if (dirVxsm.shadowsBlendMode == ShadowsBlendMode.OnlyVxShadowMaps)
+                var vxsm = GetComponent<VxShadowMap>();
+                bool vxsmIsValid = vxsm != null && vxsm.IsValid();
+                if (vxsmIsValid && vxsm.shadowsBlendMode == ShadowsBlendMode.OnlyVxShadowMaps)
                     return 0;
             }
             //seongdae;vxsm
@@ -285,6 +286,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
             float cameraDistance = Vector3.Distance(camera.transform.position, transform.position);
 
             m_WillRenderShadows = legacyLight.shadows != LightShadows.None && frameSettings.IsEnabled(FrameSettingsField.Shadow);
+            m_WillRenderVxShadows = m_WillRenderShadows && frameSettings.IsEnabled(FrameSettingsField.VxShadows); //seongdae;vxsm
 
             m_WillRenderShadows &= cullResults.GetShadowCasterBounds(lightIndex, out bounds);
             // When creating a new light, at the first frame, there is no AdditionalShadowData so we can't really render shadows

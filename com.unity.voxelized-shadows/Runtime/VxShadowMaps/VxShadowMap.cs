@@ -35,5 +35,8 @@ namespace UnityEngine.Experimental.VoxelizedShadows
         public abstract int voxelResolutionInt { get; }
         public abstract VoxelResolution subtreeResolution { get; }
         public int subtreeResolutionInt { get { return (int)subtreeResolution; } }
+        public ShadowsBlendMode shadowsBlendMode = ShadowsBlendMode.OnlyVxShadowMaps;
+
+        public abstract bool IsValid();
     }
 }

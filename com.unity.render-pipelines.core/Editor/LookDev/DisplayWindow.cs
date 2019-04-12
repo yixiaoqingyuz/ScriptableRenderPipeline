@@ -15,6 +15,11 @@ namespace UnityEditor.Rendering.LookDev
         event Action<Layout> OnLayoutChanged;
 
         event Action OnRenderDocAcquisitionTriggered;
+        
+        event Action<IMouseEvent> OnMouseEventInViewPort;
+
+        event Action<GameObject, ViewCompositionIndex, Vector2> OnChangingObjectInView;
+        event Action<GameObject, ViewCompositionIndex, Vector2> OnChangingEnvironmentInView;
     }
 
     /// <summary>
@@ -144,6 +149,27 @@ namespace UnityEditor.Rendering.LookDev
             remove => OnRenderDocAcquisitionTriggeredInternal -= value;
         }
 
+        event Action<IMouseEvent> OnMouseEventInViewPortInternal;
+        event Action<IMouseEvent> IDisplayer.OnMouseEventInViewPort
+        {
+            add => OnMouseEventInViewPortInternal += value;
+            remove => OnMouseEventInViewPortInternal -= value;
+        }
+
+        event Action<GameObject, ViewCompositionIndex, Vector2> OnChangingObjectInViewInternal;
+        event Action<GameObject, ViewCompositionIndex, Vector2> IDisplayer.OnChangingObjectInView
+        {
+            add => OnChangingObjectInViewInternal += value;
+            remove => OnChangingObjectInViewInternal -= value;
+        }
+
+        event Action<GameObject, ViewCompositionIndex, Vector2> OnChangingEnvironmentInViewInternal;
+        event Action<GameObject, ViewCompositionIndex, Vector2> IDisplayer.OnChangingEnvironmentInView
+        {
+            add => OnChangingEnvironmentInViewInternal += value;
+            remove => OnChangingEnvironmentInViewInternal -= value;
+        }
+
         public event Action OnWindowClosed;
 
         void OnEnable()
@@ -220,6 +246,9 @@ namespace UnityEditor.Rendering.LookDev
             m_ViewContainer.AddToClassList(LookDev.currentContext.layout.isMultiView ? k_SecondViewsClass : k_FirstViewClass);
             m_ViewContainer.AddToClassList(k_SharedContainerClass);
             m_MainContainer.Add(m_ViewContainer);
+            m_ViewContainer.RegisterCallback<MouseDownEvent>(evt => OnMouseEventInViewPortInternal?.Invoke(evt));
+            m_ViewContainer.RegisterCallback<MouseUpEvent>(evt => OnMouseEventInViewPortInternal?.Invoke(evt));
+            m_ViewContainer.RegisterCallback<MouseMoveEvent>(evt => OnMouseEventInViewPortInternal?.Invoke(evt));
 
             m_Views[(int)ViewIndex.First] = new Image() { name = k_FirstViewName, image = Texture2D.blackTexture };
             m_ViewContainer.Add(m_Views[(int)ViewIndex.First]);

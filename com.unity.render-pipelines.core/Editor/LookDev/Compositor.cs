@@ -94,8 +94,7 @@ namespace UnityEditor.Rendering.LookDev
         Color m_AmbientColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
 
         bool m_RenderDocAcquisitionRequested;
-
-
+        
         public Compositer(
             IDisplayer displayer,
             Context contexts,

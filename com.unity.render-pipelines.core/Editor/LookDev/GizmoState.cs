@@ -5,7 +5,7 @@ using UnityEngine;
 namespace UnityEditor.Rendering.LookDev
 {
     [Serializable]
-    internal class GizmoState
+    public class GizmoState
     {
         public const float thickness = 0.0028f;
         public const float thicknessSelected = 0.015f;
@@ -13,10 +13,8 @@ namespace UnityEditor.Rendering.LookDev
         public const float circleRadiusSelected = 0.03f;
         public const float blendFactorCircleRadius = 0.01f;
         public const float blendFactorCircleRadiusSelected = 0.03f;
-
-        [field: SerializeField]
+        
         public Vector2 point1 { get; private set; }
-        [field: SerializeField]
         public Vector2 point2 { get; private set; }
         [field: SerializeField]
         public Vector2 center { get; private set; } = Vector2.zero;
@@ -24,17 +22,21 @@ namespace UnityEditor.Rendering.LookDev
         public float angle { get; private set; }
         [field: SerializeField]
         public float length { get; private set; } = 0.2f;
-        [field: SerializeField]
         public Vector4 plane { get; private set; }
-        [field: SerializeField]
         public Vector4 planeOrtho { get; private set; }
-        
+        [field: SerializeField]
+        public float blendFactor { get; set; }
+
         public float blendFactorMaxGizmoDistance
             => length - circleRadius - blendFactorCircleRadius;
 
+        public float blendFactorMinGizmoDistance
+            => length - circleRadius - blendFactorCircleRadiusSelected;
+
         public GizmoState()
             => Update(center, length, angle);
-        
+
+        //TODO: optimize
         private Vector4 Get2DPlane(Vector2 firstPoint, float angle)
         {
             Vector4 result = new Vector4();

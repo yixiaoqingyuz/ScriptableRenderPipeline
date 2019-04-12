@@ -16,9 +16,10 @@ namespace UnityEditor.Rendering.LookDev
 
         //TODO: ensure only one displayer at time for the moment
         static DisplayWindow s_Window;
-        static Compositer s_Compositer;
+        static Compositer s_Compositor;
         static StageCache s_Stages;
-        
+        static ComparisonGizmo s_Comparator;
+
         public static bool open { get; private set; }
 
         static IDataProvider dataProvider
@@ -89,7 +90,6 @@ namespace UnityEditor.Rendering.LookDev
 
         static void ConfigureLookDev()
         {
-
             open = true;
             LoadConfig();
             WaitingSRPReloadForConfiguringRenderer(5);
@@ -109,11 +109,12 @@ namespace UnityEditor.Rendering.LookDev
         static void ConfigureRenderer()
         {
             s_Stages = new StageCache(dataProvider, currentContext);
-            s_Compositer = new Compositer(s_Window, currentContext, dataProvider, s_Stages);
+            s_Comparator = new ComparisonGizmo(currentContext.layout.gizmoState, s_Window);
+            s_Compositor = new Compositer(s_Window, currentContext, dataProvider, s_Stages);
             s_Window.OnWindowClosed += () =>
             {
-                s_Compositer?.Dispose();
-                s_Compositer = null;
+                s_Compositor?.Dispose();
+                s_Compositor = null;
 
                 SaveConfig();
 

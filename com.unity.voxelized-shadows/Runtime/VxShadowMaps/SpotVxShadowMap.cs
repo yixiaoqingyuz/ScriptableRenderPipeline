@@ -8,5 +8,10 @@ namespace UnityEngine.Experimental.VoxelizedShadows
         // TODO :
         public override int voxelResolutionInt => (int)VoxelResolution._4096;
         public override VoxelResolution subtreeResolution => VoxelResolution._4096;
+
+        public override bool IsValid()
+        {
+            return false;
+        }
     }
 }

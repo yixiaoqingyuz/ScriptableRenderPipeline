@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine.Rendering;
 
@@ -23,7 +24,7 @@ namespace UnityEngine.Experimental.VoxelizedShadows
 
         private VxShadowMap _vxShadowMapOnStage = null;
 
-
+        public delegate bool VerifyValidation();
 
         private static VxShadowMapsManager _instance = null;
         public static VxShadowMapsManager instance

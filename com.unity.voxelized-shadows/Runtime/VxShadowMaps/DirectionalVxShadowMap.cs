@@ -10,7 +10,6 @@ namespace UnityEngine.Experimental.VoxelizedShadows
         public override int voxelResolutionInt => (int)voxelResolution;
         public override VoxelResolution subtreeResolution =>
             voxelResolutionInt < MaxSubtreeResolutionInt ? voxelResolution : MaxSubtreeResolution;
-        public ShadowsBlendMode shadowsBlendMode = ShadowsBlendMode.OnlyVxShadowMaps;
 
         private void OnEnable()
         {
@@ -21,7 +20,7 @@ namespace UnityEngine.Experimental.VoxelizedShadows
             VxShadowMapsManager.instance.UnregisterVxShadowMapComponent(this);
         }
 
-        public bool IsValid()
+        public override bool IsValid()
         {
             return VxShadowMapsManager.instance.ValidVxShadowMapsBuffer;
         }

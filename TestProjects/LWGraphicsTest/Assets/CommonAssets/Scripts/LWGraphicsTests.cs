@@ -30,39 +30,27 @@ public class LWGraphicsTests
         
         Scene scene = SceneManager.GetActiveScene();
 
-        // if (scene.name.Substring(3, 4).Equals("_xr_"))
-        //{
-            if (Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer)
-            {
-                Assume.That(false, "Stereo LWRP tests do not run on MacOSX.");
-            }
-            else
-            {
-                XRSettings.LoadDeviceByName("MockHMD");
-                yield return null;
-
-                XRSettings.enabled = true;
-                yield return null;
-
-                XRSettings.gameViewRenderMode = GameViewRenderMode.BothEyes;
-                yield return null;
-
-                foreach (var camera in cameras)
-                    camera.stereoTargetEye = StereoTargetEyeMask.Both;
-
-                for (int i = 0; i < settings.WaitFrames; i++)
-                    yield return null;
-
-                ImageAssert.AreEqual(testCase.ReferenceImage, cameras.Where(x => x != null), settings.ImageComparisonSettings);
-            }
-       /* }
-        else
+        if (scene.name.Substring(3, 4).Equals("_xr_"))
         {
-            for (int i = 0; i < settings.WaitFrames; i++)
-                yield return null;
+            Assume.That((Application.platform != RuntimePlatform.OSXEditor && Application.platform != RuntimePlatform.OSXPlayer), "Stereo LWRP tests do not run on MacOSX.");
+            
+            XRSettings.LoadDeviceByName("MockHMD");
+            yield return null;
 
-            ImageAssert.AreEqual(testCase.ReferenceImage, cameras.Where(x => x != null), settings.ImageComparisonSettings);
-        }*/
+            XRSettings.enabled = true;
+            yield return null;
+
+            XRSettings.gameViewRenderMode = GameViewRenderMode.BothEyes;
+            yield return null;
+
+            foreach (var camera in cameras)
+                camera.stereoTargetEye = StereoTargetEyeMask.Both;
+        }
+        
+        for (int i = 0; i < settings.WaitFrames; i++)
+            yield return null;
+
+        ImageAssert.AreEqual(testCase.ReferenceImage, cameras.Where(x => x != null), settings.ImageComparisonSettings);
     }
 
 #if UNITY_EDITOR

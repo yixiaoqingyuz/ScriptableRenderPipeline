@@ -21,7 +21,7 @@
   * Lighting
     * [Ambient Occlusion](Override-Ambient-Occlusion)
     * [Indirect Lighting Controller](Override-Indirect-Lighting-Controller)
-    * [Volumetric Lighting Quality](Override-Volumetric-Lighting-Controller)
+    * [Volumetric Fog Quality](Override-Volumetric-Fog-Quality)
   * Shadowing
     * [Contact Shadows](Override-Contact-Shadows)
     * [Micro Shadows](Override-Micro-Shadows)
